@@ -1,0 +1,9 @@
+@import url('./login.css');
+
+.auth-copy--accent {
+    background: linear-gradient(160deg, rgba(124, 58, 237, 0.18), rgba(37, 99, 235, 0.12));
+}
+
+.feature-list i {
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+}

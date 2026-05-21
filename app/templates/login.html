@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}HireNest{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+{% endblock %}
+
+{% block content %}
+  <section class="logo-page" aria-label="HireNest logo">
+    <div class="logo-mark-wrap" aria-hidden="true">
+      <svg class="logo-mark" viewBox="0 0 320 220" role="img" aria-label="HireNest logo mark">
+        <defs>
+          <linearGradient id="blueGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#2b4f86" />
+            <stop offset="100%" stop-color="#0f3564" />
+          </linearGradient>
+          <linearGradient id="grayGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#c8cedd" />
+            <stop offset="100%" stop-color="#9aa4b8" />
+          </linearGradient>
+        </defs>
+
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M74 70 L112 52 L148 84" stroke="#103b6d" stroke-width="10" />
+          <path d="M74 70 L74 126 L118 154" stroke="#103b6d" stroke-width="10" />
+          <path d="M118 154 L150 112 L150 56" stroke="#103b6d" stroke-width="10" />
+          <path d="M150 112 L198 102" stroke="#163e72" stroke-width="10" />
+          <path d="M198 102 L230 76 L266 104" stroke="#a8afbf" stroke-width="10" />
+          <path d="M198 102 L198 150 L240 174" stroke="#a8afbf" stroke-width="10" />
+          <path d="M240 174 L268 154 L268 104" stroke="#a8afbf" stroke-width="10" />
+          <path d="M198 102 L164 134" stroke="#6f809a" stroke-width="10" />
+        </g>
+
+        <g>
+          <circle cx="74" cy="70" r="18" fill="url(#blueGradient)" />
+          <circle cx="74" cy="126" r="22" fill="url(#blueGradient)" />
+          <circle cx="118" cy="154" r="22" fill="url(#blueGradient)" />
+          <circle cx="150" cy="56" r="22" fill="url(#blueGradient)" />
+          <circle cx="150" cy="112" r="18" fill="url(#blueGradient)" />
+          <circle cx="198" cy="102" r="20" fill="#7482a0" />
+          <circle cx="230" cy="76" r="18" fill="url(#grayGradient)" />
+          <circle cx="266" cy="104" r="22" fill="url(#grayGradient)" />
+          <circle cx="240" cy="174" r="18" fill="url(#grayGradient)" />
+          <circle cx="268" cy="154" r="16" fill="url(#grayGradient)" />
+          <circle cx="198" cy="150" r="18" fill="url(#grayGradient)" />
+        </g>
+      </svg>
+    </div>
+
+    <h1 class="logo-wordmark">HireNest</h1>
+    <p class="logo-tagline">Connecting Talent</p>
+
+    <div class="action-dock" aria-label="Primary navigation actions">
+      <a class="action-button action-button--primary" href="{{ url_for('login_page.login') }}">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </a>
+      <a class="action-button" href="{{ url_for('login_page.login') }}">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>Login</span>
+      </a>
+      <a class="action-button" href="{{ url_for('registration_page.registration') }}">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Registration</span>
+      </a>
+      <a class="action-button" href="{{ url_for('forget_password_page.forget_password') }}">
+        <i class="fa-solid fa-key"></i>
+        <span>Forgot Password</span>
+      </a>
+      <a class="action-button" href="{{ url_for('logout_page.logout') }}">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span>Logout</span>
+      </a>
+    </div>
+
+    <p class="action-hint">Use the buttons above to move between the project pages.</p>
+    <span class="sparkle sparkle-left" aria-hidden="true"></span>
+    <span class="sparkle sparkle-right" aria-hidden="true"></span>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}

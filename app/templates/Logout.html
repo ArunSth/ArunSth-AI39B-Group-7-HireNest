@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Logged Out — HireNest{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/logout.css') }}" />
+{% endblock %}
+
+{% block content %}
+  <article class="auth-card auth-card--centered logout-card">
+    <div class="auth-badge auth-badge--success"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="form-head form-head--center">
+      <h3>Logged out</h3>
+      <p>Your session has ended safely.</p>
+    </div>
+
+    <p class="logout-copy">
+      Thank you for using HireNest. Sign back in anytime to continue where you left off.
+    </p>
+
+    <a href="{{ url_for('login_page.login') }}" class="btn-submit btn-submit--link">Log In</a>
+  </article>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/logout.js') }}"></script>
+{% endblock %}
