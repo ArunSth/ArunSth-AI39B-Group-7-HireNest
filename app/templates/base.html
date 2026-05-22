@@ -56,27 +56,37 @@
     </div>
   </section>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
   <div id="auth-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" id="close-modal">&times;</span>
       <h2 id="modal-title">Sign Up</h2>
  
-      <form id="auth-form">
+      <form id="auth-form" method="post" action="/register">
         <div class="form-group signup-only">
           <label for="user-name">Full Name</label>
-          <input type="text" id="user-name" placeholder="John Doe">
+          <input type="text" id="user-name" name="name" placeholder="John Doe">
         </div>
         <div class="form-group signup-only">
           <label for="user-phone">Phone Number</label>
-          <input type="tel" id="user-phone" placeholder="98XXXXXXXX">
+          <input type="tel" id="user-phone" name="phone" placeholder="98XXXXXXXX">
         </div>
         <div class="form-group">
           <label for="user-email">Email Address</label>
-          <input type="email" id="user-email" placeholder="name@gmail.com" required>
+          <input type="email" id="user-email" name="email" placeholder="name@gmail.com" required>
         </div>
         <div class="form-group">
           <label for="user-password">Password</label>
-          <input type="password" id="user-password" placeholder="••••••••" required>
+          <input type="password" id="user-password" name="password" placeholder="••••••••" required>
         </div>
         <button type="submit" class="btn-submit" id="submit-auth-btn">Create Account</button>
       </form>
