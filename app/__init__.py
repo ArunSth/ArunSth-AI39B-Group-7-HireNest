@@ -5,13 +5,13 @@ from app.routes.loginroutes import LoginRoutes
 from app.routes.registrationroutes import RegistrationRoutes
 
 def create_app():
-    # Force the main app config to bind directly to your 'statics' directory folder
+    
     app = Flask(__name__, 
                 static_folder='statics', 
                 static_url_path='/statics', 
                 template_folder='templates')
 
-    # Register your Blueprint blocks cleanly
+   
     app.register_blueprint(LoginRoutes().login())
     app.register_blueprint(RegistrationRoutes().registration())
     app.register_blueprint(ForgetPasswordRoutes().forget_password())

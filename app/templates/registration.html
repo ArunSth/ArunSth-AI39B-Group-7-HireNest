@@ -1,6 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Register — HireNest{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/registration.css') }}" />
+{% endblock %}
 {% extends 'base.html' %}
 
 {% block content %}
+  <article class="auth-card auth-card--split">
+    <div class="auth-copy auth-copy--accent">
+      <p class="eyebrow">Get started</p>
+      <h2>Create your HireNest account</h2>
+      <p class="auth-summary">
+        Join to create a profile, track applications, and receive relevant job recommendations.
+      </p>
+
+      <ul class="feature-list">
+        <li><i class="fa-solid fa-user-plus"></i> Build your hiring profile</li>
+        <li><i class="fa-solid fa-bell"></i> Receive smart alerts</li>
+        <li><i class="fa-solid fa-briefcase"></i> Apply faster everywhere</li>
+      </ul>
+    </div>
+
+    <div class="auth-form-wrap">
+      <form id="registration-form" class="auth-form">
+        <div class="form-head">
+          <h3>Sign Up</h3>
+          <p>Create a new account in a minute.</p>
+        </div>
+
+        <div class="form-group"><label for="name">Full Name</label><input id="name" type="text" placeholder="John Doe" required></div>
+        <div class="form-group"><label for="phone">Phone</label><input id="phone" type="tel" placeholder="98XXXXXXXX"></div>
+        <div class="form-group"><label for="email">Email</label><input id="email" type="email" placeholder="name@example.com" required></div>
+        <div class="form-group"><label for="password">Password</label><input id="password" type="password" placeholder="••••••••" required></div>
+
+        <button class="btn-submit" type="submit">Create Account</button>
+        <p class="switch-form-text">Already have an account? <a href="{{ url_for('login_page.login') }}">Log In</a></p>
+      </form>
+    </div>
+  </article>
 <div class="auth-container">
   <div class="auth-box">
     <h2>Sign Up</h2>
@@ -15,7 +54,7 @@
       </div>
       <div class="form-group">
         <label for="user-email">Email Address</label>
-        <input type="email" id="user-email" placeholder="name@example.com" required>
+        <input type="email" id="user-email" placeholder="name@gmail.com" required>
       </div>
       <div class="form-group">
         <label for="user-password">Password</label>
@@ -32,5 +71,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/registration.js"></script>
+  <script src="{{ url_for('statics', filename='js/registration.js') }}"></script>
+{% endblock %}
+<script src="/statics/js/registration.js"></script>
 {% endblock %}
