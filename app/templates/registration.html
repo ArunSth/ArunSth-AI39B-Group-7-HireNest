@@ -5,7 +5,6 @@
 {% block head %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/registration.css') }}" />
 {% endblock %}
-{% extends 'base.html' %}
 
 {% block content %}
   <article class="auth-card auth-card--split">
@@ -36,42 +35,12 @@
         <div class="form-group"><label for="password">Password</label><input id="password" type="password" placeholder="••••••••" required></div>
 
         <button class="btn-submit" type="submit">Create Account</button>
-        <p class="switch-form-text">Already have an account? <a href="{{ url_for('login_page.login') }}">Log In</a></p>
+        <p class="switch-form-text">Already have an account? <a href="{{ url_for('login.index') }}">Log In</a></p>
       </form>
     </div>
   </article>
-<div class="auth-container">
-  <div class="auth-box">
-    <h2>Sign Up</h2>
-    <form id="signup-form">
-      <div class="form-group">
-        <label for="user-name">Full Name</label>
-        <input type="text" id="user-name" placeholder="John Doe" required>
-      </div>
-      <div class="form-group">
-        <label for="user-phone">Phone Number</label>
-        <input type="tel" id="user-phone" placeholder="+977 98XXXXXXXX" required>
-      </div>
-      <div class="form-group">
-        <label for="user-email">Email Address</label>
-        <input type="email" id="user-email" placeholder="name@gmail.com" required>
-      </div>
-      <div class="form-group">
-        <label for="user-password">Password</label>
-        <input type="password" id="user-password" placeholder="••••••••" required>
-      </div>
-      <button type="submit" class="btn-submit">Create Account</button>
-    </form>
-    <p class="switch-form-text">
-      <span>Already have an account?</span>
-      <a href="/login">Log In</a>
-    </p>
-  </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-  <script src="{{ url_for('statics', filename='js/registration.js') }}"></script>
-{% endblock %}
-<script src="/statics/js/registration.js"></script>
+  <script src="{{ url_for('static', filename='js/registration.js') }}"></script>
 {% endblock %}
