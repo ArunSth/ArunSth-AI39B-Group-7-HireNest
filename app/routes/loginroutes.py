@@ -1,14 +1,14 @@
-from flask import Blueprint
-from app.controllers.logincontroller import LoginController
-
+from flask import Blueprint, render_template
 
 class LoginRoutes:
     def __init__(self):
-        self.bp = Blueprint("login_page", __name__)
-        self.controller = LoginController()
+        # Create a Flask Blueprint named 'login'
+        self.blueprint = Blueprint('login', __name__)
 
     def login(self):
-        self.bp.route("/", methods=["GET"])(self.controller.login)
-        self.bp.route("/home", methods=["GET"])(self.controller.login)
-        self.bp.route("/login", methods=["GET"])(self.controller.login)
-        return self.bp
+        @self.blueprint.route('/')
+        def index():
+            # Renders base.html as your homepage/login interface
+            return render_template('base.html')
+            
+        return self.blueprint
