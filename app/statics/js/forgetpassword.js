@@ -1,12 +1,10 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('forget-form');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = document.getElementById('fp-email').value;
-        alert('If an account exists for ' + email + ', a reset link will be sent.');
-        form.reset();
-        window.location.href = '/login';
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const forgetForm = document.getElementById('forget-password-form');
+    if (forgetForm) {
+        forgetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('HireNest Password reset link request captured client-side.');
+        });
+    }
 });
 

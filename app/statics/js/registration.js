@@ -1,12 +1,9 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('registration-form');
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        alert('Registration submitted for ' + email + '.\nImplement server-side handling in controllers.');
-        form.reset();
-        window.location.href = '/login';
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('HireNest Registration form submission captured client-side.');
+        });
+    }
 });
-

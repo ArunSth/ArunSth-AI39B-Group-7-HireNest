@@ -1,12 +1,13 @@
-from flask import Blueprint
-from app.controllers.logoutcontroller import LogoutController
-
+from flask import Blueprint, redirect, url_for
 
 class LogoutRoutes:
     def __init__(self):
-        self.bp = Blueprint("logout_page", __name__)
-        self.controller = LogoutController()
+        self.blueprint = Blueprint('logout', __name__)
 
     def logout(self):
-        self.bp.route("/logout", methods=["GET"])(self.controller.logout)
-        return self.bp
+        @self.blueprint.route('/logout')
+        def process_logout():
+            # Clears sessions here if needed, then redirects home
+            return redirect(url_for('login.index'))
+            
+        return self.blueprint

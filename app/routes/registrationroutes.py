@@ -1,13 +1,12 @@
-from flask import Blueprint
-from app.controllers.registrationcontroller import RegistrationController
-
+from flask import Blueprint, render_template
 
 class RegistrationRoutes:
     def __init__(self):
-        self.bp = Blueprint("registration_page", __name__)
-        self.controller = RegistrationController()
+        self.blueprint = Blueprint('registration', __name__)
 
     def registration(self):
-        self.bp.route("/registration",
-                      methods=["GET"])(self.controller.registration)
-        return self.bp
+        @self.blueprint.route('/register')
+        def register():
+            return render_template('registration.html')
+            
+        return self.blueprint

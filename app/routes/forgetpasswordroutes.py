@@ -1,13 +1,12 @@
-from flask import Blueprint
-from app.controllers.forgetpasswordcontroller import ForgetpasswordController
-
+from flask import Blueprint, render_template
 
 class ForgetPasswordRoutes:
     def __init__(self):
-        self.bp = Blueprint("forget_password_page", __name__)
-        self.controller = ForgetpasswordController()
+        self.blueprint = Blueprint('forget_password', __name__)
 
     def forget_password(self):
-        self.bp.route(
-            "/forgetpassword", methods=["GET"], endpoint="forget_password")(self.controller.password)
-        return self.bp
+        @self.blueprint.route('/forget-password')
+        def forget():
+            return render_template('forgetpassword.html')
+            
+        return self.blueprint

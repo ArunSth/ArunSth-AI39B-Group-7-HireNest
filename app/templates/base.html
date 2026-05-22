@@ -1,20 +1,93 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ theme|default('light') }}">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}HireNest{% endblock %}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  {% block head %}{% endblock %}
+  <title>HireNest</title>
+  
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  />
+  <link rel="stylesheet" href="/statics/css/login.css" />
 </head>
 <body>
-  <main class="page-shell">
-    {% block content %}{% endblock %}
-  </main>
 
-  {% block scripts %}{% endblock %}
+  <header class="navbar">
+    <div class="logo-section">
+      <a href="{{ url_for('login.index') }}" class="logo-link">
+        <img
+          src="https://scontent.xx.fbcdn.net/v/t1.15752-9/703976951_848251768332342_2544034181798847641_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=H0f_H__v4aMQ7kNvwF7GAE3&_nc_oc=AdpknzsGcyBxDbVDETTUszbHxblyqi0ojCiCnX_iDhbbfNTmj46Zz2YY_fi-31FdudNMhAJlwvxfUu3tHn7OhmxX&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD5QELn4YfsHlT7_tBIxyeZAawRGwf0bLzNeZjyVNEbugOGg&oe=6A352935"
+          alt="HireNest Logo"
+          class="logo"
+        />
+        <h2>HireNest</h2>
+      </a>
+    </div>
+
+    <nav class="nav-links">
+      <a href="#">Find Jobs</a>
+      <a href="#">Companies</a>
+      <a href="#">Resources</a>
+    </nav>
+
+    <div class="nav-icons">
+      <i class="fa-solid fa-sun" id="theme-toggle"></i>
+      <i class="fa-regular fa-bell notification"><span class="dot"></span></i>
+      <i class="fa-regular fa-user"></i>
+    </div>
+
+    <div class="auth-buttons">
+      <button class="login-btn" id="login-nav-btn">Log In</button>
+      <button class="signup-btn" id="signup-nav-btn">Sign In</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1>
+        Find Your Dream Job with
+        <span>HireNest</span>
+      </h1>
+      <p>
+        Connect with top companies and discover opportunities
+        that match your skills and aspirations.
+      </p>
+    </div>
+  </section>
+
+  <div id="auth-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" id="close-modal">&times;</span>
+      <h2 id="modal-title">Sign Up</h2>
+ 
+      <form id="auth-form">
+        <div class="form-group signup-only">
+          <label for="user-name">Full Name</label>
+          <input type="text" id="user-name" placeholder="John Doe">
+        </div>
+        <div class="form-group signup-only">
+          <label for="user-phone">Phone Number</label>
+          <input type="tel" id="user-phone" placeholder="98XXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label for="user-email">Email Address</label>
+          <input type="email" id="user-email" placeholder="name@gmail.com" required>
+        </div>
+        <div class="form-group">
+          <label for="user-password">Password</label>
+          <input type="password" id="user-password" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn-submit" id="submit-auth-btn">Create Account</button>
+      </form>
+ 
+      <p class="switch-form-text">
+        <span id="switch-text">Already have an account?</span>
+        <a href="#" id="switch-form-link">Log In</a>
+      </p>
+    </div>
+  </div>
+
+  <script src="/statics/js/login.js"></script>
 </body>
 </html>

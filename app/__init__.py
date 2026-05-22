@@ -17,8 +17,4 @@ def create_app():
     app.register_blueprint(ForgetPasswordRoutes().forget_password())
     app.register_blueprint(LogoutRoutes().logout())
 
-    @app.errorhandler(404)
-    def page_not_found(e):
-        return "Page not found", 404
-
     return app
