@@ -39,7 +39,34 @@
 
     <div class="auth-buttons">
       <button class="login-btn" id="login-nav-btn">Log In</button>
-      <button class="signup-btn" id="signup-nav-btn">Sign In</button>
+      
+      <div class="dropdown-container">
+        <button class="signup-btn" id="signup-nav-btn">
+          Sign In <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        
+        <div class="dropdown-menu">
+          <div class="dropdown-item" id="target-candidate">
+            <div class="dropdown-icon purple-badge">
+              <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="dropdown-text">
+              <h4>Sign in as Candidate</h4>
+              <p>Find your dream job</p>
+            </div>
+          </div>
+          
+          <div class="dropdown-item" id="target-recruiter">
+            <div class="dropdown-icon pink-badge">
+              <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div class="dropdown-text">
+              <h4>Sign in as Recruiter</h4>
+              <p>Hire top talent</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -56,37 +83,178 @@
     </div>
   </section>
 
+
+  <section class="features-section">
+    <div class="features-header">
+      <h2>Why Choose HireNest?</h2>
+      <p>We provide everything you need to find your perfect job and advance your career.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon-wrapper color-purple">
+          <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <h3>Precise Matching</h3>
+        <p>Our AI-powered algorithm matches you with jobs that fit your skills and career goals perfectly.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-blue">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <h3>Top Companies</h3>
+        <p>Access exclusive opportunities from leading companies across all industries.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-purple">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h3>Quick Apply</h3>
+        <p>Apply to multiple jobs with a single click. Save time and increase your chances.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-blue">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3>Verified Listings</h3>
+        <p>All job postings are verified and checked to ensure legitimacy and quality.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-purple">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <h3>Career Growth</h3>
+        <p>Get personalized career insights and recommendations to advance your professional journey.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-blue">
+          <i class="fa-solid fa-ribbon"></i>
+        </div>
+        <h3>Expert Support</h3>
+        <p>Access resume reviews, interview tips, and career coaching from industry experts.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-purple">
+          <i class="fa-regular fa-file-lines"></i>
+        </div>
+        <h3>Resume Builder</h3>
+        <p>Create professional resumes with our easy-to-use builder and templates.</p>
+        <a href="#" class="card-link">Try it now &rarr;</a>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-blue">
+          <i class="fa-solid fa-video"></i>
+        </div>
+        <h3>Video Interviews</h3>
+        <p>Schedule and conduct video interviews directly through the platform.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="icon-wrapper color-purple">
+          <i class="fa-regular fa-comment-dots"></i>
+        </div>
+        <h3>Live Chat</h3>
+        <p>Connect with recruiters and hiring managers in real-time.</p>
+      </div>
+    </div>
+  </section>
+
   <div id="auth-modal" class="modal">
     <div class="modal-content">
       <span class="close-btn" id="close-modal">&times;</span>
-      <h2 id="modal-title">Sign Up</h2>
+      <h2 id="modal-title">Create an account</h2>
  
-      <form id="auth-form">
+      <form id="auth-form" method="POST" action="/register">
         <div class="form-group signup-only">
           <label for="user-name">Full Name</label>
-          <input type="text" id="user-name" placeholder="John Doe">
+          <input type="text" name="user-name" id="user-name" placeholder="John Doe">
         </div>
         <div class="form-group signup-only">
           <label for="user-phone">Phone Number</label>
-          <input type="tel" id="user-phone" placeholder="98XXXXXXXX">
+          <input type="tel" name="user-phone" id="user-phone" placeholder="98XXXXXXXX">
         </div>
         <div class="form-group">
-          <label for="user-email">Email Address</label>
-          <input type="email" id="user-email" placeholder="name@gmail.com" required>
+          <label for="user-email">Email*</label>
+          <input type="email" name="user-email" id="user-email" placeholder="eg. janecopper@xyz.com" required>
         </div>
         <div class="form-group">
-          <label for="user-password">Password</label>
-          <input type="password" id="user-password" placeholder="••••••••" required>
+          <label for="user-password">Password*</label>
+          <input type="password" name="user-password" id="user-password" placeholder="Enter your password" required>
         </div>
-        <button type="submit" class="btn-submit" id="submit-auth-btn">Create Account</button>
+        <button type="submit" class="btn-submit" id="submit-auth-btn">Sign Up</button>
       </form>
  
       <p class="switch-form-text">
         <span id="switch-text">Already have an account?</span>
-        <a href="#" id="switch-form-link">Log In</a>
+        <a href="#" id="switch-form-link">Login</a>
       </p>
     </div>
   </div>
+
+  <footer class="main-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="logo-section">
+          <a href="{{ url_for('login.index') }}" class="logo-link">
+            <img
+              src="https://scontent.xx.fbcdn.net/v/t1.15752-9/703976951_848251768332342_2544034181798847641_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=H0f_H__v4aMQ7kNvwF7GAE3&_nc_oc=AdpknzsGcyBxDbVDETTUszbHxblyqi0ojCiCnX_iDhbbfNTmj46Zz2YY_fi-31FdudNMhAJlwvxfUu3tHn7OhmxX&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD5QELn4YfsHlT7_tBIxyeZAawRGwf0bLzNeZjyVNEbugOGg&oe=6A352935"
+              alt="HireNest Logo"
+              class="logo"
+            />
+            <h2>HireNest</h2>
+          </a>
+        </div>
+        <p class="brand-tagline">Connecting talent with opportunity. Find your perfect job match today.</p>
+        <div class="social-icons">
+          <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        </div>
+      </div>
+
+      <div class="footer-links-col">
+        <h3>For Job Seekers</h3>
+        <ul>
+          <li><a href="#">Browse Jobs</a></li>
+          <li><a href="#">Career Advice</a></li>
+          <li><a href="#">Resume Builder</a></li>
+          <li><a href="#">Salary Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h3>For Employers</h3>
+        <ul>
+          <li><a href="#">Post a Job</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Talent Search</a></li>
+          <li><a href="#">Hiring Resources</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-links-col">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Contact</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 HireNest. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script src="/statics/js/login.js"></script>
 </body>
