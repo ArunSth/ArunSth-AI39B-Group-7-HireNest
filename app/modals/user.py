@@ -20,19 +20,12 @@ class UserModel:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                # ensure role exists
-                cur.execute(
-                    "INSERT IGNORE INTO roles (name) VALUES (%s)", (role,))
-                cur.execute("SELECT id FROM roles WHERE name=%s", (role,))
-                r = cur.fetchone()
-                role_id = r['id'] if r else None
-
                 cur.execute(
                     """
-					INSERT INTO users (email, password_hash, first_name, last_name, role_id)
+					INSERT INTO `User` (`Email`, `Password`, `First_name`, `Last_name`, `Role`)
 					VALUES (%s,%s,%s,%s,%s)
 					""",
-                    (email, password_hash, first_name, last_name, role_id),
+                    (email, password_hash, first_name, last_name, role),
                 )
             conn.commit()
         finally:
@@ -43,7 +36,7 @@ class UserModel:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM users WHERE email=%s", (email,))
+                cur.execute("SELECT * FROM `User` WHERE `Email`=%s", (email,))
                 return cur.fetchone()
         finally:
             conn.close()
@@ -53,4 +46,4 @@ class UserModel:
         user = UserModel.get_by_email(email)
         if not user:
             return False
-        return check_password_hash(user['password_hash'], password)
+        return check_password_hash(user['Password'], password)
