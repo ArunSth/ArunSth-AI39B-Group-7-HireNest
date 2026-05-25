@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (emailInput) emailInput.placeholder = "eg. bruce@wayne.enterprises";
             } else {
                 if (emailLabel) emailLabel.textContent = "Email*";
-                if (emailInput) emailInput.placeholder = "eg. janecopper@xyz.com";
+                if (emailInput) emailInput.placeholder = "eg. janecopper@gmail.com";
             }
 
         } else {
