@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Profile</title>
+    <link rel="stylesheet" href="{{ url_for("static", filename="css/style.css") }}">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 20px auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .profile-section { margin-bottom: 30px; }
+        .profile-section label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        .profile-section input[type="text"], .profile-section textarea { width: calc(100% - 22px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .profile-section textarea { resize: vertical; min-height: 100px; }
+        .profile-section button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .profile-section button:hover { background-color: #0056b3; }
+        .completion-bar-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; margin-bottom: 20px; }
+        .completion-bar { height: 20px; background-color: #28a745; border-radius: 5px; text-align: center; line-height: 20px; color: white; font-size: 12px; }
+        .flash-message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash-message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .flash-message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .logo-upload-section { display: flex; align-items: center; margin-bottom: 15px; }
+        .logo-upload-section input[type="file"] { margin-right: 10px; }
+        .logo-upload-section button { margin-left: 10px; }
+        .logo-info { margin-top: 10px; font-size: 0.9em; color: #666; }
+        .logo-preview { max-width: 150px; max-height: 150px; margin-top: 10px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Employer Profile for {{ user.First_name }} {{ user.Last_name }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <<div class="profile-section">
+            <h2>Profile Completion</h2>
+            <div class="completion-bar-container">
+                <div class="completion-bar" style="--completion-width: {{ completion_percentage }}%; width: var(--completion-width);">
+                    {{ completion_percentage }}%
+                </div>
+            </div>
+            {% if completion_percentage < 100 %}
+                <p style="color: #dc3545;">Your company profile is incomplete. Please fill in all sections to maximize your visibility to job seekers.</p>
+            {% endif %}
+        </div>
+
+        <div class="profile-section">
+            <h2>Company Information</h2>
+            <form method="POST" action="{{ url_for("employer.profile") }}">
+                <label for="company_name">Company Name:</label>
+                <input type="text" id="company_name" name="company_name" value="{{ profile.Company_name if profile else "" }}" placeholder="e.g., Tech Solutions Inc.">
+
+                <label for="industry">Industry:</label>
+                <input type="text" id="industry" name="industry" value="{{ profile.Industry if profile else "" }}" placeholder="e.g., Information Technology">
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" placeholder="Tell us about your company...">{{ profile.Description if profile else "" }}</textarea>
+
+                <label for="website">Website:</label>
+                <input type="text" id="website" name="website" value="{{ profile.Website if profile else "" }}" placeholder="e.g., https://www.techsolutions.com">
+
+                <button type="submit">Save Company Profile</button>
+            </form>
+        </div>
+
+        <div class="profile-section">
+            <h2>Company Logo</h2>
+            <div class="logo-upload-section">
+                <input type="file" id="logoFile" name="logo" accept=".jpg,.jpeg,.png">
+                <button id="uploadLogoBtn">Upload/Replace Logo</button>
+            </div>
+            {% if profile and profile.Logo %}
+                <p class="logo-info">Current Logo:</p>
+                <img src="/uploads/logos/{{ profile.Logo }}" alt="Company Logo" class="logo-preview">
+            {% else %}
+                <p class="logo-info">No logo uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("uploadLogoBtn").addEventListener("click", function() {
+            const fileInput = document.getElementById("logoFile");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("logo", file);
+
+            fetch("{{ url_for('employer.upload_logo') }}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred during logo upload.");
+            });
+        });
+    </script>
+</body>
+</html>

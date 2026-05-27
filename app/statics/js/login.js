@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
- 
+
     // =========================================================================
-    // 1. THEME SWITCHER LOGIC
+    // 1. THEME SWITCHER
     // =========================================================================
     const themeToggleBtn = document.getElementById('theme-toggle');
     const rootElement = document.documentElement;
@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         themeToggleBtn.addEventListener('click', () => {
             const currentTheme = rootElement.getAttribute('data-theme');
             const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-     
             rootElement.setAttribute('data-theme', nextTheme);
             localStorage.setItem('theme', nextTheme);
             updateThemeIconStyle(nextTheme);
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!themeToggleBtn) return;
         if (theme === 'dark') {
             themeToggleBtn.className = 'fa-solid fa-moon';
-            themeToggleBtn.style.color = '#f59e0b'; // Warm moon gold highlight
+            themeToggleBtn.style.color = '#f59e0b';
         } else {
             themeToggleBtn.className = 'fa-solid fa-sun';
             themeToggleBtn.style.color = 'inherit';
@@ -33,41 +32,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // 2. DOM ELEMENT SELECTORS (AUTH MODAL & ROLE MANAGEMENT)
+    // 2. DOM SELECTORS
     // =========================================================================
-    const authModal = document.getElementById('auth-modal');
-    const signupNavBtn = document.getElementById('signup-nav-btn');
-    const loginNavBtn = document.getElementById('login-nav-btn');
-    const closeModalBtn = document.getElementById('close-modal');
- 
-    const modalTitle = document.getElementById('modal-title');
-    const authForm = document.getElementById('auth-form');
-    const submitAuthBtn = document.getElementById('submit-auth-btn');
+    const authModal      = document.getElementById('auth-modal');
+    const signupNavBtn   = document.getElementById('signup-nav-btn');
+    const loginNavBtn    = document.getElementById('login-nav-btn');
+    const closeModalBtn  = document.getElementById('close-modal');
+    const modalTitle     = document.getElementById('modal-title');
+    const authForm       = document.getElementById('auth-form');
+    const submitAuthBtn  = document.getElementById('submit-auth-btn');
     const switchFormLink = document.getElementById('switch-form-link');
-    const switchText = document.getElementById('switch-text');
+    const switchText     = document.getElementById('switch-text');
     const signupOnlyFields = document.querySelectorAll('.signup-only');
-    
-    // Form Input Specific Fields
-    const phoneInput = document.getElementById('user-phone'); 
-    const emailLabel = document.querySelector('label[for="user-email"]');
-    const emailInput = document.getElementById('user-email');
+    const emailLabel     = document.getElementById('modal-email-label');
+    const emailInput     = document.getElementById('user-email');
+    const modalRoleInput = document.getElementById('modal-role');
+    const modalAlert     = document.getElementById('modal-alert');
 
-    // Dropdown Item Paths
     const targetCandidate = document.getElementById('target-candidate');
     const targetRecruiter = document.getElementById('target-recruiter');
 
-    // Global State Memory Trackers
     let isSignUpMode = true;
-    let currentRole = 'candidate'; // Memory safe holder for 'candidate' or 'recruiter'
+    let currentRole  = 'job_seeker';
 
     // =========================================================================
-    // 3. UI CLICK EVENT ROUTING HANDLERS
+    // 3. OPEN / CLOSE MODAL
     // =========================================================================
-
-    // Top Header Navigation Bar Triggers
     if (signupNavBtn) {
         signupNavBtn.addEventListener('click', () => {
-            configureModalMode(true, 'candidate');
+            configureModalMode(true, 'job_seeker');
             authModal.style.display = 'flex';
         });
     }
@@ -79,22 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Hover Dropdown Options Event Listeners
     if (targetCandidate) {
         targetCandidate.addEventListener('click', () => {
-            configureModalMode(true, 'candidate');
+            configureModalMode(true, 'job_seeker');
             authModal.style.display = 'flex';
         });
     }
 
     if (targetRecruiter) {
         targetRecruiter.addEventListener('click', () => {
-            configureModalMode(true, 'recruiter');
+            configureModalMode(true, 'employer');
             authModal.style.display = 'flex';
         });
     }
 
-    // Closing Operations
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => authModal.style.display = 'none');
     }
@@ -111,79 +102,131 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // 4. CONFIGURATION ENGINE (MODE & ROLE MATRIX MUTATOR)
+    // 4. CONFIGURE MODAL MODE (signup / login, role)
     // =========================================================================
-    function configureModalMode(targetIsSignUp, role = 'candidate') {
+    function configureModalMode(targetIsSignUp, role = 'job_seeker') {
         isSignUpMode = targetIsSignUp;
-        currentRole = role; // Persist active role tier
-        authForm.reset();
+        currentRole  = role;
+        if (authForm) authForm.reset();
+        hideAlert();
 
         if (isSignUpMode) {
-            modalTitle.textContent = 'Create an account';
-            submitAuthBtn.textContent = 'Sign Up';
-            switchText.textContent = 'Already have an account?';
-            switchFormLink.textContent = 'Login';
-     
-            if (phoneInput) {
-                phoneInput.placeholder = '+977 98XXXXXXXX';
-            }
-     
+            if (modalTitle)    modalTitle.textContent     = 'Create an account';
+            if (submitAuthBtn) submitAuthBtn.textContent  = 'Sign Up';
+            if (switchText)    switchText.textContent     = 'Already have an account?';
+            if (switchFormLink) switchFormLink.textContent = 'Log In';
+            if (authForm)      authForm.action            = '/register';
+            if (modalRoleInput) modalRoleInput.value      = currentRole;
+
             signupOnlyFields.forEach(field => {
                 field.style.display = 'flex';
                 const input = field.querySelector('input');
                 if (input) input.required = true;
             });
 
-            // Dynamically morph email labels and fields based on selected role tier
-            if (currentRole === 'recruiter') {
-                if (emailLabel) emailLabel.textContent = "Company Email*";
-                if (emailInput) emailInput.placeholder = "eg. bruce@wayne.enterprises";
+            if (currentRole === 'employer') {
+                if (emailLabel) emailLabel.textContent  = 'Company Email*';
+                if (emailInput) emailInput.placeholder  = 'eg. bruce@wayne.enterprises';
             } else {
-                if (emailLabel) emailLabel.textContent = "Email*";
-                if (emailInput) emailInput.placeholder = "eg. janecopper@gmail.com";
+                if (emailLabel) emailLabel.textContent  = 'Email*';
+                if (emailInput) emailInput.placeholder  = 'eg. janecopper@xyz.com';
             }
-
         } else {
-            modalTitle.textContent = 'Log In';
-            submitAuthBtn.textContent = 'Welcome Back';
-            switchText.textContent = "Don't have an account?";
-            switchFormLink.textContent = 'Sign Up';
-            
+            if (modalTitle)    modalTitle.textContent     = 'Log In';
+            if (submitAuthBtn) submitAuthBtn.textContent  = 'Welcome Back';
+            if (switchText)    switchText.textContent     = "Don't have an account?";
+            if (switchFormLink) switchFormLink.textContent = 'Sign Up';
+            if (authForm)      authForm.action            = '/login';
+
             signupOnlyFields.forEach(field => {
                 field.style.display = 'none';
                 const input = field.querySelector('input');
                 if (input) input.required = false;
             });
 
-            // Restore basic login context presentation rules
-            if (emailLabel) emailLabel.textContent = "Email Address";
-            if (emailInput) emailInput.placeholder = "name@gmail.com";
+            if (emailLabel) emailLabel.textContent = 'Email Address';
+            if (emailInput) emailInput.placeholder = 'name@gmail.com';
         }
     }
 
     // =========================================================================
-    // 5. CLIENT-SIDE FORM SUBMISSION HANDLING
+    // 5. ALERT HELPERS
+    // =========================================================================
+    function showAlert(message, type) {
+        if (!modalAlert) return;
+        modalAlert.textContent = message;
+        modalAlert.style.display = 'block';
+        if (type === 'error') {
+            modalAlert.style.background = '#fef2f2';
+            modalAlert.style.color      = '#dc2626';
+            modalAlert.style.border     = '1px solid #fca5a5';
+        } else {
+            modalAlert.style.background = '#f0fdf4';
+            modalAlert.style.color      = '#16a34a';
+            modalAlert.style.border     = '1px solid #86efac';
+        }
+    }
+
+    function hideAlert() {
+        if (modalAlert) modalAlert.style.display = 'none';
+    }
+
+    // =========================================================================
+    // 6. FORM SUBMISSION — REAL AJAX TO BACKEND
     // =========================================================================
     if (authForm) {
-        authForm.addEventListener('submit', (event) => {
+        authForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-     
-            const emailValue = document.getElementById('user-email').value;
-            const passwordValue = document.getElementById('user-password').value;
+            hideAlert();
 
-            if (isSignUpMode) {
-                const nameValue = document.getElementById('user-name').value;
-                const phoneValue = document.getElementById('user-phone').value;
-         
-                console.log(`Saving ${currentRole} profile metrics securely...`, { nameValue, phoneValue, emailValue });
-                alert(`Registration Complete! Welcome to HireNest, ${nameValue}. Role: ${currentRole}`);
-            } else {
-                console.log("Verifying credentials against user storage tables...", { emailValue });
-                alert(`Logged in successfully as: ${emailValue}`);
+            if (submitAuthBtn) {
+                submitAuthBtn.disabled    = true;
+                submitAuthBtn.textContent = 'Please wait...';
             }
 
-            authModal.style.display = 'none';
-            authForm.reset();
+            // Build clean FormData with field names the backend expects,
+            // regardless of the HTML input name attributes (user-email vs email etc.)
+            const rawData = new FormData(authForm);
+            const formData = new FormData();
+            const endpoint = isSignUpMode ? '/register' : '/login';
+
+            formData.append('email',    rawData.get('user-email')    || rawData.get('email')    || '');
+            formData.append('password', rawData.get('user-password') || rawData.get('password') || '');
+
+            if (isSignUpMode) {
+                formData.append('name',  rawData.get('user-name')  || rawData.get('name')  || '');
+                formData.append('phone', rawData.get('user-phone') || rawData.get('phone') || '');
+                formData.append('role',  rawData.get('role') || currentRole);
+            }
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'ok') {
+                    showAlert(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 600);
+                } else {
+                    showAlert(data.message || 'Something went wrong.', 'error');
+                    if (submitAuthBtn) {
+                        submitAuthBtn.disabled    = false;
+                        submitAuthBtn.textContent = isSignUpMode ? 'Sign Up' : 'Welcome Back';
+                    }
+                }
+            } catch (err) {
+                showAlert('Network error. Please try again.', 'error');
+                if (submitAuthBtn) {
+                    submitAuthBtn.disabled    = false;
+                    submitAuthBtn.textContent = isSignUpMode ? 'Sign Up' : 'Welcome Back';
+                }
+            }
         });
     }
 });

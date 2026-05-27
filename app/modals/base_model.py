@@ -24,11 +24,14 @@ def create_all():
 			`Bio` TEXT,
 			`Location` VARCHAR(100),
 			`Education` VARCHAR(255),
-			`Skills` TEXT,
-			`Experiences` TEXT,
-			`Resume` VARCHAR(255),
-			FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`Skills` TEXT,
+				`Experiences` TEXT,
+				`Resume_upload_date` TIMESTAMP NULL,
+`Resume` VARCHAR(255),
+				`Profile_photo` VARCHAR(255),
+				`Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
+				FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 		""",
         """
 		CREATE TABLE IF NOT EXISTS `Employee` (
@@ -38,9 +41,10 @@ def create_all():
 			`Industry` VARCHAR(100),
 			`Description` TEXT,
 			`Website` VARCHAR(255),
-			`Logo` VARCHAR(255),
-			FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
-		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+`Logo` VARCHAR(255),
+				`Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
+				FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 		""",
         """
 		CREATE TABLE IF NOT EXISTS `Jobs` (
@@ -322,5 +326,50 @@ def drop_all():
             for statement in statements:
                 cur.execute(statement)
         conn.commit()
+    finally:
+        conn.close()
+
+
+def run_migrations():
+    """Add any missing columns to existing tables (safe to run multiple times)."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            # Add Profile_photo to Job_Seekers if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Job_Seekers'
+                  AND COLUMN_NAME = 'Profile_photo'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Job_Seekers`
+                    ADD COLUMN `Profile_photo` VARCHAR(255) NULL
+                    AFTER `Resume`
+                """)
+                conn.commit()
+    finally:
+        conn.close()
+def run_migrations():
+    """Add any missing columns to existing tables. Safe to run multiple times."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Job_Seekers'
+                  AND COLUMN_NAME = 'Profile_photo'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Job_Seekers`
+                    ADD COLUMN `Profile_photo` VARCHAR(255) NULL
+                    AFTER `Resume`
+                """)
+                conn.commit()
     finally:
         conn.close()

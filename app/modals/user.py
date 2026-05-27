@@ -47,3 +47,13 @@ class UserModel:
         if not user:
             return False
         return check_password_hash(user['Password'], password)
+
+    @staticmethod
+    def get_by_id(user_id: int):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM `User` WHERE `User_id`=%s", (user_id,))
+                return cur.fetchone()
+        finally:
+            conn.close()

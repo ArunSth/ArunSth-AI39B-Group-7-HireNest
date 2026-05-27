@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS `Job_Seekers` (
     `Skills` TEXT,
     `Experiences` TEXT,
     `Resume` VARCHAR(255),
+    `Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
     FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `Employee` (
     `Description` TEXT,
     `Website` VARCHAR(255),
     `Logo` VARCHAR(255),
+    `Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
     FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

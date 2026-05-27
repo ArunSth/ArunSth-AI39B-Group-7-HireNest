@@ -38,35 +38,49 @@
     </div>
 
     <div class="auth-buttons">
+      {% if session.get('user_id') %}
+        <!-- Logged-in state -->
+        <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px;">
+          Hi, {{ session.get('name', 'User') }}
+        </span>
+        {% if session.get('role') == 'employer' %}
+          <a href="{{ url_for('employer.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
+        {% else %}
+          <a href="{{ url_for('job_seeker.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
+        {% endif %}
+        <a href="{{ url_for('logout.process_logout') }}" class="signup-btn" style="text-decoration:none;">Log Out</a>
+      {% else %}
+        <!-- Guest state -->
       <button class="login-btn" id="login-nav-btn">Log In</button>
-      
+
       <div class="dropdown-container">
         <button class="signup-btn" id="signup-nav-btn">
           Sign In <i class="fa-solid fa-chevron-down"></i>
         </button>
-        
+
         <div class="dropdown-menu">
           <div class="dropdown-item" id="target-candidate">
             <div class="dropdown-icon purple-badge">
               <i class="fa-solid fa-user"></i>
             </div>
             <div class="dropdown-text">
-              <h4>Sign in (Job Seeker)</h4>
+              <h4>Sign in as Candidate</h4>
               <p>Find your dream job</p>
             </div>
           </div>
-          
+
           <div class="dropdown-item" id="target-recruiter">
             <div class="dropdown-icon pink-badge">
               <i class="fa-solid fa-briefcase"></i>
             </div>
             <div class="dropdown-text">
-              <h4>Sign in (Employer)</h4>
+              <h4>Sign in as Recruiter</h4>
               <p>Hire top talent</p>
             </div>
           </div>
         </div>
       </div>
+      {% endif %}
     </div>
   </header>
 
@@ -170,19 +184,25 @@
     <div class="modal-content">
       <span class="close-btn" id="close-modal">&times;</span>
       <h2 id="modal-title">Create an account</h2>
- 
+
+      <!-- Alert box for AJAX responses -->
+      <div id="modal-alert" style="display:none; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:14px;"></div>
+
       <form id="auth-form" method="POST" action="/register">
+        <!-- Hidden role field — set by JS based on candidate/recruiter choice -->
+        <input type="hidden" name="role" id="modal-role" value="job_seeker">
+
         <div class="form-group signup-only">
           <label for="user-name">Full Name</label>
-          <input type="text" name="user-name" id="user-name" placeholder="Ram Sharma">
+          <input type="text" name="user-name" id="user-name" placeholder="John Doe">
         </div>
         <div class="form-group signup-only">
           <label for="user-phone">Phone Number</label>
           <input type="tel" name="user-phone" id="user-phone" placeholder="98XXXXXXXX">
         </div>
         <div class="form-group">
-          <label for="user-email">Email*</label>
-          <input type="email" name="user-email" id="user-email" placeholder="eg. ramsharma@xyz.com" required>
+          <label for="user-email" id="modal-email-label">Email*</label>
+          <input type="email" name="user-email" id="user-email" placeholder="eg. janecopper@xyz.com" required>
         </div>
         <div class="form-group">
           <label for="user-password">Password*</label>
@@ -190,10 +210,13 @@
         </div>
         <button type="submit" class="btn-submit" id="submit-auth-btn">Sign Up</button>
       </form>
- 
+
       <p class="switch-form-text">
         <span id="switch-text">Already have an account?</span>
         <a href="#" id="switch-form-link">Login</a>
+      </p>
+      <p style="text-align:center; margin-top:10px; font-size:13px;">
+        <a href="/login" style="color:#6d5dfc;">Open full login page →</a>
       </p>
     </div>
   </div>
