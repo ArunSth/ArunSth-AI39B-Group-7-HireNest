@@ -126,10 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (currentRole === 'employer') {
                 if (emailLabel) emailLabel.textContent  = 'Company Email*';
-                if (emailInput) emailInput.placeholder  = 'eg. bruce@wayne.enterprises';
+                if (emailInput) emailInput.placeholder  = 'eg. ram@sharma.enterprises';
             } else {
                 if (emailLabel) emailLabel.textContent  = 'Email*';
-                if (emailInput) emailInput.placeholder  = 'eg. janecopper@xyz.com';
+                if (emailInput) emailInput.placeholder  = 'eg. ramsharma@gmail.com';
             }
         } else {
             if (modalTitle)    modalTitle.textContent     = 'Log In';
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (emailLabel) emailLabel.textContent = 'Email Address';
-            if (emailInput) emailInput.placeholder = 'name@gmail.com';
+            if (emailInput) emailInput.placeholder = 'ramsharma@gmail.com';
         }
     }
 
