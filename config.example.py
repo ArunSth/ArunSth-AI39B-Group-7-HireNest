@@ -6,7 +6,7 @@ SECRET_KEY = "change-this-to-a-random-secret-key-replace-me"
 # MySQL Database Settings
 MYSQL_HOST = "localhost"
 MYSQL_USER = "root"
-MYSQL_PASSWORD = "your_mysql_password_here"
+MYSQL_PASSWORD = "@Password1"
 MYSQL_DATABASE = "HireNest"
 
 # Whether to automatically initialize DB tables at app startup.
