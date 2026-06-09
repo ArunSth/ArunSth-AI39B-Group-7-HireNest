@@ -811,6 +811,17 @@
     skillsWrap.addEventListener('click', () => tagInput.focus());
   }
 
+  const profileForm = document.getElementById('profileForm');
+  if (profileForm) {
+    profileForm.addEventListener('submit', () => {
+      if (tagInput && tagInput.value.trim()) {
+        addTag(tagInput.value.replace(',', ''));
+        tagInput.value = '';
+      }
+      syncSkills();
+    });
+  }
+
   // ── PHOTO UPLOAD ────────────────────────────────────────
   const photoInput = document.getElementById('photoInput');
   if (photoInput) {
@@ -821,7 +832,7 @@
       fd.append('photo', file);
       showToast('Uploading photo...');
       try {
-        const res = await fetch('/job-seeker/profile/photo', { method: 'POST', body: fd });
+        const res = await fetch('{{ url_for("job_seeker.upload_photo") }}', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.status === 'success') {
           showToast('Photo updated!');
@@ -902,9 +913,7 @@
     deleteResumeBtn.addEventListener('click', async () => {
       if (!confirm('Remove your resume?')) return;
       try {
-        const res = await fetch('{{ url_for("job_seeker.delete_resume") }}', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
-        });
+        const res = await fetch('{{ url_for("job_seeker.delete_resume") }}', { method: 'POST' });
         const data = await res.json();
         if (data.status === 'success') {
           showToast('Resume removed');
