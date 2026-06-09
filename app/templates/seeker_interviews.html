@@ -13,23 +13,23 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a href="/job-seeker/dashboard" class="nav-item">
+      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item">
         <i class="fas fa-home"></i>
         <span>Dashboard</span>
       </a>
-      <a href="/seeker/applications" class="nav-item">
+      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
         <i class="fas fa-file-alt"></i>
         <span>Applications</span>
       </a>
-      <a href="/seeker/interviews" class="nav-item active">
+      <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item active">
         <i class="fas fa-video"></i>
         <span>Interviews</span>
       </a>
-      <a href="/job-seeker/profile" class="nav-item">
+      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
         <i class="fas fa-user"></i>
         <span>My Profile</span>
       </a>
-      <a href="/logout" class="nav-item">
+      <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
         <i class="fas fa-sign-out-alt"></i>
         <span>Logout</span>
       </a>
@@ -112,6 +112,6 @@
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
