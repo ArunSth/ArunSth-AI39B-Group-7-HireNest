@@ -7,6 +7,7 @@ from app.routes.registrationroutes import RegistrationRoutes
 from app.modals.base_model import create_all, run_migrations
 from app.routes.job_seeker_routes import JobSeekerRoutes
 from app.routes.employer_routes import EmployerRoutes
+from app.routes.admin_routes import AdminRoutes
 
 
 def create_app():
