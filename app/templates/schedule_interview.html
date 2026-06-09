@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Schedule Interview - {{ applicant.First_name }} {{ applicant.Last_name }}</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section" style="max-width: 900px;">
+        <!-- Applicant Summary -->
+        <div class="table-container" style="margin-bottom: 30px;">
+          <div style="padding: 20px; background: var(--light-bg); border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+            <div>
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Applicant</p>
+              <p style="font-size: 16px; font-weight: 600;">{{ applicant.First_name }} {{ applicant.Last_name }}</p>
+            </div>
+            <div>
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Position</p>
+              <p style="font-size: 16px; font-weight: 600;">{{ applicant.job_title }}</p>
+            </div>
+            <div>
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Email</p>
+              <p style="font-size: 14px;">{{ applicant.Email }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Form -->
+        <div class="table-container">
+          <form method="POST" data-validate>
+            <div style="padding: 30px;">
+              <h3 style="margin-bottom: 25px; font-size: 20px; font-weight: 700;">Interview Details</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="interview_date">Interview Date *</label>
+                  <input type="date" id="interview_date" name="interview_date" required>
+                </div>
+                <div class="form-group">
+                  <label for="interview_time">Interview Time *</label>
+                  <input type="time" id="interview_time" name="interview_time" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="mode">Interview Mode *</label>
+                <select id="mode" name="mode" required>
+                  <option value="Google Meet">Google Meet (Online)</option>
+                  <option value="Zoom">Zoom (Online)</option>
+                  <option value="Phone">Phone Call</option>
+                  <option value="In-person">In-person</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="meeting_link">Google Meet Link or Meeting Details *</label>
+                <textarea id="meeting_link" name="meeting_link" placeholder="Paste your Google Meet link or provide interview details here..." required style="min-height: 80px;"></textarea>
+                <p style="color: var(--text-secondary); font-size: 12px; margin-top: 8px;">
+                  <i class="fas fa-info-circle"></i> Example: https://meet.google.com/xxx-xxxx-xxx
+                </p>
+              </div>
+
+              <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn-primary">
+                  <i class="fas fa-calendar-check"></i> Schedule Interview
+                </button>
+                <a href="/employer/applicants" class="btn-secondary">Cancel</a>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Instructions -->
+        <div style="background: var(--light-purple); padding: 20px; border-radius: 8px; margin-top: 30px; border-left: 4px solid var(--primary-purple);">
+          <h4 style="color: var(--primary-purple); margin-bottom: 10px; font-weight: 700;">
+            <i class="fas fa-lightbulb"></i> How to create a Google Meet link
+          </h4>
+          <ol style="color: var(--text-primary); line-height: 1.8; margin-left: 20px;">
+            <li>Go to <strong>Google Meet</strong> (meet.google.com)</li>
+            <li>Click <strong>"Create or join a meeting"</strong></li>
+            <li>Click <strong>"Create a new meeting"</strong></li>
+            <li>Click <strong>"Generate a new link"</strong></li>
+            <li>Copy the link and paste it above</li>
+            <li>Share the link with the candidate via email</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+// Set minimum date to today
+document.getElementById('interview_date').setAttribute('min', new Date().toISOString().split('T')[0]);
+</script>
+{% endblock %}

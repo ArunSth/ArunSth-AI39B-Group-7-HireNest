@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Applicants for Job ID: {{ job_id }}</h2>
+      </div>
+      <div class="topbar-right">
+        <a href="/employer/jobs" class="btn-secondary">Back to Jobs</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if applicants %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Applied Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for applicant in applicants %}
+                <tr>
+                  <td>
+                    <strong>{{ applicant.First_name }} {{ applicant.Last_name }}</strong>
+                  </td>
+                  <td>{{ applicant.Email }}</td>
+                  <td>
+                    <span class="status-badge badge-{{ applicant.Status|lower }}">
+                      {{ applicant.Status|replace('_', ' ')|title }}
+                    </span>
+                  </td>
+                  <td>{{ applicant.Applied_at.strftime('%d %b %Y') if applicant.Applied_at else 'N/A' }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/employer/applicant/{{ applicant.Application_id }}" class="btn-small btn-view">View</a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-inbox" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Applications</h3>
+              <p>No one has applied for this job yet.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

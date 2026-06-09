@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="sidebar-logo-text">
+        <h3>HireNest</h3>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/job-seeker/dashboard" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/seeker/applications" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>Applications</span>
+      </a>
+      <a href="/seeker/interviews" class="nav-item">
+        <i class="fas fa-video"></i>
+        <span>Interviews</span>
+      </a>
+      <a href="/job-seeker/profile" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>My Profile</span>
+      </a>
+      <a href="/logout" class="nav-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>My Applications</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if applications %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Job Position</th>
+                  <th>Location</th>
+                  <th>Salary</th>
+                  <th>Status</th>
+                  <th>Applied Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for app in applications %}
+                <tr>
+                  <td>
+                    <strong>{{ app.Company_name }}</strong>
+                  </td>
+                  <td>{{ app.job_title }}</td>
+                  <td>{{ app.Location }}</td>
+                  <td>₹{{ "{:,.0f}".format(app.Salary) if app.Salary else 'Not specified' }}</td>
+                  <td>
+                    <span class="status-badge badge-{{ app.Status|lower }}">
+                      {{ app.Status|replace('_', ' ')|title }}
+                    </span>
+                  </td>
+                  <td>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="javascript:void(0)" class="btn-small btn-view" onclick="viewDetails({{ app.Application_id }})">
+                        <i class="fas fa-eye"></i> Details
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-file-alt" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Applications Yet</h3>
+              <p>Start applying for jobs to see them here.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+function viewDetails(appId) {
+  alert('Viewing details for application ' + appId);
+}
+</script>
+{% endblock %}

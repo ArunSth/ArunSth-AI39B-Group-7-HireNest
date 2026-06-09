@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Interviews</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Status Overview -->
+      <div class="stats-grid" style="margin-bottom: 30px;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Total Scheduled</h4>
+            <div class="stat-value">{{ interviews|length }}</div>
+          </div>
+          <div class="stat-icon purple-bg">
+            <i class="fas fa-video"></i>
+          </div>
+        </div>
+
+        {% if status_counts %}
+          {% for status_count in status_counts %}
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>{{ status_count.Status|replace('_', ' ')|title }}</h4>
+              <div class="stat-value">{{ status_count.count }}</div>
+            </div>
+            <div class="stat-icon red-bg">
+              <i class="fas fa-clock"></i>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Interviews Table -->
+      <div class="section">
+        <div class="section-header">
+          <h3>All Interviews</h3>
+        </div>
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if interviews %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Candidate Name</th>
+                  <th>Job Position</th>
+                  <th>Date & Time</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for interview in interviews %}
+                <tr>
+                  <td>
+                    <strong>{{ interview.First_name }} {{ interview.Last_name }}</strong>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                      {{ interview.Email }}
+                    </div>
+                  </td>
+                  <td>{{ interview.job_title }}</td>
+                  <td>
+                    <div>
+                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
+                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span style="display: inline-block; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                      {{ interview.Mode }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge badge-{{ interview.Status|lower }}">
+                      {{ interview.Status|replace('_', ' ')|title }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/employer/interview/{{ interview.Interview_id }}" class="btn-small btn-view">
+                        <i class="fas fa-eye"></i> View
+                      </a>
+                      <a href="/employer/interview/{{ interview.Interview_id }}/edit" class="btn-small btn-edit">
+                        <i class="fas fa-edit"></i> Edit
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-calendar-alt" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Interviews Scheduled</h3>
+              <p>Schedule interviews with qualified candidates.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/js/employer_dashboard.js"></script>
+{% endblock %}

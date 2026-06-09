@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Manage Applicants</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats Overview -->
+      <div class="stats-grid" style="margin-bottom: 30px;">
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Total Applicants</h4>
+            <div class="stat-value">{{ total_applicants }}</div>
+          </div>
+          <div class="stat-icon red-bg">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+
+        {% if status_counts %}
+          {% for status_count in status_counts %}
+          <div class="stat-card">
+            <div class="stat-info">
+              <h4>{{ status_count.Status|replace('_', ' ')|title }}</h4>
+              <div class="stat-value">{{ status_count.count }}</div>
+            </div>
+            <div class="stat-icon purple-bg">
+              <i class="fas fa-file-alt"></i>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <!-- Applicants Table -->
+      <div class="section">
+        <div class="section-header">
+          <h3>All Applications</h3>
+        </div>
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if applicants %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Applicant Name</th>
+                  <th>Email</th>
+                  <th>Job Title</th>
+                  <th>Status</th>
+                  <th>Applied Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for applicant in applicants %}
+                <tr>
+                  <td>
+                    <strong>{{ applicant.First_name }} {{ applicant.Last_name }}</strong>
+                  </td>
+                  <td>{{ applicant.Email }}</td>
+                  <td>{{ applicant.job_title }}</td>
+                  <td>
+                    <span class="status-badge badge-{{ applicant.Status|lower }}">
+                      {{ applicant.Status|replace('_', ' ')|title }}
+                    </span>
+                  </td>
+                  <td>{{ applicant.Applied_at.strftime('%d %b %Y') if applicant.Applied_at else 'N/A' }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/employer/applicant/{{ applicant.Application_id }}" class="btn-small btn-view">
+                        <i class="fas fa-eye"></i> View
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-user-clock" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Applications Yet</h3>
+              <p>When candidates apply for your jobs, they will appear here.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/js/employer_dashboard.js"></script>
+{% endblock %}

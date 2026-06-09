@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="sidebar-logo-text">
+        <h3>HireNest</h3>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/job-seeker/dashboard" class="nav-item">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="/seeker/applications" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>Applications</span>
+      </a>
+      <a href="/seeker/interviews" class="nav-item active">
+        <i class="fas fa-video"></i>
+        <span>Interviews</span>
+      </a>
+      <a href="/job-seeker/profile" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>My Profile</span>
+      </a>
+      <a href="/logout" class="nav-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>My Interviews</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if interviews %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Job Position</th>
+                  <th>Date & Time</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for interview in interviews %}
+                <tr>
+                  <td>
+                    <strong>{{ interview.Company_name }}</strong>
+                  </td>
+                  <td>{{ interview.job_title }}</td>
+                  <td>
+                    <div>
+                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
+                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span style="display: inline-block; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                      {{ interview.Mode }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge badge-{{ interview.Status|lower }}">
+                      {{ interview.Status|replace('_', ' ')|title }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/seeker/interview/{{ interview.Interview_id }}" class="btn-small btn-view">
+                        <i class="fas fa-eye"></i> View
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-video" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Interviews Scheduled</h3>
+              <p>When employers schedule interviews with you, they will appear here.</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
