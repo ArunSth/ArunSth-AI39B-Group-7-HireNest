@@ -19,8 +19,14 @@ def create_app():
     app.register_blueprint(RegistrationRoutes().registration())
     app.register_blueprint(ForgetPasswordRoutes().forget_password())
     app.register_blueprint(LogoutRoutes().logout())
-    app.register_blueprint(JobSeekerRoutes().job_seeker_profile())
-    app.register_blueprint(EmployerRoutes().employer_profile())
+    
+    # Register job seeker routes (dashboard and profile)
+    job_seeker_routes = JobSeekerRoutes()
+    app.register_blueprint(job_seeker_routes.register_routes())
+    
+    # Register employer routes (dashboard and profile)
+    employer_routes = EmployerRoutes()
+    app.register_blueprint(employer_routes.register_routes())
 
     from flask import send_from_directory
     import os

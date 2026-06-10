@@ -10,6 +10,31 @@ class JobSeekerRoutes:
     def __init__(self):
         self.blueprint = Blueprint('job_seeker', __name__)
 
+    def register_routes(self):
+        """Register all job seeker routes"""
+        self.job_seeker_dashboard()
+        self.job_seeker_profile()
+        return self.blueprint
+
+    def job_seeker_dashboard(self):
+        @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
+        def dashboard():
+            if 'user_id' not in session or session.get('role') != 'job_seeker':
+                flash('Please log in as a job seeker to view your dashboard.', 'error')
+                return redirect(url_for('login.index'))
+
+            user_id = session['user_id']
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+
+            return render_template(
+                'job_seeker_dashboard.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage
+            )
+
     def job_seeker_profile(self):
 
         @self.blueprint.route('/job-seeker/profile', methods=['GET', 'POST'])
@@ -132,8 +157,6 @@ class JobSeekerRoutes:
                     return jsonify({'status': 'error', 'message': 'Failed to delete resume from database'}), 500
             else:
                 return jsonify({'status': 'error', 'message': 'No resume found to delete'}), 404
-
-        return self.blueprint
 
     def _allowed_resume_file(self, filename):
         if '.' not in filename:
