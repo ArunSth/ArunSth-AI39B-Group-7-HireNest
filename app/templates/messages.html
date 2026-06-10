@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages — HireNest</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #162033; }
+    .page { display: flex; min-height: 100vh; }
+    .sidebar { width: 340px; background: #0f172a; color: #fff; padding: 18px; border-right: 1px solid #22304a; }
+    .sidebar h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .sidebar p { color: #cbd5e1; font-size: .92rem; margin-bottom: 16px; }
+    .conversation-list a { display: block; text-decoration: none; color: inherit; }
+    .conversation-card { background: #17233a; border: 1px solid #26344d; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .conversation-card.active { border-color: #f59e0b; background: #1f3148; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .badge { background: #f59e0b; color: #111827; border-radius: 999px; padding: 2px 8px; font-size: .75rem; font-weight: 700; }
+    .chat { flex: 1; display: flex; flex-direction: column; background: #fff; }
+    .chat-header { padding: 18px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
+    .chat-body { flex: 1; overflow-y: auto; padding: 18px; background: linear-gradient(180deg,#fff,#f7fafc); }
+    .msg { max-width: 70%; padding: 10px 12px; border-radius: 14px; margin-bottom: 10px; background: #e5eefb; }
+    .msg.me { background: #f59e0b; color: #111827; margin-left: auto; }
+    .msg-time { font-size: .75rem; color: #64748b; margin-top: 4px; }
+    .msg.me .msg-time { color: #4b5563; }
+    .composer { padding: 14px; border-top: 1px solid #edf2f7; display: flex; gap: 10px; }
+    .composer input { flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 999px; }
+    .composer button { border: 0; background: #0f172a; color: #fff; border-radius: 999px; padding: 0 14px; cursor: pointer; }
+    .empty { color: #475569; padding: 24px; }
+    small { color: #64748b; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <h2>Messages</h2>
+      <p>Employers and job seekers can exchange messages here.</p>
+      <a href="{{ url_for('notifications.index') }}" style="color:#f59e0b;text-decoration:none;display:inline-block;margin-bottom:12px;">← Notifications</a>
+      <div class="conversation-list">
+        {% if conversations %}
+          {% for item in conversations %}
+            {% set user = item['user'] %}
+            <a href="{{ url_for('messages.conversation', conversation_id=user['User_id']) }}">
+              <article class="conversation-card {% if selected_user and selected_user.User_id == user['User_id'] %}active{% endif %}">
+                <div class="row"><strong>{{ user.First_name }} {{ user.Last_name }}</strong>{% if item['unread_count'] %}<span class="badge">{{ item['unread_count'] }}</span>{% endif %}</div>
+                <small>{{ item['last_message']['Message'][:80] }}</small>
+              </article>
+            </a>
+          {% endfor %}
+        {% else %}
+          <div class="empty">No conversations yet.</div>
+        {% endif %}
+      </div>
+    </aside>
+
+    <section class="chat">
+      {% if selected_user %}
+        <header class="chat-header">
+          <div>
+            <h3 style="margin:0;">{{ selected_user.First_name }} {{ selected_user.Last_name }}</h3>
+            <small>{{ selected_user.Email }}</small>
+          </div>
+          <a href="{{ url_for('notifications.index') }}" style="color:#0f172a;text-decoration:none;">Notification Center</a>
+        </header>
+        <div class="chat-body" id="chat-body">
+          {% for msg in messages %}
+            <article class="msg {% if msg.Sender_id == session['user_id'] %}me{% endif %}">
+              <div>{{ msg.Message }}</div>
+              <div class="msg-time">{{ msg.Created_at }}</div>
+            </article>
+          {% endfor %}
+        </div>
+        <form class="composer" id="message-form">
+          <input type="hidden" name="receiver_id" value="{{ selected_user.User_id }}" />
+          <input type="text" name="message" id="message-input" placeholder="Type a message..." required />
+          <button type="submit">Send</button>
+        </form>
+      {% else %}
+        <div class="empty">Select a conversation to start chatting.</div>
+      {% endif %}
+    </section>
+  </div>
+
+  <script>
+    const form = document.getElementById('message-form');
+    if (form) {
+      form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const response = await fetch('{{ url_for("messages.send_message") }}', {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          window.location.reload();
+        } else {
+          alert(data.message || 'Unable to send message.');
+        }
+      });
+    }
+  </script>
+</body>
+</html>
