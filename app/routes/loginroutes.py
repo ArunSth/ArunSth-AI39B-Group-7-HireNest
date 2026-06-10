@@ -15,7 +15,7 @@ class LoginRoutes:
                 if role == 'employer':
                     return redirect(url_for('employer.profile'))
                 elif role == 'job_seeker':
-                    return redirect(url_for('job_seeker.profile'))
+                    return redirect(url_for('job_seeker.dashboard'))
             return render_template('base.html')
 
         @self.blueprint.route('/login', methods=['GET', 'POST'])
@@ -26,7 +26,7 @@ class LoginRoutes:
                     role = session.get('role')
                     if role == 'employer':
                         return redirect(url_for('employer.profile'))
-                    return redirect(url_for('job_seeker.profile'))
+                    return redirect(url_for('job_seeker.dashboard'))
                 return render_template('login_page.html')
 
             # POST — handle login form submission (also used by AJAX from modal)
@@ -60,7 +60,7 @@ class LoginRoutes:
             if role == 'employer':
                 redirect_url = url_for('employer.profile')
             else:
-                redirect_url = url_for('job_seeker.profile')
+                redirect_url = url_for('job_seeker.dashboard')
 
             if is_ajax:
                 return jsonify({'status': 'ok', 'message': 'Login successful!', 'redirect': redirect_url}), 200
