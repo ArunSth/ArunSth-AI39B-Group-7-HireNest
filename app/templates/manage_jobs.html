@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Manage Posted Jobs</h2>
+      </div>
+      <div class="topbar-right">
+        <a href="/employer/jobs/create" class="btn-primary">
+          <i class="fas fa-plus"></i> Post New Job
+        </a>
+      </div>
+    </div>
+
+    <div class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+          <div style="padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid {% if category == 'success' %}#22C55E{% else %}#EF4444{% endif %}; background: {% if category == 'success' %}rgba(34, 197, 94, 0.1){% else %}rgba(239, 68, 68, 0.1){% endif %}; color: {% if category == 'success' %}#22C55E{% else %}#EF4444{% endif %};">
+            <strong>{{ category|capitalize }}:</strong> {{ message }}
+          </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="section">
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if jobs %}
+            <table>
+              <thead>
+                <tr>
+                  <th>Job Title</th>
+                  <th>Location</th>
+                  <th>Job Type</th>
+                  <th>Salary</th>
+                  <th>Status</th>
+                  <th>Applications</th>
+                  <th>Posted Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for job in jobs %}
+                <tr>
+                  <td>
+                    <div>
+                      <strong>{{ job.Title }}</strong>
+                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                        {{ job.Experience_level if job.Experience_level else 'N/A' }}
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ job.Location }}</td>
+                  <td>
+                    <span style="display: inline-block; padding: 4px 8px; background: var(--light-purple); color: var(--primary-purple); border-radius: 4px; font-size: 12px; font-weight: 600;">
+                      {{ job.Job_type if job.Job_type else 'Full-time' }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if job.Salary %}
+                      ₹{{ "{:,.0f}".format(job.Salary) }}
+                    {% else %}
+                      <span style="color: var(--text-secondary);">-</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="status-badge badge-{{ job.Status|lower }}">
+                      {{ job.Status|capitalize }}
+                    </span>
+                  </td>
+                  <td style="text-align: center;">
+                    <strong style="font-size: 18px; color: var(--primary-purple);">0</strong>
+                  </td>
+                  <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="/employer/jobs/{{ job.Job_id }}" class="btn-small btn-view">
+                        <i class="fas fa-eye"></i> View
+                      </a>
+                      <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-small btn-edit">
+                        <i class="fas fa-edit"></i> Edit
+                      </a>
+                      <form method="POST" action="/employer/jobs/{{ job.Job_id }}/delete" style="display: inline;">
+                        <button type="submit" class="btn-small btn-delete" onclick="return confirm('Are you sure?');">
+                          <i class="fas fa-trash"></i> Delete
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+              <i class="fas fa-inbox" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Jobs Posted Yet</h3>
+              <p style="margin-bottom: 20px;">Start hiring by posting your first job now!</p>
+              <a href="/employer/jobs/create" class="btn-primary">
+                <i class="fas fa-plus"></i> Post Your First Job
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/js/employer_dashboard.js"></script>
+{% endblock %}

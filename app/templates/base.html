@@ -9,7 +9,8 @@
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
   />
-  <link rel="stylesheet" href="/statics/css/login.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+  {% block scripts %}{% endblock %}
 </head>
 <body>
 
@@ -100,6 +101,7 @@
     </div>
   </header>
 
+  {% block content %}
   <section class="hero">
     <div class="hero-content">
       <h1>
@@ -195,6 +197,7 @@
       </div>
     </div>
   </section>
+  {% endblock %}
 
   <div id="auth-modal" class="modal">
     <div class="modal-content">
@@ -295,37 +298,7 @@
     </div>
   </footer>
 
-  <script src="/statics/js/login.js"></script>
-  <script>
-    async function refreshBadges() {
-      try {
-        const notificationResponse = await fetch('{{ url_for("notifications.unread_count") }}');
-        const notificationData = await notificationResponse.json();
-        const messageResponse = await fetch('{{ url_for("messages.unread_count") }}');
-        const messageData = await messageResponse.json();
-
-        const notificationBadge = document.getElementById('nav-notification-badge');
-        const messageBadge = document.getElementById('nav-message-badge');
-
-        if (notificationBadge) {
-          const count = Number(notificationData.count || 0);
-          notificationBadge.style.display = count > 0 ? 'inline-flex' : 'none';
-        }
-
-        if (messageBadge) {
-          const count = Number(messageData.count || 0);
-          messageBadge.style.display = count > 0 ? 'inline-flex' : 'none';
-        }
-      } catch (error) {
-        console.error('Badge refresh failed:', error);
-      }
-    }
-
-    if (document.getElementById('nav-notification-badge') || document.getElementById('nav-message-badge')) {
-      refreshBadges();
-      setInterval(refreshBadges, 30000);
-    }
-  </script>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
 

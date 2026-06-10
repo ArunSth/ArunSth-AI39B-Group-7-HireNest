@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>{{ applicant.First_name }} {{ applicant.Last_name }} - Application Details</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="max-width: 1000px;">
+        <!-- Applicant Info Card -->
+        <div class="table-container" style="margin-bottom: 30px;">
+          <div style="padding: 30px;">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <div class="user-avatar" style="width: 100px; height: 100px; font-size: 40px;">
+                  {{ applicant.First_name[0] }}{{ applicant.Last_name[0] }}
+                </div>
+              </div>
+              <div>
+                <h3 style="font-size: 24px; margin-bottom: 10px;">{{ applicant.First_name }} {{ applicant.Last_name }}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 5px;">
+                  <i class="fas fa-envelope"></i> {{ applicant.Email }}
+                </p>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                  <i class="fas fa-map-marker-alt"></i> {{ applicant.Location if applicant.Location else 'Not specified' }}
+                </p>
+                <span class="status-badge badge-{{ applicant.Status|lower }}">
+                  {{ applicant.Status|replace('_', ' ')|title }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Application Details -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+              <div>
+                <h4 style="font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Job Applied For</h4>
+                <p style="font-size: 16px; font-weight: 600; color: var(--primary-purple);">{{ applicant.job_title }}</p>
+                <p style="color: var(--text-secondary); margin-top: 5px;">Salary: ₹{{ "{:,.0f}".format(applicant.Salary) if applicant.Salary else 'Not specified' }}</p>
+              </div>
+              <div>
+                <h4 style="font-weight: 700; margin-bottom: 10px; color: var(--text-primary);">Application Status</h4>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button class="btn-small" onclick="updateApplicationStatus('{{ applicant.Application_id }}', 'pending')" style="background: rgba(249, 115, 22, 0.1); color: #F97316;">Pending</button>
+                  <button class="btn-small" onclick="updateApplicationStatus('{{ applicant.Application_id }}', 'under_review')" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">Under Review</button>
+                  <button class="btn-small" onclick="updateApplicationStatus('{{ applicant.Application_id }}', 'shortlisted')" style="background: rgba(34, 197, 94, 0.1); color: #22C55E;">Shortlisted</button>
+                  <button class="btn-small" onclick="updateApplicationStatus('{{ applicant.Application_id }}', 'rejected')" style="background: rgba(239, 68, 68, 0.1); color: var(--primary-red);">Rejected</button>
+                  <button class="btn-small" onclick="updateApplicationStatus('{{ applicant.Application_id }}', 'accepted')" style="background: rgba(34, 197, 94, 0.1); color: #22C55E;">Accepted</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Professional Info -->
+            <div style="padding-bottom: 30px; border-bottom: 1px solid var(--border-color); margin-bottom: 30px;">
+              <h4 style="font-weight: 700; margin-bottom: 15px; color: var(--text-primary);">Professional Information</h4>
+              
+              {% if applicant.Education %}
+              <div style="margin-bottom: 15px;">
+                <p style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">Education</p>
+                <p>{{ applicant.Education }}</p>
+              </div>
+              {% endif %}
+
+              {% if applicant.Skills %}
+              <div style="margin-bottom: 15px;">
+                <p style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">Skills</p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  {% for skill in applicant.Skills.split(',') %}
+                  <span style="display: inline-block; background: var(--light-purple); color: var(--primary-purple); padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                    {{ skill.strip() }}
+                  </span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              {% if applicant.Bio %}
+              <div>
+                <p style="font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 5px;">Bio</p>
+                <p>{{ applicant.Bio }}</p>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Cover Letter -->
+            {% if applicant.Cover_letter %}
+            <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <h4 style="font-weight: 700; margin-bottom: 15px; color: var(--text-primary);">Cover Letter</h4>
+              <div style="background: var(--light-bg); padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary-purple);">
+                <p>{{ applicant.Cover_letter }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Resume -->
+            <div style="margin-bottom: 30px;">
+              <h4 style="font-weight: 700; margin-bottom: 15px; color: var(--text-primary);">Resume</h4>
+              {% if applicant.Resume %}
+              <a href="/uploads/{{ applicant.Resume }}" target="_blank" class="btn-secondary">
+                <i class="fas fa-download"></i> Download Resume
+              </a>
+              {% else %}
+              <p style="color: var(--text-secondary);">No resume uploaded</p>
+              {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+              <a href="/employer/interview/schedule/{{ applicant.Application_id }}" class="btn-primary">
+                <i class="fas fa-calendar"></i> Schedule Interview
+              </a>
+              <a href="/employer/applicants" class="btn-secondary">Back to Applications</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/js/employer_dashboard.js"></script>
+<script>
+function updateApplicationStatus(applicationId, status) {
+  fetch(`/employer/applicant/${applicationId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: status })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.status === 'success') {
+      showNotification('Success', d.message, 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showNotification('Error', d.message, 'error');
+    }
+  })
+  .catch(e => showNotification('Error', 'Failed to update status', 'error'));
+}
+</script>
+{% endblock %}

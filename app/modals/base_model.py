@@ -347,15 +347,49 @@ def _column_exists(cur, table_name, column_name):
 
 
 def run_migrations():
-    """Add any missing columns needed by HireNest features.
-
-    This is safe to run multiple times and uses ALTER TABLE only when
-    the column is not already present.
-    """
+    """Add any missing columns to existing tables. Safe to run multiple times."""
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            if not _column_exists(cur, 'Job_Seekers', 'Profile_photo'):
+            # Add Job_type to Jobs if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Jobs'
+                  AND COLUMN_NAME = 'Job_type'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Jobs`
+                    ADD COLUMN `Job_type` VARCHAR(50) DEFAULT 'Full-time' AFTER `Status`
+                """)
+                conn.commit()
+
+            # Add Experience_level to Jobs if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Jobs'
+                  AND COLUMN_NAME = 'Experience_level'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Jobs`
+                    ADD COLUMN `Experience_level` VARCHAR(50) DEFAULT 'Entry-level' AFTER `Job_type`
+                """)
+                conn.commit()
+
+            # Add Profile_photo to Job_Seekers if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Job_Seekers'
+                  AND COLUMN_NAME = 'Profile_photo'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
                 cur.execute("""
                     ALTER TABLE `Job_Seekers`
                     ADD COLUMN `Profile_photo` VARCHAR(255) NULL

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Edit Job</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section" style="max-width: 900px;">
+        <div class="table-container">
+          <form method="POST" data-validate>
+            <div style="padding: 30px;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="title">Job Title *</label>
+                  <input type="text" id="title" name="title" value="{{ job.Title }}" required>
+                </div>
+                <div class="form-group">
+                  <label for="job_type">Job Type *</label>
+                  <select id="job_type" name="job_type" required>
+                    <option value="Full-time" {% if job.Job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                    <option value="Part-time" {% if job.Job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                    <option value="Contract" {% if job.Job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                    <option value="Internship" {% if job.Job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="description">Job Description *</label>
+                <textarea id="description" name="description" required>{{ job.Description }}</textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="requirement">Required Skills & Qualifications *</label>
+                <textarea id="requirement" name="requirement" required>{{ job.Requirement }}</textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="salary">Salary</label>
+                  <input type="number" id="salary" name="salary" value="{{ job.Salary if job.Salary else '' }}" step="0.01">
+                </div>
+                <div class="form-group">
+                  <label for="location">Location *</label>
+                  <input type="text" id="location" name="location" value="{{ job.Location }}" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="experience_level">Experience Level *</label>
+                <select id="experience_level" name="experience_level" required>
+                  <option value="Entry-level" {% if job.Experience_level == 'Entry-level' %}selected{% endif %}>Entry-level</option>
+                  <option value="Mid-level" {% if job.Experience_level == 'Mid-level' %}selected{% endif %}>Mid-level</option>
+                  <option value="Senior" {% if job.Experience_level == 'Senior' %}selected{% endif %}>Senior</option>
+                  <option value="Executive" {% if job.Experience_level == 'Executive' %}selected{% endif %}>Executive</option>
+                </select>
+              </div>
+
+              <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn-primary">
+                  <i class="fas fa-save"></i> Save Changes
+                </button>
+                <a href="/employer/jobs" class="btn-secondary">Cancel</a>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

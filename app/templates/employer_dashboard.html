@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employer Dashboard — HireNest</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">
+          <i class="fas fa-building"></i>
+        </div>
+        <div class="sidebar-logo-text">
+          <h3>HireNest</h3>
+          <p>Employer hub</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="/employer/dashboard" class="nav-item active">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="/employer/jobs" class="nav-item">
+          <i class="fas fa-briefcase"></i>
+          <span>Manage Jobs</span>
+        </a>
+        <a href="/employer/applicants" class="nav-item">
+          <i class="fas fa-users"></i>
+          <span>Applicants</span>
+        </a>
+        <a href="/employer/interviews" class="nav-item">
+          <i class="fas fa-calendar-check"></i>
+          <span>Interviews</span>
+        </a>
+        <a href="/employer/profile" class="nav-item">
+          <i class="fas fa-building"></i>
+          <span>Company Profile</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/logout" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="topbar">
+        <div>
+          <h2>Welcome back, {{ user.First_name }}!</h2>
+          <p class="topbar-subtitle">Everything you need to manage hiring from one place.</p>
+        </div>
+        <div class="topbar-right">
+          <div class="user-profile">
+            <div class="user-avatar">{{ user.First_name[0] }}{{ user.Last_name[0] if user.Last_name else '' }}</div>
+            <div>
+              <div class="user-name">{{ user.First_name }} {{ user.Last_name if user.Last_name else '' }}</div>
+              <div class="user-role">Employer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="section overview-section">
+        <div class="overview-header">
+          <div>
+            <h3>Employer Dashboard</h3>
+            <p>Track posted jobs, applications, interviews, and profile health.</p>
+          </div>
+          <div class="overview-actions">
+            <a href="/employer/jobs/create" class="btn-primary"><i class="fas fa-plus"></i> Post new job</a>
+            <a href="/employer/profile" class="btn-secondary"><i class="fas fa-user-gear"></i> Edit profile</a>
+          </div>
+        </div>
+
+        <div class="overview-cards">
+          <div class="stat-card amber">
+            <div>
+              <h4>Total jobs</h4>
+              <div class="stat-value">{{ jobs|length }}</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-briefcase"></i>
+            </div>
+          </div>
+          <div class="stat-card navy">
+            <div>
+              <h4>Applicants</h4>
+              <div class="stat-value">{{ total_applicants }}</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+          </div>
+          <div class="stat-card green">
+            <div>
+              <h4>Interviews</h4>
+              <div class="stat-value">{{ interviews|length }}</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-calendar-check"></i>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div>
+              <h4>Profile completion</h4>
+              <div class="stat-value">{{ completion_percentage }}%</div>
+            </div>
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section card-grid">
+        <article class="company-card">
+          <div class="card-header">
+            <div>
+              <h3>Company profile</h3>
+              <p>Quick view of your employer profile details.</p>
+            </div>
+            <a href="/employer/profile" class="btn-secondary">Edit profile</a>
+          </div>
+          <div class="company-info">
+            <p><strong>Name:</strong> {{ profile.Company_name if profile else 'Not set yet' }}</p>
+            <p><strong>Industry:</strong> {{ profile.Industry if profile else 'Not set yet' }}</p>
+            <p><strong>Website:</strong>
+              {% if profile and profile.Website %}
+                <a href="{{ profile.Website }}" target="_blank">{{ profile.Website }}</a>
+              {% else %}
+                Not set
+              {% endif %}
+            </p>
+            <p><strong>Description:</strong></p>
+            <p class="company-description">{{ profile.Description if profile else 'Add your company details to attract more candidates.' }}</p>
+          </div>
+        </article>
+
+        <article class="activity-card">
+          <div class="card-header">
+            <div>
+              <h3>Upcoming interviews</h3>
+              <p>Interviews scheduled for your candidates.</p>
+            </div>
+            <a href="/employer/interviews" class="btn-secondary">View all</a>
+          </div>
+          <div class="activity-list">
+            {% if interviews %}
+              {% for interview in interviews[:4] %}
+                <div class="activity-item">
+                  <div>
+                    <h4>{{ interview.First_name }} {{ interview.Last_name }}</h4>
+                    <p>{{ interview.job_title }}</p>
+                  </div>
+                  <div class="activity-meta">
+                    <span>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</span>
+                    <span>{{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="empty-state">
+                <i class="fas fa-calendar-alt"></i>
+                <p>No interviews scheduled yet.</p>
+              </div>
+            {% endif %}
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h3>Recent job postings</h3>
+          <a href="/employer/jobs" class="btn-secondary">View all jobs</a>
+        </div>
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if jobs %}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Job</th>
+                    <th>Location</th>
+                    <th>Applications</th>
+                    <th>Status</th>
+                    <th>Posted</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for job in jobs[:5] %}
+                  <tr>
+                    <td><strong>{{ job.Title }}</strong></td>
+                    <td>{{ job.Location }}</td>
+                    <td>{{ job_app_counts.get(job.Job_id, 0) }}</td>
+                    <td><span class="status-badge badge-{{ job.Status|lower }}">{{ job.Status|capitalize }}</span></td>
+                    <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
+                    <td class="text-right">
+                      <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-small btn-edit">Edit</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <div class="empty-state">
+                <i class="fas fa-briefcase"></i>
+                <p>No job postings yet. Start by posting your first job.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h3>Recent applications</h3>
+          <a href="/employer/applicants" class="btn-secondary">View all applicants</a>
+        </div>
+        <div class="table-container">
+          <div class="table-responsive">
+            {% if recent_applications %}
+              <table>
+                <thead>
+                  <tr>
+                    <th>Applicant</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Applied</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for app in recent_applications[:5] %}
+                  <tr>
+                    <td><strong>{{ app.First_name }} {{ app.Last_name }}</strong></td>
+                    <td>{{ app.job_title }}</td>
+                    <td><span class="status-badge badge-{{ app.Status|lower }}">{{ app.Status|replace('_', ' ')|title }}</span></td>
+                    <td>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</td>
+                    <td class="text-right">
+                      <a href="/employer/applicant/{{ app.Application_id }}" class="btn-small btn-view">View</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <div class="empty-state">
+                <i class="fas fa-user-clock"></i>
+                <p>No applications yet. Candidates will appear here once they apply.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
+</body>
+</html>

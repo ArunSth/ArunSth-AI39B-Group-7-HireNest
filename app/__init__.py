@@ -7,10 +7,9 @@ from app.routes.registrationroutes import RegistrationRoutes
 from app.modals.base_model import create_all, run_migrations
 from app.routes.job_seeker_routes import JobSeekerRoutes
 from app.routes.employer_routes import EmployerRoutes
-from app.routes.admin_routes import AdminRoutes
-from app.routes.messageroutes import MessageRoutes
-from app.routes.notificationroutes import NotificationRoutes
-from app.routes.job_alert_routes import JobAlertRoutes
+from app.routes.job_posting_routes import JobPostingRoutes
+from app.routes.applicant_routes import ApplicantRoutes
+from app.routes.interview_routes import InterviewRoutes
 
 
 def create_app():
@@ -25,9 +24,9 @@ def create_app():
     app.register_blueprint(LogoutRoutes().logout())
     app.register_blueprint(JobSeekerRoutes().job_seeker_profile())
     app.register_blueprint(EmployerRoutes().employer_profile())
-    app.register_blueprint(MessageRoutes().messages())
-    app.register_blueprint(NotificationRoutes().notifications())
-    app.register_blueprint(JobAlertRoutes().job_alerts())
+    app.register_blueprint(JobPostingRoutes().job_posting())
+    app.register_blueprint(ApplicantRoutes().applicant_management())
+    app.register_blueprint(InterviewRoutes().interview_scheduling())
 
     from flask import send_from_directory
     import os

@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <i class="fas fa-user-graduate"></i>
+      </div>
+      <div class="sidebar-logo-text">
+        <h3>HireNest</h3>
+        <p>Your job search hub</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item active">
+        <i class="fas fa-home"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
+        <i class="fas fa-briefcase"></i>
+        <span>Search Opportunities</span>
+      </a>
+      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
+        <i class="fas fa-file-alt"></i>
+        <span>Applications</span>
+      </a>
+      <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item">
+        <i class="fas fa-video"></i>
+        <span>Interviews</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-bookmark"></i>
+        <span>Bookmarks</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-paper-plane"></i>
+        <span>Requests</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-headset"></i>
+        <span>Contact Us</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Welcome back, {{ user.First_name or 'Job Seeker' }}!</h2>
+        <p class="topbar-subtitle">Track your applications, interviews, and next steps in one place.</p>
+      </div>
+      <div class="topbar-right">
+        <div class="user-profile">
+          <div class="user-avatar">{{ user.First_name[0] if user.First_name else 'J' }}</div>
+          <div class="user-name">{{ user.First_name or 'Seeker' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="overview-section">
+        <div class="overview-header">
+          <div>
+            <h3>{{ profile_alert_title }}</h3>
+            <p>{{ profile_alert_text }}</p>
+          </div>
+          <div class="overview-actions">
+            <a href="{{ url_for('job_seeker.profile') }}" class="btn-primary">{{ profile_action_text }}</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Applied</h4>
+            <div class="stat-value">{{ applied_count }}</div>
+          </div>
+          <div class="stat-icon blue-bg">
+            <i class="fas fa-rocket"></i>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Alerts</h4>
+            <div class="stat-value">{{ alerts_count }}</div>
+          </div>
+          <div class="stat-icon purple-bg">
+            <i class="fas fa-bell"></i>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Rejected</h4>
+            <div class="stat-value">{{ rejected_count }}</div>
+          </div>
+          <div class="stat-icon red-bg">
+            <i class="fas fa-times-circle"></i>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <h4>Bookmarks</h4>
+            <div class="stat-value">{{ bookmarks_count }}</div>
+          </div>
+          <div class="stat-icon purple-bg">
+            <i class="fas fa-bookmark"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <div class="company-card">
+          <div class="card-header">
+            <div>
+              <h3>Recent Applications</h3>
+              <p>Latest jobs you have applied for.</p>
+            </div>
+            <a href="{{ url_for('applicant.seeker_applications') }}" class="btn-secondary">View All</a>
+          </div>
+
+          {% if recent_applications %}
+          <div class="activity-list">
+            {% for app in recent_applications %}
+            <div class="activity-item">
+              <div>
+                <h4>{{ app.job_title }}</h4>
+                <p>{{ app.Company_name }} · {{ app.Location or 'Remote' }}</p>
+              </div>
+              <div class="activity-meta">
+                <span>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</span>
+                <span class="status-badge badge-{{ app.Status|lower }}">{{ app.Status|replace('_', ' ')|title }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-file-alt"></i>
+            <h3>No applications yet</h3>
+            <p>Start applying to jobs to see your latest activity here.</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="activity-card">
+          <div class="card-header">
+            <div>
+              <h3>Recent Activity</h3>
+              <p>Stay updated on your latest job seeker actions.</p>
+            </div>
+            <a href="{{ url_for('interview.seeker_interviews') }}" class="btn-secondary">See Interviews</a>
+          </div>
+
+          {% if recent_activities %}
+          <div class="activity-list">
+            {% for activity in recent_activities %}
+            <div class="activity-item">
+              <div>
+                <h4>{{ activity.title }}</h4>
+                <p>{{ activity.subtitle }}</p>
+              </div>
+              <div class="activity-meta">
+                <span>{{ activity.time }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fas fa-clock"></i>
+            <h3>No recent activity</h3>
+            <p>Your next update will appear after you apply to jobs or attend interviews.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+{% endblock %}

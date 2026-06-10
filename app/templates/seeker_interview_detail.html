@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="sidebar-logo-text">
+        <h3>HireNest</h3>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/seeker/interviews" class="nav-item active">
+        <i class="fas fa-video"></i>
+        <span>Interviews</span>
+      </a>
+    </nav>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Interview Details</h2>
+      </div>
+    </div>
+
+    <div class="content">
+      <div style="max-width: 900px;">
+        <div class="table-container">
+          <div style="padding: 30px;">
+            <!-- Interview Info -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Company</p>
+                <p style="font-size: 18px; font-weight: 700;">{{ interview.Company_name }}</p>
+              </div>
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Position</p>
+                <p style="font-size: 18px; font-weight: 700;">{{ interview.job_title }}</p>
+              </div>
+            </div>
+
+            <!-- Interview Details -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Date</p>
+                <p style="font-size: 16px; font-weight: 700;">{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</p>
+              </div>
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Time</p>
+                <p style="font-size: 16px; font-weight: 700;">{{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}</p>
+              </div>
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Mode</p>
+                <span style="display: inline-block; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                  {{ interview.Mode }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Meeting Link -->
+            <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Meeting Link</p>
+              <div style="background: var(--light-purple); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-purple);">
+                {% if interview.Meeting_link.startswith('http') %}
+                  <a href="{{ interview.Meeting_link }}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex;">
+                    <i class="fas fa-video"></i> Join Video Meeting
+                  </a>
+                {% else %}
+                  <code style="color: var(--text-primary); font-family: 'Courier New', monospace;">
+                    {{ interview.Meeting_link }}
+                  </code>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Interviewer Info -->
+            <div style="margin-bottom: 30px;">
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Interviewer</p>
+              <div style="background: var(--light-bg); padding: 16px; border-radius: 8px;">
+                <p style="font-weight: 600; margin-bottom: 4px;">{{ interview.employer_first_name }} {{ interview.employer_last_name }}</p>
+                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">{{ interview.employer_email }}</p>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-color);">
+              <a href="/seeker/interviews" class="btn-secondary">Back to Interviews</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
