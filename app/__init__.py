@@ -10,6 +10,9 @@ from app.routes.employer_routes import EmployerRoutes
 from app.routes.job_posting_routes import JobPostingRoutes
 from app.routes.applicant_routes import ApplicantRoutes
 from app.routes.interview_routes import InterviewRoutes
+from app.routes.messageroutes import MessageRoutes
+from app.routes.notificationroutes import NotificationRoutes
+from app.routes.job_alert_routes import JobAlertRoutes
 
 
 def create_app():
@@ -27,6 +30,9 @@ def create_app():
     app.register_blueprint(JobPostingRoutes().job_posting())
     app.register_blueprint(ApplicantRoutes().applicant_management())
     app.register_blueprint(InterviewRoutes().interview_scheduling())
+    app.register_blueprint(MessageRoutes().messages())
+    app.register_blueprint(NotificationRoutes().notifications())
+    app.register_blueprint(JobAlertRoutes().job_alerts())
 
     from flask import send_from_directory
     import os
