@@ -179,6 +179,7 @@
     .nav-item:hover { background: rgba(255,255,255,0.07); color: var(--white); }
     .nav-item.active { background: rgba(232,168,56,0.15); color: var(--amber); }
     .nav-item.active i { color: var(--amber); }
+    .nav-item.small { font-size: 13px; }
 
     .sidebar-footer {
       padding: 16px 16px 24px;
@@ -522,6 +523,15 @@
       <a href="#" class="nav-item">
         <i class="fa-solid fa-bookmark"></i> Saved Jobs
         <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
+      </a>
+      <a href="{{ url_for('messages.index') }}" class="nav-item">
+        <i class="fa-regular fa-message"></i> Messages
+      </a>
+      <a href="{{ url_for('notifications.index') }}" class="nav-item">
+        <i class="fa-regular fa-bell"></i> Notifications
+      </a>
+      <a href="{{ url_for('job_alerts.index') }}" class="nav-item">
+        <i class="fa-solid fa-bell-concierge"></i> Job Alerts
       </a>
       <a href="#" class="nav-item">
         <i class="fa-solid fa-magnifying-glass"></i> Find Jobs

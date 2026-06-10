@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications — HireNest</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #162033; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    .card { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); margin-bottom: 18px; }
+    .row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .pill { padding: 8px 12px; border-radius: 999px; background: #111827; color: #fff; text-decoration: none; font-size: .9rem; }
+    .notification { border:1px solid #e5e7eb; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .notification.unread { background: #fff7e6; border-color: #fbbf24; }
+    .muted { color:#64748b;font-size:.9rem; }
+    .btn { display:inline-block; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#111827; cursor:pointer; text-decoration:none; font-size:.88rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <h2 style="margin:0 0 6px 0;">Notifications</h2>
+          <p class="muted">Track messages, interviews, applications, and job alerts from one place.</p>
+        </div>
+        <div class="row">
+          <a class="pill" href="{{ url_for('messages.index') }}">Messages</a>
+          <button class="pill" id="mark-all-read" type="button">Mark all read</button>
+        </div>
+      </div>
+    </div>
+
+    {% if notifications %}
+      {% for item in notifications %}
+        <article class="card notification {% if not item.Is_read %}unread{% endif %}">
+          <div class="row">
+            <div>
+              <h3 style="margin:0 0 4px 0;">{{ item.Title or 'Notification' }}</h3>
+              <p style="margin:0;">{{ item.Message }}</p>
+              <p class="muted">{{ item.Created_at }}</p>
+            </div>
+            {% if not item.Is_read %}
+              <button class="btn" data-notice-id="{{ item.Notification_id }}" type="button">Mark read</button>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    {% else %}
+      <div class="card">No notifications yet.</div>
+    {% endif %}
+  </div>
+
+  <script>
+    document.querySelectorAll('[data-notice-id]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const id = button.getAttribute('data-notice-id');
+        const response = await fetch('{{ url_for("notifications.mark_read", notification_id=0) }}'.replace('0', id), { method: 'POST' });
+        const data = await response.json();
+        if (data.status === 'success') window.location.reload();
+      });
+    });
+
+    document.getElementById('mark-all-read')?.addEventListener('click', async () => {
+      const response = await fetch('{{ url_for("notifications.mark_all_read") }}', { method: 'POST' });
+      const data = await response.json();
+      if (data.status === 'success' || data.updated >= 0) window.location.reload();
+    });
+  </script>
+</body>
+</html>
