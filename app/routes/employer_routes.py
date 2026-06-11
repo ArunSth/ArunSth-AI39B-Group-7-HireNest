@@ -145,6 +145,8 @@ class EmployerRoutes:
             else:
                 return jsonify({"status": "error", "message": "Invalid file type or size. Accepted: JPG, PNG (max 5MB)"}), 400
 
+        return self.blueprint
+
     def _allowed_logo_file(self, filename):
         if "." not in filename:
             return False

@@ -251,6 +251,8 @@ class JobSeekerRoutes:
             else:
                 return jsonify({'status': 'error', 'message': 'No resume found to delete'}), 404
 
+        return self.blueprint
+
     def _allowed_resume_file(self, filename):
         if '.' not in filename:
             return False
