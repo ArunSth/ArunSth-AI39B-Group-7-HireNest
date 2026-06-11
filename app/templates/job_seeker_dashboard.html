@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Employer Dashboard — HireNest</title>
+  <title>Job Seeker Dashboard — HireNest</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <link rel="stylesheet" href="/statics/css/login.css" />
   <style>
@@ -271,7 +271,7 @@
   <div class="main-container">
     <div class="dashboard-header">
       <h1>Welcome, {{ user.First_name }}! 👋</h1>
-      <p>Here's your employer dashboard at a glance.</p>
+      <p>Find your dream job and manage your applications.</p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -299,53 +299,53 @@
         </div>
         <p class="card-description" style="margin-top: 1rem;">
           {% if completion_percentage < 100 %}
-            Complete your company profile to attract more job seekers.
+            Complete your profile to increase your visibility to employers.
           {% else %}
             Great job! Your profile is complete.
           {% endif %}
         </p>
-        <a href="/employer/profile" class="card-action">Edit Profile →</a>
+        <a href="/job-seeker/profile" class="card-action">Edit Profile →</a>
       </div>
 
       <div class="dashboard-card">
         <div class="card-icon">
           <i class="fa-solid fa-briefcase"></i>
         </div>
-        <div class="card-title">Active Jobs</div>
+        <div class="card-title">Job Applications</div>
         <div class="card-value">0</div>
-        <p class="card-description">Jobs currently posted</p>
-        <a href="#" class="card-action">Post New Job →</a>
+        <p class="card-description">Applications submitted</p>
+        <a href="#" class="card-action">View Applications →</a>
       </div>
 
       <div class="dashboard-card">
         <div class="card-icon">
-          <i class="fa-solid fa-users"></i>
+          <i class="fa-solid fa-heart"></i>
         </div>
-        <div class="card-title">Applications</div>
+        <div class="card-title">Saved Jobs</div>
         <div class="card-value">0</div>
-        <p class="card-description">New applications received</p>
-        <a href="#" class="card-action">View All →</a>
+        <p class="card-description">Jobs you've saved</p>
+        <a href="#" class="card-action">View Saved →</a>
       </div>
 
       <div class="dashboard-card">
         <div class="card-icon">
-          <i class="fa-solid fa-star"></i>
+          <i class="fa-solid fa-bell"></i>
         </div>
-        <div class="card-title">Saved Candidates</div>
+        <div class="card-title">Job Alerts</div>
         <div class="card-value">0</div>
-        <p class="card-description">Candidates you've saved</p>
-        <a href="#" class="card-action">Browse →</a>
+        <p class="card-description">New job matches</p>
+        <a href="#" class="card-action">Configure →</a>
       </div>
     </div>
 
     <div class="action-buttons">
-      <a href="/employer/profile" class="btn btn-primary">
+      <a href="/job-seeker/profile" class="btn btn-primary">
         <i class="fa-solid fa-user"></i>
         Edit Profile
       </a>
       <a href="#" class="btn btn-primary">
-        <i class="fa-solid fa-plus"></i>
-        Post a Job
+        <i class="fa-solid fa-search"></i>
+        Browse Jobs
       </a>
       <a href="/logout" class="btn btn-secondary">
         <i class="fa-solid fa-sign-out-alt"></i>
