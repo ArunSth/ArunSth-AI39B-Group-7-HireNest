@@ -1,4 +1,4 @@
-import config
+from . import config
 
 
 def _get_pymysql():
