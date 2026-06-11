@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS `HireNest`;
 USE `HireNest`;
 
 DROP TABLE IF EXISTS `Admin_Audit_Log`;
+DROP TABLE IF EXISTS `Admin_Profiles`;
 DROP TABLE IF EXISTS `User_Sessions`;
 DROP TABLE IF EXISTS `Email_Verification_Tokens`;
 DROP TABLE IF EXISTS `User_Settings`;
@@ -262,6 +263,21 @@ CREATE TABLE IF NOT EXISTS `User_Sessions` (
     `Expires_at` DATETIME,
     `Is_revoked` BOOLEAN DEFAULT FALSE,
     `Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `Admin_Profiles` (
+    `Admin_id` INT PRIMARY KEY AUTO_INCREMENT,
+    `User_id` INT NOT NULL UNIQUE,
+    `Display_name` VARCHAR(150),
+    `Department` VARCHAR(100),
+    `Access_level` VARCHAR(50) NOT NULL DEFAULT 'full',
+    `Bio` TEXT,
+    `Last_login_at` DATETIME,
+    `Is_active` BOOLEAN DEFAULT TRUE,
+    `Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
+    `Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `Updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -25,7 +25,7 @@ class LoginRoutes:
                 if 'user_id' in session:
                     role = session.get('role')
                     if role == 'employer':
-                        return redirect(url_for('employer.dashboard'))
+                        return redirect(url_for('employer.profile'))
                     return redirect(url_for('job_seeker.dashboard'))
                 return render_template('login_page.html')
 

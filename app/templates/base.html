@@ -30,11 +30,27 @@
       <a href="#">Find Jobs</a>
       <a href="#">Companies</a>
       <a href="#">Resources</a>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('messages.index') }}">Messages</a>
+        <a href="{{ url_for('notifications.index') }}">Notifications</a>
+        <a href="{{ url_for('job_alerts.index') }}">Job Alerts</a>
+      {% endif %}
     </nav>
 
     <div class="nav-icons">
       <i class="fa-solid fa-sun" id="theme-toggle"></i>
-      <i class="fa-regular fa-bell notification"><span class="dot"></span></i>
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('notifications.index') }}" class="notification" aria-label="Notifications" style="text-decoration:none;color:inherit;position:relative;">
+          <i class="fa-regular fa-bell"></i>
+          <span id="nav-notification-badge" class="dot" style="display:none;"></span>
+        </a>
+        <a href="{{ url_for('messages.index') }}" aria-label="Messages" style="text-decoration:none;color:inherit;position:relative;">
+          <i class="fa-regular fa-message"></i>
+          <span id="nav-message-badge" class="dot" style="display:none;"></span>
+        </a>
+      {% else %}
+        <i class="fa-regular fa-bell notification"><span class="dot"></span></i>
+      {% endif %}
       <i class="fa-regular fa-user"></i>
     </div>
 

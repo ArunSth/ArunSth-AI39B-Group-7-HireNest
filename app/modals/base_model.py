@@ -330,6 +330,22 @@ def drop_all():
         conn.close()
 
 
+def _column_exists(cur, table_name, column_name):
+    """Return True when a column already exists in the current database."""
+    cur.execute(
+        """
+        SELECT COUNT(*) AS cnt
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = %s
+          AND COLUMN_NAME = %s
+        """,
+        (table_name, column_name),
+    )
+    row = cur.fetchone()
+    return bool(row and row['cnt'] > 0)
+
+
 def run_migrations():
     """Add any missing columns to existing tables. Safe to run multiple times."""
     conn = get_connection()
@@ -379,6 +395,55 @@ def run_migrations():
                     ADD COLUMN `Profile_photo` VARCHAR(255) NULL
                     AFTER `Resume`
                 """)
-                conn.commit()
+
+            if not _column_exists(cur, 'Messages', 'Is_read'):
+                cur.execute("""
+                    ALTER TABLE `Messages`
+                    ADD COLUMN `Is_read` BOOLEAN NOT NULL DEFAULT FALSE
+                """)
+
+            if not _column_exists(cur, 'Messages', 'Created_at'):
+                cur.execute("""
+                    ALTER TABLE `Messages`
+                    ADD COLUMN `Created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                """)
+
+            if not _column_exists(cur, 'Notification', 'Type'):
+                cur.execute("""
+                    ALTER TABLE `Notification`
+                    ADD COLUMN `Type` VARCHAR(50) NULL
+                """)
+
+            if not _column_exists(cur, 'Notification', 'Reference_id'):
+                cur.execute("""
+                    ALTER TABLE `Notification`
+                    ADD COLUMN `Reference_id` INT NULL
+                """)
+
+            if not _column_exists(cur, 'Job_Alerts', 'Job_type'):
+                cur.execute("""
+                    ALTER TABLE `Job_Alerts`
+                    ADD COLUMN `Job_type` VARCHAR(100) NULL
+                """)
+
+            if not _column_exists(cur, 'Job_Alerts', 'Industry'):
+                cur.execute("""
+                    ALTER TABLE `Job_Alerts`
+                    ADD COLUMN `Industry` VARCHAR(100) NULL
+                """)
+
+            if not _column_exists(cur, 'Job_Alerts', 'Is_active'):
+                cur.execute("""
+                    ALTER TABLE `Job_Alerts`
+                    ADD COLUMN `Is_active` BOOLEAN NOT NULL DEFAULT TRUE
+                """)
+
+            if not _column_exists(cur, 'Job_Alerts', 'Created_at'):
+                cur.execute("""
+                    ALTER TABLE `Job_Alerts`
+                    ADD COLUMN `Created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                """)
+
+            conn.commit()
     finally:
         conn.close()

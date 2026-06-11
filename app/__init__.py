@@ -10,6 +10,9 @@ from app.routes.employer_routes import EmployerRoutes
 from app.routes.job_posting_routes import JobPostingRoutes
 from app.routes.applicant_routes import ApplicantRoutes
 from app.routes.interview_routes import InterviewRoutes
+from app.routes.messageroutes import MessageRoutes
+from app.routes.notificationroutes import NotificationRoutes
+from app.routes.job_alert_routes import JobAlertRoutes
 
 
 def create_app():
@@ -22,14 +25,14 @@ def create_app():
     app.register_blueprint(RegistrationRoutes().registration())
     app.register_blueprint(ForgetPasswordRoutes().forget_password())
     app.register_blueprint(LogoutRoutes().logout())
-    
-    # Register job seeker routes (dashboard and profile)
-    job_seeker_routes = JobSeekerRoutes()
-    app.register_blueprint(job_seeker_routes.register_routes())
-    
-    # Register employer routes (dashboard and profile)
-    employer_routes = EmployerRoutes()
-    app.register_blueprint(employer_routes.register_routes())
+    app.register_blueprint(JobSeekerRoutes().job_seeker_profile())
+    app.register_blueprint(EmployerRoutes().employer_profile())
+    app.register_blueprint(JobPostingRoutes().job_posting())
+    app.register_blueprint(ApplicantRoutes().applicant_management())
+    app.register_blueprint(InterviewRoutes().interview_scheduling())
+    app.register_blueprint(MessageRoutes().messages())
+    app.register_blueprint(NotificationRoutes().notifications())
+    app.register_blueprint(JobAlertRoutes().job_alerts())
 
     from flask import send_from_directory
     import os

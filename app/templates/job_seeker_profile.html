@@ -179,6 +179,7 @@
     .nav-item:hover { background: rgba(255,255,255,0.07); color: var(--white); }
     .nav-item.active { background: rgba(232,168,56,0.15); color: var(--amber); }
     .nav-item.active i { color: var(--amber); }
+    .nav-item.small { font-size: 13px; }
 
     .sidebar-footer {
       padding: 16px 16px 24px;
@@ -523,6 +524,15 @@
         <i class="fa-solid fa-bookmark"></i> Saved Jobs
         <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
       </a>
+      <a href="{{ url_for('messages.index') }}" class="nav-item">
+        <i class="fa-regular fa-message"></i> Messages
+      </a>
+      <a href="{{ url_for('notifications.index') }}" class="nav-item">
+        <i class="fa-regular fa-bell"></i> Notifications
+      </a>
+      <a href="{{ url_for('job_alerts.index') }}" class="nav-item">
+        <i class="fa-solid fa-bell-concierge"></i> Job Alerts
+      </a>
       <a href="#" class="nav-item">
         <i class="fa-solid fa-magnifying-glass"></i> Find Jobs
         <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
@@ -811,6 +821,17 @@
     skillsWrap.addEventListener('click', () => tagInput.focus());
   }
 
+  const profileForm = document.getElementById('profileForm');
+  if (profileForm) {
+    profileForm.addEventListener('submit', () => {
+      if (tagInput && tagInput.value.trim()) {
+        addTag(tagInput.value.replace(',', ''));
+        tagInput.value = '';
+      }
+      syncSkills();
+    });
+  }
+
   // ── PHOTO UPLOAD ────────────────────────────────────────
   const photoInput = document.getElementById('photoInput');
   if (photoInput) {
@@ -821,7 +842,7 @@
       fd.append('photo', file);
       showToast('Uploading photo...');
       try {
-        const res = await fetch('/job-seeker/profile/photo', { method: 'POST', body: fd });
+        const res = await fetch('{{ url_for("job_seeker.upload_photo") }}', { method: 'POST', body: fd });
         const data = await res.json();
         if (data.status === 'success') {
           showToast('Photo updated!');
@@ -902,9 +923,7 @@
     deleteResumeBtn.addEventListener('click', async () => {
       if (!confirm('Remove your resume?')) return;
       try {
-        const res = await fetch('{{ url_for("job_seeker.delete_resume") }}', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
-        });
+        const res = await fetch('{{ url_for("job_seeker.delete_resume") }}', { method: 'POST' });
         const data = await res.json();
         if (data.status === 'success') {
           showToast('Resume removed');

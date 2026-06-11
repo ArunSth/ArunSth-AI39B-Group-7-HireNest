@@ -15,6 +15,8 @@
         .profile-section textarea { resize: vertical; min-height: 100px; }
         .profile-section button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         .profile-section button:hover { background-color: #0056b3; }
+        .quick-links { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+        .quick-links a { text-decoration:none; color:#0056b3; border:1px solid #cfe2ff; padding:8px 10px; border-radius:6px; background:#f8fbff; font-size:0.92rem; }
         .completion-bar-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; margin-bottom: 20px; }
         .completion-bar { height: 20px; background-color: #28a745; border-radius: 5px; text-align: center; line-height: 20px; color: white; font-size: 12px; }
         .flash-message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
@@ -36,6 +38,11 @@
 <body>
     <div class="container">
         <h1>Employer Profile for {{ user.First_name }} {{ user.Last_name }}</h1>
+        <div class="quick-links">
+            <a href="{{ url_for('messages.index') }}">Messages</a>
+            <a href="{{ url_for('notifications.index') }}">Notifications</a>
+            <a href="{{ url_for('job_alerts.index') }}">Job Alerts</a>
+        </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
