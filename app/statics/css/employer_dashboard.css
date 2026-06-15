@@ -4,13 +4,17 @@
   --primary-red: #EF4444;
   --primary-purple: #6D5DFC;
   --secondary-purple: #5149E8;
+  --deep-blue: #1E3A8A;
+  --hirenest-blue: #2F4FCD;
+  --hirenest-purple: #7C3AED;
   --light-purple: #F0EFFF;
-  --dark-bg: #0D1424;
+  --light-blue: #EFF6FF;
+  --dark-bg: #0F172A;
   --white: #FFFFFF;
-  --text-primary: #171718;
-  --text-secondary: #1e1e20;
-  --border-color: #D1D5DB;
-  --light-bg: #f8f9fa;
+  --text-primary: #111827;
+  --text-secondary: #475569;
+  --border-color: #E2E8F0;
+  --light-bg: #F4F7FB;
 }
 
 * {
@@ -233,6 +237,104 @@ body {
 /* Section */
 .section {
   margin-bottom: 30px;
+}
+
+.flash-message {
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 14px;
+  border: 1px solid var(--border-color);
+}
+
+.flash-message.success {
+  background: rgba(34, 197, 94, 0.08);
+  color: #15803D;
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.flash-message.error {
+  background: rgba(239, 68, 68, 0.08);
+  color: #B91C1C;
+  border-color: rgba(239, 68, 68, 0.18);
+}
+
+.helper-text,
+.muted {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.logo-card {
+  display: grid;
+  gap: 16px;
+}
+
+.logo-dropzone {
+  border: 1px dashed var(--border-color);
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--light-bg), var(--white));
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.logo-placeholder {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: var(--text-secondary);
+}
+
+.logo-placeholder i {
+  font-size: 32px;
+  color: var(--primary-purple);
+}
+
+.logo-preview {
+  width: 100%;
+  max-width: 180px;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(16, 24, 40, 0.08);
+}
+
+.profile-form {
+  display: grid;
+  gap: 14px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.completion-bar-container {
+  width: 100%;
+  height: 12px;
+  background: #E5E7EB;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.completion-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary-red), var(--primary-purple));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .section-header {

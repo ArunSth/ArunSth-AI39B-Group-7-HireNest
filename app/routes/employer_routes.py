@@ -7,6 +7,7 @@ from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
 import os
 
+
 class EmployerRoutes:
     def __init__(self):
         self.blueprint = Blueprint("employer", __name__)
@@ -27,7 +28,8 @@ class EmployerRoutes:
             user_id = session["user_id"]
             user_data = UserModel.get_by_id(user_id)
             profile_data = EmployerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = EmployerProfileModel.calculate_profile_completion(user_id)
+            completion_percentage = EmployerProfileModel.calculate_profile_completion(
+                user_id)
 
             return render_template("employer_dashboard.html", user=user_data, profile=profile_data, completion_percentage=completion_percentage)
 
@@ -40,32 +42,39 @@ class EmployerRoutes:
 
             user_id = session["user_id"]
             user_data = UserModel.get_by_id(user_id)
-            
+
             # Get employer profile
             from app.database import get_connection
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
-                    cur.execute("SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
+                    cur.execute(
+                        "SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
                     employee = cur.fetchone()
                     if not employee:
                         flash("Employer profile not found.", "error")
                         return redirect(url_for("employer.profile"))
-                    
+
                     employee_id = employee['Employee_id']
             finally:
                 conn.close()
 
             profile_data = EmployerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = EmployerProfileModel.calculate_profile_completion(
+                user_id)
             jobs = JobPostingModel.get_jobs_by_employer(employee_id)
-            applicants = ApplicantManagementModel.get_applications_for_employer(employee_id)
-            interviews = InterviewSchedulingModel.get_interviews_for_employer(employee_id)
-            
+            applicants = ApplicantManagementModel.get_applications_for_employer(
+                employee_id)
+            interviews = InterviewSchedulingModel.get_interviews_for_employer(
+                employee_id)
+
             # Calculate stats
-            total_applicants = ApplicantManagementModel.get_total_applicants(employee_id)
+            total_applicants = ApplicantManagementModel.get_total_applicants(
+                employee_id)
             job_app_counts = {}
             for job in jobs:
-                job_app_counts[job['Job_id']] = JobPostingModel.get_application_count(job['Job_id'])
+                job_app_counts[job['Job_id']] = JobPostingModel.get_application_count(
+                    job['Job_id'])
 
             return render_template(
                 "employer_dashboard.html",
@@ -75,6 +84,7 @@ class EmployerRoutes:
                 recent_applications=applicants[:5] if applicants else [],
                 interviews=interviews,
                 total_applicants=total_applicants,
+                completion_percentage=completion_percentage,
                 job_app_counts=job_app_counts
             )
 
@@ -85,9 +95,11 @@ class EmployerRoutes:
                 return redirect(url_for("login.index"))
 
             user_id = session["user_id"]
-            user_data = UserModel.get_by_id(user_id)  # Assuming a get_by_id method exists in UserModel
+            # Assuming a get_by_id method exists in UserModel
+            user_data = UserModel.get_by_id(user_id)
             profile_data = EmployerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = EmployerProfileModel.calculate_profile_completion(user_id)
+            completion_percentage = EmployerProfileModel.calculate_profile_completion(
+                user_id)
 
             if request.method == "POST":
                 company_name = request.form.get("company_name", "").strip()
@@ -98,15 +110,18 @@ class EmployerRoutes:
 
                 if EmployerProfileModel.create_or_update_profile(user_id, company_name, industry, description, website):
                     # Recalculate and update completion percentage
-                    new_completion_percentage = EmployerProfileModel.calculate_profile_completion(user_id)
-                    EmployerProfileModel.update_profile_completion(user_id, new_completion_percentage)
+                    new_completion_percentage = EmployerProfileModel.calculate_profile_completion(
+                        user_id)
+                    EmployerProfileModel.update_profile_completion(
+                        user_id, new_completion_percentage)
 
                     flash("Company profile updated successfully!", "success")
                     if action == "save_and_dashboard":
                         return redirect(url_for("employer.dashboard"))
                     return redirect(url_for("employer.profile"))
                 else:
-                    flash("Failed to update company profile. Please try again.", "error")
+                    flash(
+                        "Failed to update company profile. Please try again.", "error")
 
             return render_template("employer_profile.html", user=user_data, profile=profile_data, completion_percentage=completion_percentage)
 
@@ -136,8 +151,10 @@ class EmployerRoutes:
 
                 if EmployerProfileModel.update_logo(user_id, filename):
                     # Recalculate and update completion percentage
-                    new_completion_percentage = EmployerProfileModel.calculate_profile_completion(user_id)
-                    EmployerProfileModel.update_profile_completion(user_id, new_completion_percentage)
+                    new_completion_percentage = EmployerProfileModel.calculate_profile_completion(
+                        user_id)
+                    EmployerProfileModel.update_profile_completion(
+                        user_id, new_completion_percentage)
 
                     return jsonify({"status": "success", "message": "Company logo uploaded successfully!", "filename": filename}), 200
                 else:
