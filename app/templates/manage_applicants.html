@@ -2,8 +2,6 @@
 
 {% block content %}
 <div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
   <div class="main-content">
     <div class="topbar">
       <div class="topbar-left">
@@ -21,7 +19,7 @@
       </div>
     </div>
 
-    <div class="content">
+    <div class="content applicants-page-shell">
       {% set status_map = {} %}
       {% if status_counts %}
         {% for status_count in status_counts %}
@@ -29,8 +27,21 @@
         {% endfor %}
       {% endif %}
 
-      <div class="stats-grid" style="margin-bottom: 30px;">
-        <div class="stat-card">
+      <section class="applicants-hero">
+        <div>
+          <div class="eyebrow"><i class="fas fa-users"></i> Employer pipeline</div>
+          <h3>Applicants</h3>
+          <p>Review candidate applications, monitor hiring progress, and keep your shortlist moving with the same polished workspace as the dashboard.</p>
+        </div>
+        <div class="applicants-hero-badges">
+          <span class="applicants-chip"><i class="fas fa-briefcase"></i> {{ total_applicants or 0 }} total</span>
+          <span class="applicants-chip"><i class="fas fa-clock"></i> {{ status_map.get('pending', 0) }} new</span>
+          <span class="applicants-chip"><i class="fas fa-check-circle"></i> {{ status_map.get('accepted', 0) }} selected</span>
+        </div>
+      </section>
+
+      <div class="stats-grid applicants-stats-grid">
+        <div class="stat-card applicants-stat-card">
           <div class="stat-info">
             <h4>Total Applicants</h4>
             <div class="stat-value">{{ total_applicants or 0 }}</div>
@@ -38,7 +49,7 @@
           <div class="stat-icon red-bg"><i class="fas fa-users"></i></div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card applicants-stat-card">
           <div class="stat-info">
             <h4>Applied</h4>
             <div class="stat-value">{{ status_map.get('pending', 0) }}</div>
@@ -46,7 +57,7 @@
           <div class="stat-icon purple-bg"><i class="fas fa-paper-plane"></i></div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card applicants-stat-card">
           <div class="stat-info">
             <h4>Shortlisted</h4>
             <div class="stat-value">{{ status_map.get('shortlisted', 0) }}</div>
@@ -54,7 +65,7 @@
           <div class="stat-icon blue-bg"><i class="fas fa-star"></i></div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card applicants-stat-card">
           <div class="stat-info">
             <h4>Rejected</h4>
             <div class="stat-value">{{ status_map.get('rejected', 0) }}</div>
@@ -62,7 +73,7 @@
           <div class="stat-icon red-bg"><i class="fas fa-times-circle"></i></div>
         </div>
 
-        <div class="stat-card">
+        <div class="stat-card applicants-stat-card">
           <div class="stat-info">
             <h4>Selected</h4>
             <div class="stat-value">{{ status_map.get('accepted', 0) }}</div>
@@ -71,7 +82,7 @@
         </div>
       </div>
 
-      <div class="section">
+      <section class="section applicants-section-card">
         <div class="section-header">
           <div>
             <h3>All Applications</h3>
@@ -117,7 +128,7 @@
               </tbody>
             </table>
             {% else %}
-            <div class="empty-state">
+            <div class="empty-state applicants-empty-state">
               <i class="fas fa-user-clock"></i>
               <h3>No applications received yet.</h3>
               <p>Candidate applications will appear here once they apply to your posted jobs.</p>
@@ -125,7 +136,7 @@
             {% endif %}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   </div>
 </div>
@@ -133,6 +144,7 @@
 
 {% block scripts %}
 <link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="/static/css/employer_applicants.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="/static/js/employer_dashboard.js"></script>
 {% endblock %}
