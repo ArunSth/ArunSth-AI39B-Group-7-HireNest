@@ -25,9 +25,9 @@
           <i class="fas fa-home"></i>
           <span>Dashboard</span>
         </a>
-        <a href="/employer/profile" class="nav-item">
-          <i class="fas fa-building"></i>
-          <span>Company Profile</span>
+        <a href="/employer/profile" class="nav-item {% if 'profile' in request.path%}active{% endif %}">
+         <i class="fas fa-building"></i>
+         <span>Company Profile</span>
         </a>
         <a href="/employer/jobs" class="nav-item">
           <i class="fas fa-briefcase"></i>
@@ -38,7 +38,7 @@
           <span>Applicants</span>
         </a>
         <a href="/employer/interviews" class="nav-item">
-          <i class="fas fa-calender-check"></i>
+          <i class="fas fa-video"></i>
           <span>Interviews</span>
         </a>
       </nav>
