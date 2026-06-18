@@ -72,122 +72,243 @@
     </div>
 
     <div class="content">
-      <div class="overview-section">
-        <div class="overview-header">
-          <div>
-            <h3>{{ profile_alert_title }}</h3>
-            <p>{{ profile_alert_text }}</p>
+      <div class="seeker-dashboard-shell">
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Candidate home</span>
+            <h1>Welcome back, {{ user.First_name or 'Job Seeker' }}</h1>
+            <p>Keep your profile strong, track applications, and stay ready for your next opportunity.</p>
           </div>
-          <div class="overview-actions">
-            <a href="{{ url_for('job_seeker.profile') }}" class="btn-primary">{{ profile_action_text }}</a>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('applicant.seeker_applications') }}" class="seeker-action seeker-action--primary">
+              <i class="fas fa-search"></i>
+              <span>Search Opportunities</span>
+            </a>
+            <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-user-edit"></i>
+              <span>Update Profile</span>
+            </a>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-info">
-            <h4>Applied</h4>
-            <div class="stat-value">{{ applied_count }}</div>
+        <section class="seeker-stat-grid" aria-label="Dashboard statistics">
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Applications</p>
+              <strong>{{ applied_count }}</strong>
+              <span>Roles submitted</span>
+            </div>
+            <i class="fas fa-briefcase"></i>
           </div>
-          <div class="stat-icon blue-bg">
-            <i class="fas fa-rocket"></i>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-info">
-            <h4>Alerts</h4>
-            <div class="stat-value">{{ alerts_count }}</div>
-          </div>
-          <div class="stat-icon purple-bg">
-            <i class="fas fa-bell"></i>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-info">
-            <h4>Rejected</h4>
-            <div class="stat-value">{{ rejected_count }}</div>
-          </div>
-          <div class="stat-icon red-bg">
-            <i class="fas fa-times-circle"></i>
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-info">
-            <h4>Bookmarks</h4>
-            <div class="stat-value">{{ bookmarks_count }}</div>
-          </div>
-          <div class="stat-icon purple-bg">
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Saved Jobs</p>
+              <strong>{{ bookmarks_count }}</strong>
+              <span>Opportunities saved</span>
+            </div>
             <i class="fas fa-bookmark"></i>
           </div>
-        </div>
-      </div>
-
-      <div class="card-grid">
-        <div class="company-card">
-          <div class="card-header">
+          <div class="seeker-stat-tile">
             <div>
-              <h3>Recent Applications</h3>
-              <p>Latest jobs you have applied for.</p>
+              <p>Interviews</p>
+              <strong>{{ alerts_count }}</strong>
+              <span>Scheduled updates</span>
             </div>
-            <a href="{{ url_for('applicant.seeker_applications') }}" class="btn-secondary">View All</a>
+            <i class="fas fa-calendar-check"></i>
           </div>
-
-          {% if recent_applications %}
-          <div class="activity-list">
-            {% for app in recent_applications %}
-            <div class="activity-item">
-              <div>
-                <h4>{{ app.job_title }}</h4>
-                <p>{{ app.Company_name }} · {{ app.Location or 'Remote' }}</p>
-              </div>
-              <div class="activity-meta">
-                <span>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</span>
-                <span class="status-badge badge-{{ app.Status|lower }}">{{ app.Status|replace('_', ' ')|title }}</span>
-              </div>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <div class="empty-state">
-            <i class="fas fa-file-alt"></i>
-            <h3>No applications yet</h3>
-            <p>Start applying to jobs to see your latest activity here.</p>
-          </div>
-          {% endif %}
-        </div>
-
-        <div class="activity-card">
-          <div class="card-header">
+          <div class="seeker-stat-tile">
             <div>
-              <h3>Recent Activity</h3>
-              <p>Stay updated on your latest job seeker actions.</p>
+              <p>Profile Completion</p>
+              <strong>{{ completion_percentage }}%</strong>
+              <span>Candidate profile</span>
             </div>
-            <a href="{{ url_for('interview.seeker_interviews') }}" class="btn-secondary">See Interviews</a>
+            <i class="fas fa-user-check"></i>
+          </div>
+        </section>
+
+        {% if profile_incomplete %}
+        <section class="seeker-panel seeker-profile-warning">
+          <div class="seeker-profile-warning__icon">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div>
+            <span class="seeker-kicker">Profile required</span>
+            <h2>Complete your job seeker profile</h2>
+            <p>Your dashboard is available, but applications, interviews, alerts, and recommendations work best after your profile is created.</p>
+          </div>
+          <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--primary">Complete Profile</a>
+        </section>
+        {% endif %}
+
+        <section class="seeker-focus-grid">
+          <div class="seeker-panel seeker-profile-completion">
+            <div class="seeker-panel-heading">
+              <div>
+                <span class="seeker-kicker">Profile completion</span>
+                <h2>{{ profile_alert_title }}</h2>
+              </div>
+              <a href="{{ url_for('job_seeker.profile') }}" class="seeker-link-action">{{ profile_action_text }}</a>
+            </div>
+            <p>{{ profile_alert_text }}</p>
+            <div class="seeker-progress-track" aria-label="Profile completion">
+              <div class="seeker-progress-fill" style="width: {{ completion_percentage }}%"></div>
+            </div>
+            <div class="seeker-progress-meta">
+              <span>{{ completion_percentage }}% complete</span>
+              <span>
+                {% if completion_percentage >= 100 %}
+                  Profile ready
+                {% else %}
+                  Complete missing profile steps
+                {% endif %}
+              </span>
+            </div>
+            <div class="seeker-profile-steps">
+              <span class="{% if profile and profile.Bio %}seeker-step-done{% endif %}">Bio</span>
+              <span class="{% if profile and profile.Location %}seeker-step-done{% endif %}">Location</span>
+              <span class="{% if profile and profile.Education %}seeker-step-done{% endif %}">Education</span>
+              <span class="{% if profile and profile.Skills %}seeker-step-done{% endif %}">Skills</span>
+            </div>
           </div>
 
-          {% if recent_activities %}
-          <div class="activity-list">
-            {% for activity in recent_activities %}
-            <div class="activity-item">
-              <div>
-                <h4>{{ activity.title }}</h4>
-                <p>{{ activity.subtitle }}</p>
-              </div>
-              <div class="activity-meta">
-                <span>{{ activity.time }}</span>
-              </div>
+          <div class="seeker-panel seeker-membership-card">
+            <div class="seeker-membership-icon">
+              <i class="fas fa-crown"></i>
             </div>
-            {% endfor %}
+            <div>
+              <span class="seeker-kicker">Reserved</span>
+              <h2>Membership area</h2>
+              <p>This space is ready for future subscription and premium job seeker features.</p>
+            </div>
           </div>
-          {% else %}
-          <div class="empty-state">
-            <i class="fas fa-clock"></i>
-            <h3>No recent activity</h3>
-            <p>Your next update will appear after you apply to jobs or attend interviews.</p>
+        </section>
+
+        <section class="seeker-dashboard-grid">
+          <div class="seeker-dashboard-main">
+            <div class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Recent applications</span>
+                  <h2>Applications</h2>
+                </div>
+                <a href="{{ url_for('applicant.seeker_applications') }}" class="seeker-link-action">View all</a>
+              </div>
+
+              {% if recent_applications %}
+              <div class="seeker-item-list">
+                {% for app in recent_applications %}
+                <div class="seeker-application-row">
+                  <div>
+                    <h3>{{ app.job_title }}</h3>
+                    <p>{{ app.Company_name }} &middot; {{ app.Location or 'Remote' }}</p>
+                  </div>
+                  <div class="seeker-row-meta">
+                    <span>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</span>
+                    <span class="seeker-status seeker-status--{{ app.Status|lower }}">{{ app.Status|replace('_', ' ')|title }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="seeker-empty-block">
+                <h3>No recent applications yet</h3>
+                <p>Search opportunities and apply when you find the right fit.</p>
+                <a href="{{ url_for('applicant.seeker_applications') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Recommended jobs</span>
+                  <h2>Recommended for you</h2>
+                </div>
+              </div>
+              {% if recent_applications %}
+              <div class="seeker-recommendation-grid">
+                {% for app in recent_applications %}
+                <div class="seeker-recommendation-card">
+                  <div>
+                    <h3>{{ app.job_title }}</h3>
+                    <p>{{ app.Company_name }}</p>
+                  </div>
+                  <span>{{ app.Location or 'Remote' }}</span>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="seeker-empty-block seeker-empty-block--compact">
+                <h3>No recommended jobs yet</h3>
+                <p>Recommendations will appear here as your activity grows.</p>
+              </div>
+              {% endif %}
+            </div>
           </div>
-          {% endif %}
-        </div>
+
+          <div class="seeker-dashboard-side">
+            <div class="seeker-panel">
+              <div class="seeker-panel-heading seeker-panel-heading--compact">
+                <div>
+                  <span class="seeker-kicker">Upcoming interviews</span>
+                  <h2>Interviews</h2>
+                </div>
+                <a href="{{ url_for('interview.seeker_interviews') }}" class="seeker-link-action">See all</a>
+              </div>
+
+              {% set interview_items = [] %}
+              {% for activity in recent_activities if activity.title.startswith('Interview') %}
+                {% set _ = interview_items.append(activity) %}
+              {% endfor %}
+
+              {% if interview_items %}
+              <div class="seeker-item-list">
+                {% for item in interview_items %}
+                <div class="seeker-side-row">
+                  <div>
+                    <h3>{{ item.subtitle }}</h3>
+                    <p>{{ item.time }}</p>
+                  </div>
+                  <span class="seeker-chip">{{ item.title.split(' ')[1] if item.title.split(' ')|length > 1 else 'Event' }}</span>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="seeker-empty-block seeker-empty-block--compact">
+                <h3>No upcoming interviews</h3>
+                <p>Interview invitations and schedules will show here.</p>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="seeker-panel">
+              <div class="seeker-panel-heading seeker-panel-heading--compact">
+                <div>
+                  <span class="seeker-kicker">Recent activity</span>
+                  <h2>Activity</h2>
+                </div>
+              </div>
+              {% if recent_activities %}
+              <div class="seeker-item-list">
+                {% for activity in recent_activities %}
+                <div class="seeker-side-row">
+                  <div>
+                    <h3>{{ activity.title }}</h3>
+                    <p>{{ activity.subtitle }}</p>
+                  </div>
+                  <span>{{ activity.time }}</span>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="seeker-empty-block seeker-empty-block--compact">
+                <h3>No recent activity</h3>
+                <p>Your latest dashboard updates will appear here.</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
