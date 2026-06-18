@@ -429,6 +429,121 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
   });
 });
  
+
+// ════════════════════════════════════════════
+// ADMIN NOTIFICATION DROPDOWN
+// ════════════════════════════════════════════
+ 
+const adminNotifs = [];
+let notifFilter = 'all';
+ 
+// Called by logActivity — auto-creates a notification for every admin action
+function pushAdminNotif(action, target, status) {
+  const typeMap = {
+    success: 'job',
+    danger:  'report',
+    warning: 'job',
+    info:    'announcement',
+    muted:   'system',
+  };
+  adminNotifs.unshift({
+    id:     Date.now(),
+    type:   typeMap[status] || 'system',
+    title:  action,
+    msg:    target,
+    time:   new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    unread: true,
+  });
+  if (adminNotifs.length > 50) adminNotifs.pop();
+  renderAdminNotifs();
+}
+ 
+// Patch logActivity so every action also creates a notification
+const _origLogActivity = logActivity;
+logActivity = function(action, target, status) {
+  _origLogActivity(action, target, status);
+  pushAdminNotif(action, target, status);
+};
+ 
+function getFilteredNotifs() {
+  if (notifFilter === 'unread')       return adminNotifs.filter(n => n.unread);
+  if (notifFilter === 'announcement') return adminNotifs.filter(n => n.type === 'announcement');
+  if (notifFilter === 'report')       return adminNotifs.filter(n => n.type === 'report');
+  return adminNotifs;
+}
+ 
+function renderAdminNotifs() {
+  const body   = document.getElementById('notifListBody');
+  const badge  = document.getElementById('notifBadge');
+  const label  = document.getElementById('notifUnreadLabel');
+  if (!body) return;
+ 
+  const unread = adminNotifs.filter(n => n.unread).length;
+  if (badge) {
+    badge.textContent = unread;
+    badge.style.display = unread === 0 ? 'none' : '';
+  }
+  if (label) label.textContent = unread > 0 ? `(${unread} unread)` : '';
+ 
+  const data = getFilteredNotifs();
+  if (data.length === 0) {
+    body.innerHTML = `<div class="notif-empty">
+      <i class="fa-solid fa-bell-slash"></i>
+      <p>No notifications</p>
+    </div>`;
+    return;
+  }
+ 
+  const iconMap  = { announcement:'fa-bullhorn', user:'fa-user-plus', report:'fa-flag', job:'fa-briefcase', system:'fa-heart-pulse' };
+  const classMap = { announcement:'announce',    user:'user',          report:'report', job:'job',          system:'system'        };
+ 
+  body.innerHTML = data.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markAdminNotifRead(${n.id})">
+      <div class="notif-icon ${classMap[n.type] || 'system'}">
+        <i class="fa-solid ${iconMap[n.type] || 'fa-bell'}"></i>
+      </div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-msg">${n.msg}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+      ${n.unread ? '<span class="notif-dot"></span>' : ''}
+    </div>`).join('');
+}
+ 
+function markAdminNotifRead(id) {
+  const n = adminNotifs.find(x => x.id === id);
+  if (n) n.unread = false;
+  renderAdminNotifs();
+}
+ 
+function markAllAdminNotifs() {
+  adminNotifs.forEach(n => n.unread = false);
+  renderAdminNotifs();
+}
+ 
+function setNotifFilter(f, btn) {
+  notifFilter = f;
+  document.querySelectorAll('.nftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderAdminNotifs();
+}
+ 
+function toggleNotifDropdown() {
+  const dd = document.getElementById('notifDropdown');
+  if (dd) dd.classList.toggle('open');
+}
+ 
+function closeNotifDropdown() {
+  document.getElementById('notifDropdown')?.classList.remove('open');
+}
+ 
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('notifWrap');
+  if (wrap && !wrap.contains(e.target)) closeNotifDropdown();
+});
+ 
 // ════════════════════════════════════════════
 // USER MANAGEMENT — SERVER SIDE USERS
 // Users are rendered by Jinja in the HTML.
@@ -1093,6 +1208,99 @@ function updatePlatformHealth() {
       </div>`).join('');
   }
 }
+
+// ════════════════════════════════════════════
+// NOTIFICATION SYSTEM — JS ADDITIONS
+// These go at the VERY BOTTOM of admin_dashboard.js,
+// replacing nothing — just appended.
+// ════════════════════════════════════════════
+ 
+// ── Bell shake on new notification ──────────
+function shakeBell() {
+  const btn = document.getElementById('notifBtn');
+  if (!btn) return;
+  btn.classList.remove('bell-shake');
+  // Force reflow so the animation restarts
+  void btn.offsetWidth;
+  btn.classList.add('bell-shake');
+  setTimeout(() => btn.classList.remove('bell-shake'), 500);
+}
+ 
+// ── Patch pushAdminNotif to also shake the bell
+//    and show the badge correctly ─────────────
+const _origPushAdminNotif = pushAdminNotif;
+pushAdminNotif = function(action, target, status) {
+  _origPushAdminNotif(action, target, status);
+  shakeBell();
+ 
+  // Make badge visible (renderAdminNotifs sets display:none but CSS default is none)
+  const badge = document.getElementById('notifBadge');
+  if (badge && badge.textContent !== '0') {
+    badge.style.display = 'flex';
+    // also add has-unread class to btn
+    document.getElementById('notifBtn')?.classList.add('has-unread');
+  }
+};
+ 
+// ── Fix renderAdminNotifs to properly show/hide badge ──
+const _origRenderAdminNotifs = renderAdminNotifs;
+renderAdminNotifs = function() {
+  _origRenderAdminNotifs();
+  const unread = adminNotifs.filter(n => n.unread).length;
+  const badge  = document.getElementById('notifBadge');
+  const btn    = document.getElementById('notifBtn');
+  if (badge) {
+    badge.style.display = unread > 0 ? 'flex' : 'none';
+    badge.textContent   = unread > 99 ? '99+' : unread;
+  }
+  if (btn) btn.classList.toggle('has-unread', unread > 0);
+};
+ 
+// ════════════════════════════════════════════
+// FIX: Remove the duplicate sendAnnouncementForm
+// listener that was added in the analytics section.
+// The single correct listener below replaces both.
+// ════════════════════════════════════════════
+// NOTE: In your admin_dashboard.js, DELETE these two blocks:
+//   1. The first sendAnnouncementForm listener (~line 134, in the analytics section)
+//   2. The patchAnnouncementLog IIFE below it
+// Keep only the second sendAnnouncementForm listener (in the ANNOUNCEMENTS section).
+// Then update that listener's .then() success block to also log to announcementLog:
+ 
+// ── Wrap the existing announcement listener to also
+//    push to announcementLog (for the Analytics tab) ──
+(function fixAnnouncementListener() {
+  // We can't remove old listeners, but we CAN patch at the fetch level.
+  // The cleanest fix: override the fetch for /admin/announcements/send
+  // so the first (duplicate) listener's fetch is a no-op.
+  // Instead, patch announcementLog to be filled by logActivity.
+ 
+  const _origLogActivity2 = logActivity;
+  logActivity = function(action, target, status) {
+    _origLogActivity2(action, target, status);
+ 
+    // If this is an announcement action, also log to announcementLog
+    if (action.toLowerCase().includes('announcement')) {
+      // Parse subject and audience from target string "Subject → Audience"
+      const parts    = target.split(' → ');
+      const subject  = parts[0] || target;
+      const audience = parts[1] || 'All Users';
+      // Avoid duplicates
+      if (!announcementLog.find(a => a.subject === subject)) {
+        announcementLog.unshift({
+          subject,
+          audience,
+          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        });
+      }
+    }
+  };
+})();
+ 
+// ── Initial badge render on page load ────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderAdminNotifs();
+});
  
 // ─────────────────────────────────────────────
 // GLOBAL SEARCH
