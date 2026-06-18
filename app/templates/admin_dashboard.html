@@ -43,9 +43,9 @@
             </a>
         </nav>
         <div class="sidebar-footer">
-            <a href="/" class="nav-link exit-link" onclick="confirmExit(event)">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Exit Admin</span>
-            </a>
+      <a href="/logout" class="logout-btn">
+        <i class="fa-solid fa-right-from-bracket"></i> Exit Admin
+      </a>
         </div>
     </aside>
  
@@ -481,28 +481,72 @@
  
         <!-- ── SETTINGS ── -->
         <div class="tab-content" id="tab-settings">
-            <div class="page-head"><h1>Settings</h1><p>Configure platform preferences.</p></div>
-            <div class="chart-card" style="max-width:540px">
-                <h3 style="margin-bottom:20px;font-size:16px;font-weight:600">General Settings</h3>
-                <div class="setting-row">
-                    <div><strong>Maintenance Mode</strong><p>Temporarily disable public access</p></div>
-                    <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <div><strong>Email Notifications</strong><p>Send alerts for new applications</p></div>
-                    <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <div><strong>Auto-approve Jobs</strong><p>Skip manual review for verified employers</p></div>
-                    <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <div><strong>Job Moderation</strong><p>Require admin approval before jobs go live</p></div>
-                    <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
-                </div>
-                <button class="action-btn purple" style="margin-top:24px" onclick="showToast('Settings saved','success')">Save Settings</button>
-            </div>
-        </div>
+  <div class="page-head">
+    <h1>⚙️ Admin Settings</h1>
+    <p>Configure platform rules and administrative preferences.</p>
+  </div>
+
+  <!-- General Platform Controls -->
+  <div class="chart-card">
+    <h3>Platform Controls</h3>
+    <div class="setting-row">
+      <div>
+        <strong>User Registration</strong>
+        <p>Allow new users to sign up</p>
+      </div>
+      <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <strong>Employer Verification</strong>
+        <p>Require verification before posting jobs</p>
+      </div>
+      <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- Job Posting Rules -->
+  <div class="chart-card">
+    <h3>Job Posting Rules</h3>
+    <div class="setting-row">
+      <div>
+        <strong>Auto-approve Jobs</strong>
+        <p>Skip manual review for trusted employers</p>
+      </div>
+      <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <strong>Job Moderation</strong>
+        <p>Require admin approval before jobs go live</p>
+      </div>
+      <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- Reporting & Notifications -->
+  <div class="chart-card">
+    <h3>Reporting & Notifications</h3>
+    <div class="setting-row">
+      <div>
+        <strong>Email Alerts</strong>
+        <p>Notify admins of flagged content</p>
+      </div>
+      <label class="toggle"><input type="checkbox" checked><span class="slider"></span></label>
+    </div>
+    <div class="setting-row">
+      <div>
+        <strong>Weekly Reports</strong>
+        <p>Send summary of platform activity</p>
+      </div>
+      <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <button class="action-btn purple" onclick="saveSettings()">💾 Save Settings</button>
+</div>
+
+
  
     </main>
 </div>
