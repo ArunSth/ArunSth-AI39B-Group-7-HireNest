@@ -84,6 +84,27 @@ class AdminRoutes:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
             finally:
                 conn.close()
+
+        @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/delete', methods=['POST'])
+        def delete_moderation_job(job_id):
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+            from app.database import get_connection
+            conn = get_connection()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute("DELETE FROM `Jobs` WHERE `Job_id`=%s", (job_id,))
+                conn.commit()
+                AdminProfileModel.record_audit_log(
+                    session['user_id'], 'job_deleted', 'job', job_id,
+                    f'Job #{job_id} deleted by admin.'
+                )
+                return jsonify({'status': 'success'})
+            except Exception as e:
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+            finally:
+                conn.close()
  
         # ── 4. Profile API ────────────────────────────────────
         @self.blueprint.route('/admin/profile', methods=['GET', 'POST'])
@@ -146,6 +167,30 @@ class AdminRoutes:
                 admin_user_id=session['user_id'], limit=limit
             )
             return jsonify({'status': 'success', 'audit_logs': logs}), 200
+            
+
+        @self.blueprint.route('/admin/moderation/jobs', methods=['GET'])
+        def moderation_jobs():
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+            jobs = JobPostingModel.get_all_jobs_for_admin()
+            result = []
+            for j in jobs:
+                db_status = (j['Status'] or '').lower()
+                ui_status = 'Approved' if db_status == 'active' else \
+                            'Rejected' if db_status == 'rejected' else 'Pending'
+                result.append({
+                    'id':          j['Job_id'],
+                    'title':       j['Title'],
+                    'company':     j['Company_name'],
+                    'type':        j['Job_type'],
+                    'location':    j['Location'],
+                    'status':      ui_status,
+                    'submitted':   j['Created_at'].strftime('%-d %b %Y') if j['Created_at'] else '—',
+                    'description': j['Description'] or '',
+                })
+            return jsonify(result)
  
         # ── 6. Send Announcement ──────────────────────────────
         @self.blueprint.route('/admin/announcements/send', methods=['POST'])
