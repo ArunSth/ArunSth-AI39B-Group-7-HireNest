@@ -8,7 +8,7 @@
 // Load persisted state, or start fresh
 let JOBS    = JSON.parse(localStorage.getItem('hn_jobs')    || '[]');
 let REPORTS = JSON.parse(localStorage.getItem('hn_reports') || '[]');
-let _nextJobId    = JOBS.reduce((m, j) => Math.max(m, j.id + 1), 1);
+let _nextJobId = JOBS.reduce((m, j) => (!j.fromDB && typeof j.id === 'number') ? Math.max(m, j.id + 1) : m, 1);
 let _nextReportId = REPORTS.reduce((m, r) => Math.max(m, r.id + 1), 1);
  
  
@@ -811,14 +811,18 @@ function renderModeration(data) {
       </td>
       <td>
         <div class="td-actions">
-          <button class="action-btn ghost sm" onclick="viewModerationJob(${j.id})">
+          <button class="action-btn ghost sm" onclick="viewModerationJob('${j.id}')">
             <i class="fa-solid fa-eye"></i> View
           </button>
           ${j.status === 'Pending' ? `
-            <button class="action-btn green sm" onclick="approveJob(${j.id},'${j.title}')">
+            <button class="action-btn green sm" onclick="approveJob('${j.id}','${j.title}')">
               <i class="fa-solid fa-check"></i> Approve</button>
-            <button class="action-btn danger sm" onclick="rejectJob(${j.id},'${j.title}')">
+            <button class="action-btn danger sm" onclick="rejectJob('${j.id}','${j.title}')">
               <i class="fa-solid fa-xmark"></i> Reject</button>` : ''}
+          <button class="action-btn secondary sm" onclick="reportModerationJob('${j.id}','${j.title}','${j.company}')">
+            <i class="fa-solid fa-flag"></i> Report</button>
+          <button class="action-btn danger sm" onclick="deleteModerationJob('${j.id}','${j.title}')">
+            <i class="fa-solid fa-trash"></i></button>
         </div>
       </td>
     </tr>`).join('');
@@ -903,12 +907,65 @@ function viewModerationJob(id) {
       </div>
     </div>
     ${j.description ? `<div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.6">${j.description}</div>` : ''}`;
-  document.getElementById('viewJobFooter').innerHTML = j.status === 'Pending' ? `
+  document.getElementById('viewJobFooter').innerHTML = `
     <button class="action-btn ghost" onclick="closeModal('viewJobModal')">Cancel</button>
-    <button class="action-btn green" onclick="closeModal('viewJobModal');approveJob(${j.id},'${j.title}')"><i class="fa-solid fa-check"></i> Approve</button>
-    <button class="action-btn danger" onclick="closeModal('viewJobModal');rejectJob(${j.id},'${j.title}')"><i class="fa-solid fa-xmark"></i> Reject</button>` :
-    `<button class="action-btn ghost" onclick="closeModal('viewJobModal')">Close</button>`;
+    ${j.status === 'Pending' ? `
+      <button class="action-btn green" onclick="closeModal('viewJobModal');approveJob('${j.id}','${j.title}')">
+        <i class="fa-solid fa-check"></i> Approve</button>
+      <button class="action-btn danger" onclick="closeModal('viewJobModal');rejectJob('${j.id}','${j.title}')">
+        <i class="fa-solid fa-xmark"></i> Reject</button>` : ''}
+    <button class="action-btn secondary" onclick="closeModal('viewJobModal');reportModerationJob('${j.id}','${j.title}','${j.company}')">
+      <i class="fa-solid fa-flag"></i> Report</button>
+    <button class="action-btn danger" onclick="closeModal('viewJobModal');deleteModerationJob('${j.id}','${j.title}')">
+      <i class="fa-solid fa-trash"></i> Delete</button>`;
   openModal('viewJobModal');
+}
+// ── Report a job from the moderation tab ──
+function reportModerationJob(id, title, company) {
+  // Pre-fill the existing addReportModal and open it
+  const form = document.getElementById('addReportForm');
+  if (form) {
+    form.reportJobTitle.value = title;
+    form.reportCompany.value  = company;
+    form.reportedBy.value     = 'Admin';
+    form.reportReason.value   = 'Inappropriate';
+    form.reportDescription.value = '';
+  }
+  openModal('addReportModal');
+}
+
+// ── Delete a job from the moderation tab ──
+function deleteModerationJob(id, title) {
+  showConfirm(
+    'Delete Job',
+    `Permanently delete "${title}"? This cannot be undone.`,
+    'Delete', 'danger',
+    () => {
+      const j = JOBS.find(j => j.id === id);
+      if (!j) return;
+
+      const doDelete = () => {
+        JOBS = JOBS.filter(j => j.id !== id);
+        persistState();
+        filterModeration();
+        updateStats();
+        logActivity('Job Deleted', title, 'danger');
+        showToast(`"${title}" deleted`, 'danger');
+      };
+
+      if (j.fromDB) {
+        fetch(`/admin/moderation/jobs/${j.dbId}/delete`, { method: 'POST' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'success') doDelete();
+            else showToast(data.message || 'Failed to delete job', 'danger');
+          })
+          .catch(() => showToast('Network error', 'danger'));
+      } else {
+        doDelete();
+      }
+    }
+  );
 }
  
 // ════════════════════════════════════════════
@@ -987,6 +1044,8 @@ document.getElementById('addReportForm')?.addEventListener('submit', e => {
   filterReports(); updateStats();
   logActivity('Job Reported', `${jobTitle} — ${reason}`, 'warning');
   showToast(`Report submitted for "${jobTitle}"`, 'warning');
+  // Navigate to Reported Jobs tab so admin can see it immediately
+  document.querySelector('[data-tab="reported-jobs"]')?.click();
 });
  
 function viewReport(id) {
@@ -1016,14 +1075,14 @@ function viewReport(id) {
 function removeReportedJob(id, title) {
   showConfirm('Remove Job', `Remove "${title}" from the platform?`, 'Remove Job', 'danger', () => {
     const r = REPORTS.find(r => r.id === id);
-    if (r) { r.status = 'Resolved'; persistState(); filterReports(); updateStats(); logActivity('Job Removed', title, 'danger'); showToast(`"${title}" removed`, 'danger'); }
+    if (r) { r.status = 'Resolved'; persistState(); filterReports(); updateAnalytics(); updateStats(); logActivity('Job Removed', title, 'danger'); showToast(`"${title}" removed`, 'danger'); }
   });
 }
  
 function dismissReport(id, title) {
   showConfirm('Dismiss Report', `Dismiss the report for "${title}"?`, 'Dismiss', 'ghost', () => {
     const r = REPORTS.find(r => r.id === id);
-    if (r) { r.status = 'Dismissed'; persistState(); filterReports(); updateStats(); logActivity('Report Dismissed', title, 'muted'); showToast('Report dismissed', 'success'); }
+    if (r) { r.status = 'Dismissed'; persistState(); filterReports(); updateAnalytics(); updateStats(); logActivity('Report Dismissed', title, 'muted'); showToast('Report dismissed', 'success'); }
   });
 }
  
@@ -1353,6 +1412,40 @@ document.querySelector('.search-bar input')?.addEventListener('input', function 
   }
 });
  
+
+function loadModerationJobsFromDB() {
+  fetch('/admin/moderation/jobs')
+    .then(r => r.json())
+    .then(dbJobs => {
+      // Remove previously loaded DB jobs to avoid duplicates on refresh
+      JOBS = JOBS.filter(j => !j.fromDB);
+
+      dbJobs.forEach(dbJob => {
+        JOBS.push({
+          id:          'db-' + dbJob.id,
+          dbId:        dbJob.id,
+          title:       dbJob.title,
+          company:     dbJob.company,
+          type:        dbJob.type,
+          location:    dbJob.location,
+          status:      dbJob.status,
+          submitted:   dbJob.submitted,
+          description: dbJob.description || '',
+          fromDB:      true,
+        });
+      });
+
+      renderModeration(JOBS);
+      updateStats();
+    })
+    .catch(err => console.error('Could not load jobs for moderation:', err));
+}
+
+function persistState() {
+  localStorage.setItem('hn_jobs',    JSON.stringify(JOBS.filter(j => !j.fromDB)));
+  localStorage.setItem('hn_reports', JSON.stringify(REPORTS));
+}
+
 // ─────────────────────────────────────────────
 // INIT — do NOT call renderUsers here, Jinja already rendered them
 // ─────────────────────────────────────────────
@@ -1367,4 +1460,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderReports(REPORTS);
   renderRoleBreakdown();
   updatePlatformHealth();
+  updateAnalytics();
+  loadModerationJobsFromDB(); 
 });
