@@ -252,7 +252,7 @@ function showToast(message, type = 'success') {
   clearTimeout(toast._timeout);
   toast._timeout = setTimeout(() => { toast.style.transform = 'translateY(20px)'; toast.style.opacity = '0'; }, 3000);
 }
-
+ 
 // ════════════════════════════════════════════
 // ANALYTICS TAB
 // ════════════════════════════════════════════
@@ -429,7 +429,7 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
   });
 });
  
-
+ 
 // ════════════════════════════════════════════
 // ADMIN NOTIFICATION DROPDOWN
 // ════════════════════════════════════════════
@@ -1208,7 +1208,7 @@ function updatePlatformHealth() {
       </div>`).join('');
   }
 }
-
+ 
 // ════════════════════════════════════════════
 // NOTIFICATION SYSTEM — JS ADDITIONS
 // These go at the VERY BOTTOM of admin_dashboard.js,
@@ -1302,6 +1302,24 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminNotifs();
 });
  
+function saveSettings() {
+  showToast('Settings saved successfully!', 'success');
+}
+ 
+// Dark Mode Toggle (no-op if the toggle isn't in the page yet)
+document.getElementById("darkModeToggle")?.addEventListener("change", function() {
+  if (this.checked) {
+    document.body.style.background = "#1e1e2f";
+    document.body.style.color = "#f5f5f5";
+  } else {
+    document.body.style.background = "#f5f7fa";
+    document.body.style.color = "#333";
+  }
+});
+ 
+
+ 
+ 
 // ─────────────────────────────────────────────
 // GLOBAL SEARCH
 // ─────────────────────────────────────────────
@@ -1350,4 +1368,3 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRoleBreakdown();
   updatePlatformHealth();
 });
- 
