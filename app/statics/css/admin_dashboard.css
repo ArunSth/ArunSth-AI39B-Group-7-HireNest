@@ -695,3 +695,26 @@ td.empty-state { border: none; }
   80%     { transform: rotate(9deg);  }
 }
 .bell-shake { animation: bellShake 0.5s ease; }
+
+/* Dropdown */
+.dropdown {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  background: #f9f9f9;
+  transition: 0.3s;
+}
+.dropdown:hover {
+  border-color: #6a67f1;
+}
+
+/* Section Headings */
+.chart-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 16px;
+  border-left: 4px solid #6a67f1;
+  padding-left: 8px;
+}
