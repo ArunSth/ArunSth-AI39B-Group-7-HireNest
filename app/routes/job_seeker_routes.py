@@ -84,38 +84,39 @@ class JobSeekerRoutes:
 
             from app.database import get_connection
             conn = get_connection()
+            applications = []
+            interviews = []
+            profile_incomplete = False
             try:
                 with conn.cursor() as cur:
                     cur.execute('SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s', (user_id,))
                     seeker = cur.fetchone()
                     if not seeker:
-                        flash('Job seeker profile not found.', 'error')
-                        return redirect(url_for('job_seeker.profile'))
-
-                    seekers_id = seeker['Seekers_id']
-                    cur.execute(
-                        '''
-                        SELECT 
-                            a.`Application_id`,
-                            a.`Status`,
-                            a.`Applied_at`,
-                            j.`Title` AS job_title,
-                            j.`Salary`,
-                            j.`Location`,
-                            e.`Company_name`
-                        FROM `Applications` a
-                        JOIN `Jobs` j ON a.`Job_id` = j.`Job_id`
-                        JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
-                        WHERE a.`Seekers_id`=%s
-                        ORDER BY a.`Applied_at` DESC
-                        ''',
-                        (seekers_id,),
-                    )
-                    applications = cur.fetchall()
+                        profile_incomplete = True
+                    else:
+                        seekers_id = seeker['Seekers_id']
+                        cur.execute(
+                            '''
+                            SELECT 
+                                a.`Application_id`,
+                                a.`Status`,
+                                a.`Applied_at`,
+                                j.`Title` AS job_title,
+                                j.`Salary`,
+                                j.`Location`,
+                                e.`Company_name`
+                            FROM `Applications` a
+                            JOIN `Jobs` j ON a.`Job_id` = j.`Job_id`
+                            JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                            WHERE a.`Seekers_id`=%s
+                            ORDER BY a.`Applied_at` DESC
+                            ''',
+                            (seekers_id,),
+                        )
+                        applications = cur.fetchall()
+                        interviews = InterviewSchedulingModel.get_interviews_for_applicant(seekers_id)
             finally:
                 conn.close()
-
-            interviews = InterviewSchedulingModel.get_interviews_for_applicant(seekers_id)
 
             applied_count = len(applications)
             rejected_count = sum(1 for app in applications if app.get('Status', '').lower() == 'rejected')
@@ -160,7 +161,8 @@ class JobSeekerRoutes:
                 recent_activities=recent_activities,
                 profile_alert_title=profile_alert_title,
                 profile_alert_text=profile_alert_text,
-                profile_action_text=profile_action_text
+                profile_action_text=profile_action_text,
+                profile_incomplete=profile_incomplete
             )
 
         @self.blueprint.route('/job-seeker/profile/photo', methods=['POST'])
