@@ -13,7 +13,7 @@ from app.routes.interview_routes import InterviewRoutes
 from app.routes.messageroutes import MessageRoutes
 from app.routes.notificationroutes import NotificationRoutes
 from app.routes.job_alert_routes import JobAlertRoutes
-
+from app.routes.admin_routes import AdminRoutes
 
 def create_app():
     app = Flask(__name__, static_folder='statics', template_folder='templates')
@@ -33,7 +33,8 @@ def create_app():
     app.register_blueprint(MessageRoutes().messages())
     app.register_blueprint(NotificationRoutes().notifications())
     app.register_blueprint(JobAlertRoutes().job_alerts())
-
+    app.register_blueprint(AdminRoutes().register_routes())
+    
     from flask import send_from_directory
     import os
 
