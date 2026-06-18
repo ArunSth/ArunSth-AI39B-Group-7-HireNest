@@ -21,6 +21,7 @@ from app.routes.job_alert_routes import JobAlertRoutes
 from app.routes.review_routes import ReviewRoutes
 from app.routes.subscription_routes import SubscriptionRoutes
 
+from app.routes.admin_routes import AdminRoutes
 
 def create_app():
     app = Flask(__name__, static_folder='statics', template_folder='templates')
@@ -55,6 +56,11 @@ def create_app():
     app.register_blueprint(SubscriptionRoutes().subscription_routes())
 
     # Upload route
+    app.register_blueprint(AdminRoutes().register_routes())
+    
+    from flask import send_from_directory
+    import os
+
     @app.route('/uploads/<path:filename>')
     def download_file(filename):
         return send_from_directory(

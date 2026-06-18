@@ -71,6 +71,100 @@ class JobSeekerRoutes:
                 completion_percentage=completion_percentage
             )
 
+        @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
+        def dashboard():
+            if 'user_id' not in session or session.get('role') != 'job_seeker':
+                flash('Please log in as a job seeker to view your dashboard.', 'error')
+                return redirect(url_for('login.index'))
+
+            user_id = session['user_id']
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+
+            from app.database import get_connection
+            conn = get_connection()
+            applications = []
+            interviews = []
+            profile_incomplete = False
+            try:
+                with conn.cursor() as cur:
+                    cur.execute('SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s', (user_id,))
+                    seeker = cur.fetchone()
+                    if not seeker:
+                        profile_incomplete = True
+                    else:
+                        seekers_id = seeker['Seekers_id']
+                        cur.execute(
+                            '''
+                            SELECT 
+                                a.`Application_id`,
+                                a.`Status`,
+                                a.`Applied_at`,
+                                j.`Title` AS job_title,
+                                j.`Salary`,
+                                j.`Location`,
+                                e.`Company_name`
+                            FROM `Applications` a
+                            JOIN `Jobs` j ON a.`Job_id` = j.`Job_id`
+                            JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                            WHERE a.`Seekers_id`=%s
+                            ORDER BY a.`Applied_at` DESC
+                            ''',
+                            (seekers_id,),
+                        )
+                        applications = cur.fetchall()
+                        interviews = InterviewSchedulingModel.get_interviews_for_applicant(seekers_id)
+            finally:
+                conn.close()
+
+            applied_count = len(applications)
+            rejected_count = sum(1 for app in applications if app.get('Status', '').lower() == 'rejected')
+            alerts_count = sum(1 for interview in interviews if interview.get('Status', '').lower() == 'scheduled')
+            bookmarks_count = 0
+            recent_applications = applications[:4]
+
+            recent_activities = []
+            for app in applications[:3]:
+                recent_activities.append({
+                    'title': f"Applied to {app.get('job_title', 'Job')}",
+                    'subtitle': f"{app.get('Company_name', 'Company')} • {app.get('Status', 'Pending').title()}",
+                    'time': app['Applied_at'].strftime('%d %b %Y') if app.get('Applied_at') else 'N/A'
+                })
+
+            for interview in interviews[:2]:
+                recent_activities.append({
+                    'title': f"Interview {interview.get('Status', 'Scheduled').title()}",
+                    'subtitle': f"{interview.get('job_title', 'Position')} at {interview.get('Company_name', '')}",
+                    'time': interview['Interview_date'].strftime('%d %b') if interview.get('Interview_date') else 'N/A'
+                })
+
+            profile_alert_title = 'Complete your profile'
+            profile_alert_text = 'Update your profile and location details to improve your job matches.'
+            profile_action_text = 'Complete Profile'
+
+            if profile_data and completion_percentage == 100:
+                profile_alert_title = 'Profile complete'
+                profile_alert_text = 'Your job seeker profile looks great. Keep applying to new jobs.'
+                profile_action_text = 'View Profile'
+
+            return render_template(
+                'seeker_dashboard.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage,
+                applied_count=applied_count,
+                alerts_count=alerts_count,
+                rejected_count=rejected_count,
+                bookmarks_count=bookmarks_count,
+                recent_applications=recent_applications,
+                recent_activities=recent_activities,
+                profile_alert_title=profile_alert_title,
+                profile_alert_text=profile_alert_text,
+                profile_action_text=profile_action_text,
+                profile_incomplete=profile_incomplete
+            )
+
         @self.blueprint.route('/job-seeker/profile/photo', methods=['POST'])
         def upload_photo():
             if 'user_id' not in session or session.get('role') != 'job_seeker':

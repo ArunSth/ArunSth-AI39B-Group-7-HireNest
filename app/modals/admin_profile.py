@@ -15,6 +15,22 @@ class AdminProfileModel:
             conn.close()
 
     @staticmethod
+    def get_profile_by_user_id(user_id: int) -> Optional[dict]:
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                # Use 'admin_profiles' (lowercase)
+                cur.execute("SELECT * FROM `admin_profiles` WHERE `User_id`=%s", (user_id,))
+                return cur.fetchone()
+        finally:
+            conn.close()
+
+    # ... and so on for all other methods
+    # For audit logs, use 'admin_audit_log'
+    # cur.execute("INSERT INTO `admin_audit_log` ...")
+    
+
+    @staticmethod
     def calculate_profile_completion(user_id: int) -> float:
         # Simple heuristic: presence of Display_name, Department, Bio
         profile = AdminProfileModel.get_profile_by_user_id(user_id) or {}

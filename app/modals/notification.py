@@ -42,6 +42,40 @@ class NotificationModel:
             conn.close()
 
     @staticmethod
+    def send_announcement(subject, message, audience, db):
+        """
+        audience: 'all' | 'Job Seeker' | 'Employer'
+        db: your SQLAlchemy db instance (or however you access the session)
+ 
+        Adjust the import / query style to match your existing controller patterns.
+        """
+        from app.models.user import User            # adjust import path as needed
+        from app.models.notification import Notification  # adjust import path as needed
+ 
+    # Build the recipient query
+        if audience == 'all':
+           users = db.session.query(User).all()
+        else:
+           users = db.session.query(User).filter(User.Role == audience).all()
+ 
+        notifications = [
+            Notification(
+              user_id=u.User_id,
+              title=f"📢 {subject}",
+              message=message,
+              is_read=False,
+            )
+            for u in users
+        ]
+ 
+        if notifications:
+            db.session.bulk_save_objects(notifications)
+            db.session.commit()
+ 
+        return len(notifications)
+ 
+
+    @staticmethod
     def unread_count(user_id):
         conn = get_connection()
         try:
