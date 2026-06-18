@@ -1,6 +1,6 @@
 from app.database import get_connection
 from datetime import datetime
-
+ 
 class JobPostingModel:
     @staticmethod
     def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level"):
@@ -23,7 +23,37 @@ class JobPostingModel:
             return None
         finally:
             conn.close()
-
+ 
+    @staticmethod
+    def search_jobs(keyword, location, job_type):
+        conn = get_connection()
+        try:
+            query = "SELECT * FROM `Jobs` WHERE `Status` = 'active'"
+            params = []
+ 
+            if keyword:
+                query += " AND (`Title` LIKE %s OR `Description` LIKE %s)"
+                params.extend([f"%{keyword}%", f"%{keyword}%"])
+ 
+            if location:
+                query += " AND `Location` LIKE %s"
+                params.append(f"%{location}%")
+ 
+            if job_type != "All Types":
+                query += " AND `Job_type` = %s"
+                params.append(job_type)
+ 
+            query += " ORDER BY `Created_at` DESC"
+ 
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchall()
+        except Exception as e:
+            print(f"Error searching jobs: {e}")
+            return []
+        finally:
+            conn.close()
+ 
     @staticmethod
     def get_jobs_by_employer(employee_id):
         conn = get_connection()
@@ -41,23 +71,20 @@ class JobPostingModel:
                 return cur.fetchall()
         finally:
             conn.close()
-
+ 
     @staticmethod
     def get_job_by_id(job_id):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    """
-                    SELECT * FROM `Jobs`
-                    WHERE `Job_id`=%s
-                    """,
+                    "SELECT * FROM `Jobs` WHERE `Job_id`=%s",
                     (job_id,),
                 )
                 return cur.fetchone()
         finally:
             conn.close()
-
+ 
     @staticmethod
     def update_job(job_id, title, description, requirement, salary, location, job_type, experience_level):
         conn = get_connection()
@@ -79,7 +106,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
-
+ 
     @staticmethod
     def delete_job(job_id):
         conn = get_connection()
@@ -94,7 +121,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
-
+ 
     @staticmethod
     def update_job_status(job_id, status):
         conn = get_connection()
@@ -112,7 +139,23 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
-
+ 
+    @staticmethod
+    def get_active_jobs():
+        """Returns count of all active jobs."""
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                # FIX: was `Job` (wrong), correct table name is `Jobs`
+                cur.execute("SELECT COUNT(*) as total FROM `Jobs` WHERE `Status` = 'active'")
+                result = cur.fetchone()
+                return result['total'] if result else 0
+        except Exception as e:
+            print(f"Error getting active jobs count: {e}")
+            return 0
+        finally:
+            conn.close()
+ 
     @staticmethod
     def get_application_count(job_id):
         conn = get_connection()
@@ -124,5 +167,23 @@ class JobPostingModel:
                 )
                 result = cur.fetchone()
                 return result['count'] if result else 0
+        except Exception as e:
+            print(f"Error getting application count: {e}")
+            return 0
+        finally:
+            conn.close()
+ 
+    @staticmethod
+    def get_total_jobs():
+        """Returns total count of all jobs regardless of status."""
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) as total FROM `Jobs`")
+                result = cur.fetchone()
+                return result['total'] if result else 0
+        except Exception as e:
+            print(f"Error getting total jobs count: {e}")
+            return 0
         finally:
             conn.close()
