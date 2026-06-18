@@ -14,24 +14,8 @@ class EmployerRoutes:
 
     def register_routes(self):
         """Register all employer routes"""
-        self.employer_dashboard()
         self.employer_profile()
         return self.blueprint
-
-    def employer_dashboard(self):
-        @self.blueprint.route("/employer/dashboard", methods=["GET"])
-        def dashboard():
-            if "user_id" not in session or session.get("role") != "employer":
-                flash("Please log in as an employer to view your dashboard.", "error")
-                return redirect(url_for("login.index"))
-
-            user_id = session["user_id"]
-            user_data = UserModel.get_by_id(user_id)
-            profile_data = EmployerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = EmployerProfileModel.calculate_profile_completion(
-                user_id)
-
-            return render_template("employer_dashboard.html", user=user_data, profile=profile_data, completion_percentage=completion_percentage)
 
     def employer_profile(self):
         @self.blueprint.route("/employer/dashboard", methods=["GET"])

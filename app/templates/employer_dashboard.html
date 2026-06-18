@@ -176,6 +176,34 @@
         </article>
       </section>
 
+      <section class="section card-grid">
+        <article class="activity-card">
+          <div class="card-header">
+            <div>
+              <h3>Subscription plans</h3>
+              <p>Manage employer subscription plans and billing settings.</p>
+            </div>
+            <a href="{{ url_for('subscriptions.plans') }}" class="btn-secondary">View plans</a>
+          </div>
+          <div class="company-info">
+            <p>Upgrade or change your subscription plan without leaving the dashboard.</p>
+          </div>
+        </article>
+
+        <article class="activity-card">
+          <div class="card-header">
+            <div>
+              <h3>Payment history</h3>
+              <p>View and download invoices for your active subscriptions.</p>
+            </div>
+            <a href="{{ url_for('subscriptions.payment_history') }}" class="btn-secondary">View payments</a>
+          </div>
+          <div class="company-info">
+            <p>See your latest billing details and transaction records at a glance.</p>
+          </div>
+        </article>
+      </section>
+
       <section class="section">
         <div class="section-header">
           <h3>Recent job postings</h3>

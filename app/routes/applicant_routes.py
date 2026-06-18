@@ -126,7 +126,8 @@ class ApplicantRoutes:
                             j.`Title` as job_title,
                             j.`Salary`,
                             j.`Location`,
-                            e.`Company_name`
+                            e.`Company_name`,
+                            e.`Employee_id`
                         FROM `Applications` a
                         JOIN `Jobs` j ON a.`Job_id` = j.`Job_id`
                         JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`

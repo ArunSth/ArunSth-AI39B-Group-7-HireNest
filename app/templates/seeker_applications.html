@@ -80,6 +80,11 @@
                       <a href="javascript:void(0)" class="btn-small btn-view" onclick="viewDetails({{ app.Application_id }})">
                         <i class="fas fa-eye"></i> Details
                       </a>
+                      {% if app.Employee_id %}
+                      <a href="{{ url_for('reviews.company_review', employee_id=app.Employee_id) }}" class="btn-small btn-secondary">
+                        <i class="fas fa-star"></i> Reviews
+                      </a>
+                      {% endif %}
                     </div>
                   </td>
                 </tr>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Reviews — HireNest</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+</head>
+<body>
+  <div class="dashboard-container">
+    {% include 'sidebar_job_seeker.html' %}
+    <main class="main-content">
+      <div class="topbar">
+        <div>
+          <h2>Company Reviews</h2>
+          <p>Share your experience and read others&rsquo; reviews for this employer.</p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="card-grid">
+          <article class="company-card">
+            <div class="card-header">
+              <div>
+                <h3>Review summary</h3>
+                <p>Average rating and total feedback.</p>
+              </div>
+            </div>
+            <div class="company-info">
+              <p><strong>Average rating:</strong> {{ summary.average_rating|round(1) if summary and summary.average_rating else 'N/A' }}</p>
+              <p><strong>Total reviews:</strong> {{ summary.total_reviews if summary else 0 }}</p>
+            </div>
+          </article>
+
+          <article class="activity-card">
+            <div class="card-header">
+              <div>
+                <h3>Write a review</h3>
+                <p>Help other job seekers by sharing your experience.</p>
+              </div>
+            </div>
+            <form method="POST" class="profile-form" action="{{ url_for('reviews.edit_review', employee_id=employee_id, review_id=edit_review.Review_id) if edit_review else url_for('reviews.company_review', employee_id=employee_id) }}">
+              <div class="form-group">
+                <label for="rating">Rating</label>
+                <select id="rating" name="rating">
+                  <option value="">Select rating</option>
+                  {% for value in range(1, 6) %}
+                    <option value="{{ value }}" {% if edit_review and edit_review.Rating == value %}selected{% endif %}>{{ value }} star{{ 's' if value > 1 else '' }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="review_text">Review</label>
+                <textarea id="review_text" name="review_text" rows="5" placeholder="Write your review here...">{{ edit_review.Review_text if edit_review else '' }}</textarea>
+              </div>
+              <button type="submit" class="btn-primary">{{ 'Update Review' if edit_review else 'Submit Review' }}</button>
+              {% if edit_review %}
+                <a href="{{ url_for('reviews.company_review', employee_id=employee_id) }}" class="btn-secondary">Cancel</a>
+              {% endif %}
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h3>Recent reviews</h3>
+        </div>
+        <div class="table-container">
+          {% if reviews %}
+            <div class="review-list">
+              {% for review in reviews %}
+                <div class="review-card">
+                  <div class="review-header">
+                    <div>
+                      <h4>{{ review.First_name }} {{ review.Last_name }}</h4>
+                      <p class="muted">Rated {{ review.Rating }}/5</p>
+                    </div>
+                    <span class="review-date">{{ review.Created_at.strftime('%d %b %Y') if review.Created_at else '' }}</span>
+                  </div>
+                  <p>{{ review.Review_text }}</p>
+                  {% if current_seekers_id and review.Seekers_id == current_seekers_id %}
+                    <div class="review-actions">
+                      <a href="{{ url_for('reviews.edit_review', employee_id=employee_id, review_id=review.Review_id) }}" class="btn-small btn-edit">Edit</a>
+                      <form method="POST" action="{{ url_for('reviews.delete_review', employee_id=employee_id, review_id=review.Review_id) }}" style="display:inline;">
+                        <button type="submit" class="btn-small btn-delete">Delete</button>
+                      </form>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="empty-state">
+              <p>No reviews yet. Be the first to leave feedback.</p>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

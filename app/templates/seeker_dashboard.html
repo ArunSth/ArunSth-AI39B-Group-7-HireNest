@@ -34,6 +34,10 @@
         <i class="fas fa-video"></i>
         <span>Interviews</span>
       </a>
+      <a href="{{ url_for('reviews.reviews_index') }}" class="nav-item">
+        <i class="fas fa-star"></i>
+        <span>Company Reviews</span>
+      </a>
       <a href="#" class="nav-item">
         <i class="fas fa-bookmark"></i>
         <span>Bookmarks</span>
@@ -127,11 +131,16 @@
         <div class="company-card">
           <div class="card-header">
             <div>
-              <h3>Recent Applications</h3>
-              <p>Latest jobs you have applied for.</p>
+              <h3>Company Reviews</h3>
+              <p>See companies you have applied to and leave feedback.</p>
             </div>
-            <a href="{{ url_for('applicant.seeker_applications') }}" class="btn-secondary">View All</a>
+            <a href="{{ url_for('reviews.reviews_index') }}" class="btn-secondary">Go to Reviews</a>
           </div>
+          <div class="company-info">
+            <p>Access employer review pages for companies tied to your recent applications.</p>
+          </div>
+        </div>
+      </div>
 
           {% if recent_applications %}
           <div class="activity-list">

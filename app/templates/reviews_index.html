@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+  <main class="main-content">
+    <div class="topbar">
+      <div>
+        <h2>Company Reviews</h2>
+        <p>Choose a company to view and submit reviews for your applications.</p>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <h3>Your companies</h3>
+        <p>Companies from your applications are listed below.</p>
+      </div>
+
+      {% if companies %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for company in companies %}
+            <tr>
+              <td>{{ company.Company_name }}</td>
+              <td>
+                <a href="{{ url_for('reviews.company_review', employee_id=company.Employee_id) }}" class="btn-secondary">Open Review</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fas fa-building"></i>
+        <h3>No companies found</h3>
+        <p>Apply to jobs to start writing reviews for employers.</p>
+      </div>
+      {% endif %}
+    </section>
+  </main>
+</div>
+{% endblock %}
