@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice — HireNest</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+</head>
+<body>
+  <div class="dashboard-container">
+    {% include 'sidebar_employer.html' %}
+    <main class="main-content">
+      <div class="topbar">
+        <div>
+          <h2>Invoice</h2>
+          <p>Payment invoice details for your subscription.</p>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="company-card">
+          <div class="card-header">
+            <div>
+              <h3>Invoice Summary</h3>
+            </div>
+          </div>
+          <div class="company-info">
+            <p><strong>Transaction reference:</strong> {{ payment.Transaction_reference }}</p>
+            <p><strong>Plan:</strong> {{ payment.Plan_name or 'N/A' }}</p>
+            <p><strong>Amount:</strong> ${{ payment.Amount }}</p>
+            <p><strong>Payment method:</strong> {{ payment.Payment_method }}</p>
+            <p><strong>Status:</strong> {{ payment.Status }}</p>
+            <p><strong>Paid at:</strong> {{ payment.Paid_at.strftime('%d %b %Y %H:%M') if payment.Paid_at else 'N/A' }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="company-card">
+          <div class="card-header">
+            <div>
+              <h3>Subscription Details</h3>
+            </div>
+          </div>
+          <div class="company-info">
+            <p><strong>Billing cycle:</strong> {{ payment.Billing_cycle or 'N/A' }}</p>
+            <p><strong>Subscription ID:</strong> {{ payment.Subscription_id }}</p>
+          </div>
+        </div>
+      </section>
+
+      <a href="{{ url_for('subscriptions.payment_history') }}" class="btn-secondary">Back to payment history</a>
+    </main>
+  </div>
+</body>
+</html>

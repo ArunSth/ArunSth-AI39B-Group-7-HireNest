@@ -30,7 +30,7 @@ class JobSeekerRoutes:
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
 
             return render_template(
-                'job_seeker_dashboard.html',
+                'seeker_dashboard.html',
                 user=user_data,
                 profile=profile_data,
                 completion_percentage=completion_percentage
