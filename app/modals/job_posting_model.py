@@ -155,6 +155,28 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
+
+    @staticmethod
+    def get_all_jobs_for_admin():
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT j.`Job_id`, j.`Title`, j.`Description`, j.`Location`,
+                           j.`Job_type`, j.`Status`, j.`Created_at`,
+                           COALESCE(e.`Company_name`, 'Unknown') AS `Company_name`
+                    FROM `Jobs` j
+                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    ORDER BY j.`Created_at` DESC
+                    """
+                )
+                return cur.fetchall()
+        except Exception as ex:
+            print(f"Error fetching jobs for admin: {ex}")
+            return []
+        finally:
+            conn.close()
  
     @staticmethod
     def get_application_count(job_id):
