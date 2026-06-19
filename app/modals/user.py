@@ -55,6 +55,39 @@ class UserModel:
             conn.close()
 
     @staticmethod
+    def update_last_active(user_id: int):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE `User` SET `Last_active_at` = NOW() WHERE `User_id` = %s",
+                    (user_id,),
+                )
+                conn.commit()
+                return cur.rowcount > 0
+        except Exception:
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_online_status(user):
+        if not user or not user.get('Last_active_at'):
+            return {'online': False, 'last_active': None}
+
+        from datetime import datetime, timedelta
+        last_active = user['Last_active_at']
+        if isinstance(last_active, str):
+            try:
+                last_active = datetime.strptime(last_active, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                return {'online': False, 'last_active': None}
+
+        online = (last_active + timedelta(minutes=2)) >= datetime.now()
+        return {'online': online, 'last_active': last_active}
+
+    @staticmethod
     def update_password(email: str, new_password: str) -> bool:
         hashed = generate_password_hash(new_password)
         conn = get_connection()

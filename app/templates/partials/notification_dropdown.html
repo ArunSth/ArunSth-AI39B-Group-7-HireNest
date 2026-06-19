@@ -70,6 +70,12 @@
     }
   });
 
+  notifItems?.addEventListener('click', (event) => {
+    const item = event.target.closest('.notif-item');
+    if (!item) return;
+    notifDropdown?.classList.remove('visible');
+  });
+
   document.addEventListener('click', (event) => {
     if (!notifDropdown || !notifToggle) return;
     if (!notifDropdown.contains(event.target) && !notifToggle.contains(event.target)) {

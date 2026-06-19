@@ -41,4 +41,3 @@ class SubscriptionController:
     @staticmethod
     def update_subscription_status(subscription_id, status):
         return SubscriptionModel.update_subscription_status(subscription_id, status)
-    # Additional methods for admin functionality can be added here as needed

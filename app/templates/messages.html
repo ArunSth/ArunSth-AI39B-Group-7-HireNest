@@ -12,20 +12,34 @@
     .sidebar h2 { font-size: 1.2rem; margin-bottom: 8px; }
     .sidebar p { color: #cbd5e1; font-size: .92rem; margin-bottom: 16px; }
     .conversation-list a { display: block; text-decoration: none; color: inherit; }
-    .conversation-card { background: #17233a; border: 1px solid #26344d; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .conversation-card { background: #17233a; border: 1px solid #26344d; border-radius: 12px; padding: 14px; margin-bottom: 12px; transition: background .2s, border-color .2s; }
     .conversation-card.active { border-color: #f59e0b; background: #1f3148; }
-    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .badge { background: #f59e0b; color: #111827; border-radius: 999px; padding: 2px 8px; font-size: .75rem; font-weight: 700; }
+    .conversation-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .conversation-role { color: #94a3b8; font-size: .78rem; margin-top: 4px; }
+    .conversation-meta-right { text-align: right; }
+    .conversation-time { color: #94a3b8; font-size: .75rem; }
+    .conversation-preview { color: #cbd5e1; margin: 10px 0 0; line-height: 1.4; }
+    .conversation-link:hover .conversation-card { border-color: #f59e0b; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+    .sidebar-unread { color: #f8fafc; font-size: .95rem; font-weight: 700; }
+    .conversation-search { margin-bottom: 16px; }
+    .conversation-search input { width: 100%; padding: 12px 14px; border-radius: 999px; border: 1px solid #334155; background: #0f172a; color: #f8fafc; }
+    .conversation-search input::placeholder { color: #94a3b8; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 999px; background: #f59e0b; color: #0f172a; font-weight: 700; font-size: .78rem; padding: 0 8px; }
     .chat { flex: 1; display: flex; flex-direction: column; background: #fff; }
-    .chat-header { padding: 18px; border-bottom: 1px solid #edf2f7; display: flex; justify-content: space-between; align-items: center; }
-    .chat-body { flex: 1; overflow-y: auto; padding: 18px; background: linear-gradient(180deg,#fff,#f7fafc); }
-    .msg { max-width: 70%; padding: 10px 12px; border-radius: 14px; margin-bottom: 10px; background: #e5eefb; }
-    .msg.me { background: #f59e0b; color: #111827; margin-left: auto; }
-    .msg-time { font-size: .75rem; color: #64748b; margin-top: 4px; }
-    .msg.me .msg-time { color: #4b5563; }
-    .composer { padding: 14px; border-top: 1px solid #edf2f7; display: flex; gap: 10px; }
-    .composer input { flex: 1; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 999px; }
-    .composer button { border: 0; background: #0f172a; color: #fff; border-radius: 999px; padding: 0 14px; cursor: pointer; }
+    .chat-header { padding: 22px 24px; border-bottom: 1px solid #edf2f7; }
+    .chat-title { margin: 0 0 8px; }
+    .chat-subtitle { color: #64748b; }
+    .chat-body { flex: 1; overflow-y: auto; padding: 24px; background: linear-gradient(180deg,#fff,#f7fafc); }
+    .msg { max-width: 70%; display: inline-flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 18px; margin-bottom: 12px; background: #f1f5f9; }
+    .msg.me { background: #fde68a; color: #111827; margin-left: auto; border-bottom-right-radius: 4px; }
+    .msg:not(.me) { border-bottom-left-radius: 4px; }
+    .msg-bubble { white-space: pre-wrap; word-break: break-word; }
+    .msg-time { font-size: .72rem; color: #64748b; text-align: right; display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+    .msg-status { font-size: .68rem; color: #475569; }
+    .composer { padding: 16px 20px; border-top: 1px solid #edf2f7; display: flex; gap: 12px; align-items: center; }
+    .composer input { flex: 1; min-width: 0; padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 999px; background: #f8fafc; }
+    .composer button { border: 0; background: #0f172a; color: #fff; border-radius: 999px; padding: 0 20px; min-height: 44px; cursor: pointer; }
     .empty { color: #475569; padding: 24px; }
     small { color: #64748b; }
   </style>
@@ -33,21 +47,77 @@
 <body>
   <div class="page">
     <aside class="sidebar">
-      <h2>Messages</h2>
-      <p>Employers and job seekers can exchange messages here.</p>
-      <div class="conversation-list">
+      <div class="sidebar-header">
+        <div>
+          <h2>Messages</h2>
+          <p>Employers and job seekers can exchange messages here.</p>
+        </div>
+        <div class="sidebar-unread">Unread: {{ unread_count }}</div>
+      </div>
+      <div class="conversation-search">
+        <input id="conversation-search" type="search" placeholder="Search conversations..." aria-label="Search conversations" />
+      </div>
+      <div class="conversation-list" id="conversation-list">
         {% if conversations %}
           {% for item in conversations %}
             {% set user = item['user'] %}
-            <a href="{{ url_for('messages.conversation', conversation_id=user['User_id']) }}">
+            <a class="conversation-link" href="{{ url_for('messages.conversation', conversation_id=user['User_id']) }}">
               <article class="conversation-card {% if selected_user and selected_user.User_id == user['User_id'] %}active{% endif %}">
-                <div class="row"><strong>{{ user.First_name }} {{ user.Last_name }}</strong>{% if item['unread_count'] %}<span class="badge">{{ item['unread_count'] }}</span>{% endif %}</div>
-                <small>{{ item['last_message']['Message'][:80] }}</small>
+                <div class="conversation-card-top">
+                  <div>
+                    <strong>{{ user.First_name }} {{ user.Last_name }}</strong>
+                    <div class="conversation-role">
+                      {{ user.Role|title|replace('_', ' ') }}
+                      {% if user.Company_name %}
+                        · {{ user.Company_name }}
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="conversation-meta-right">
+                    <small class="conversation-time">
+                      {% if item['last_message']['Created_at'] is string %}
+                        {{ item['last_message']['Created_at'] }}
+                      {% elif item['last_message']['Created_at'] %}
+                        {{ item['last_message']['Created_at'].strftime('%b %d %H:%M') }}
+                      {% endif %}
+                    </small>
+                    {% if item['unread_count'] %}
+                      <span class="badge">{{ item['unread_count'] }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="conversation-status">
+                  {% if user.Last_active_at %}
+                    {% set online = user.Last_active_at|string and (user.Last_active_at | tojson) %}
+                  {% endif %}
+                  {% if user.Last_active_at and user.Last_active_at != none %}
+                    {% set last_active = user.Last_active_at %}
+                    {% if last_active %}
+                      {% if last_active is string %}
+                        <span class="status-dot {% if user.Last_active_at and user.Last_active_at|length %}online{% endif %}"></span>
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                  <span class="conversation-preview">
+                    {% if user.Last_active_at %}
+                      {% set dt = user.Last_active_at %}
+                      {% if dt is string %}
+                        {% set formatted = dt %}
+                      {% else %}
+                        {% set formatted = dt.strftime('%b %d %H:%M') %}
+                      {% endif %}
+                      ⚫ Last active {{ formatted }}
+                    {% else %}
+                      ⚫ Offline
+                    {% endif %}
+                  </span>
+                </div>
+                <p class="conversation-preview">{{ item['last_message']['Message'][:80] }}</p>
               </article>
             </a>
           {% endfor %}
         {% else %}
-          <div class="empty">No conversations yet.</div>
+          <div class="empty">No conversations yet. Use the message buttons on candidate or employer pages to start one.</div>
         {% endif %}
       </div>
     </aside>
@@ -56,21 +126,36 @@
       {% if selected_user %}
         <header class="chat-header">
           <div>
-            <h3 style="margin:0;">{{ selected_user.First_name }} {{ selected_user.Last_name }}</h3>
-            <small>{{ selected_user.Email }}</small>
+            <h3 class="chat-title">{{ selected_user.First_name }} {{ selected_user.Last_name }}</h3>
+            <small class="chat-subtitle">{{ selected_user.Role|title|replace('_', ' ') }} · {{ selected_user.Email }}</small>
+            {% if selected_user_status %}
+              <div class="status-pill">
+                <span class="status-dot {% if selected_user_status.online %}online{% else %}offline{% endif %}"></span>
+                {{ 'Online' if selected_user_status.online else 'Offline' }}
+              </div>
+            {% endif %}
           </div>
         </header>
         <div class="chat-body" id="chat-body">
           {% for msg in messages %}
             <article class="msg {% if msg.Sender_id == session['user_id'] %}me{% endif %}">
-              <div>{{ msg.Message }}</div>
-              <div class="msg-time">{{ msg.Created_at }}</div>
+              <div class="msg-bubble">{{ msg.Message }}</div>
+              <div class="msg-time">
+                {% if msg.Created_at is string %}
+                  {{ msg.Created_at }}
+                {% elif msg.Created_at %}
+                  {{ msg.Created_at.strftime('%d %b %Y %H:%M') }}
+                {% endif %}
+                {% if msg.Sender_id == session['user_id'] %}
+                  <span class="msg-status">{{ msg.Status|default('sent')|capitalize }}</span>
+                {% endif %}
+              </div>
             </article>
           {% endfor %}
         </div>
         <form class="composer" id="message-form">
           <input type="hidden" name="receiver_id" value="{{ selected_user.User_id }}" />
-          <input type="text" name="message" id="message-input" placeholder="Type a message..." required />
+          <input type="text" name="message" id="message-input" placeholder="Type a message..." autocomplete="off" required />
           <button type="submit">Send</button>
         </form>
       {% else %}
@@ -80,7 +165,17 @@
   </div>
 
   <script>
+    const chatBody = document.getElementById('chat-body');
     const form = document.getElementById('message-form');
+
+    function scrollToBottom() {
+      if (chatBody) {
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }
+    }
+
+    window.addEventListener('load', scrollToBottom);
+
     if (form) {
       form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -96,6 +191,18 @@
         } else {
           alert(data.message || 'Unable to send message.');
         }
+      });
+    }
+
+    const searchInput = document.getElementById('conversation-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        const filter = this.value.toLowerCase();
+        const items = document.querySelectorAll('#conversation-list .conversation-link');
+        items.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(filter) ? '' : 'none';
+        });
       });
     }
   </script>

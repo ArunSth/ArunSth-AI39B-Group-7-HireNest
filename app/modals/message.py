@@ -13,13 +13,19 @@ class MessageModel:
                            sender.Last_name AS sender_last_name,
                            sender.Email AS sender_email,
                            sender.Role AS sender_role,
+                           sender.Last_active_at AS sender_last_active_at,
                            receiver.First_name AS receiver_first_name,
                            receiver.Last_name AS receiver_last_name,
                            receiver.Email AS receiver_email,
-                           receiver.Role AS receiver_role
+                           receiver.Role AS receiver_role,
+                           receiver.Last_active_at AS receiver_last_active_at,
+                           sender_emp.Company_name AS sender_company_name,
+                           receiver_emp.Company_name AS receiver_company_name
                     FROM `Messages` m
                     JOIN `User` sender ON sender.User_id = m.Sender_id
                     JOIN `User` receiver ON receiver.User_id = m.Receiver_id
+                    LEFT JOIN `Employee` sender_emp ON sender_emp.User_id = sender.User_id
+                    LEFT JOIN `Employee` receiver_emp ON receiver_emp.User_id = receiver.User_id
                     WHERE (m.Sender_id = %s OR m.Receiver_id = %s)
                     ORDER BY m.Created_at DESC, m.Message_id DESC
                     """,
@@ -36,6 +42,8 @@ class MessageModel:
                     'Last_name': row['receiver_last_name'] if row['Sender_id'] == user_id else row['sender_last_name'],
                     'Email': row['receiver_email'] if row['Sender_id'] == user_id else row['sender_email'],
                     'Role': row['receiver_role'] if row['Sender_id'] == user_id else row['sender_role'],
+                    'Last_active_at': row['receiver_last_active_at'] if row['Sender_id'] == user_id else row['sender_last_active_at'],
+                    'Company_name': row['receiver_company_name'] if row['Sender_id'] == user_id else row['sender_company_name'],
                 }
 
                 if other_user_id not in conversations:
@@ -84,6 +92,29 @@ class MessageModel:
             conn.close()
 
     @staticmethod
+    def mark_message_seen(message_id, receiver_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    UPDATE `Messages`
+                    SET `Is_read` = TRUE, `Status` = 'seen'
+                    WHERE `Message_id` = %s
+                      AND `Receiver_id` = %s
+                      AND (`Is_read` IS NULL OR `Is_read` = FALSE)
+                    """,
+                    (message_id, receiver_id),
+                )
+                conn.commit()
+                return cur.rowcount
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_by_id(message_id):
         conn = get_connection()
         try:
@@ -106,8 +137,8 @@ class MessageModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO `Messages` (`Sender_id`, `Receiver_id`, `Message`, `Is_read`, `Created_at`)
-                    VALUES (%s, %s, %s, FALSE, NOW())
+                    INSERT INTO `Messages` (`Sender_id`, `Receiver_id`, `Message`, `Is_read`, `Created_at`, `Status`)
+                    VALUES (%s, %s, %s, FALSE, NOW(), 'sent')
                     """,
                     (sender_id, receiver_id, message_text.strip()),
                 )
@@ -131,7 +162,8 @@ class MessageModel:
                 cur.execute(
                     """
                     UPDATE `Messages`
-                    SET `Is_read` = TRUE
+                    SET `Is_read` = TRUE,
+                        `Status` = 'seen'
                     WHERE `Receiver_id` = %s
                       AND `Sender_id` = %s
                       AND (`Is_read` IS NULL OR `Is_read` = FALSE)
@@ -162,5 +194,18 @@ class MessageModel:
                 )
                 row = cur.fetchone()
                 return int(row['cnt']) if row else 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_message(message_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM `Messages` WHERE `Message_id`=%s",
+                    (message_id,),
+                )
+                return cur.fetchone()
         finally:
             conn.close()
