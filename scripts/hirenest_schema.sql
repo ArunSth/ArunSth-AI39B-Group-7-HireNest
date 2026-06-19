@@ -292,3 +292,11 @@ CREATE TABLE IF NOT EXISTS `Admin_Audit_Log` (
     FOREIGN KEY (`Admin_user_id`) REFERENCES `User`(`User_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   
+
+-- Admin User
+INSERT INTO `User` (`First_name`, `Last_name`, `Email`, `Password`, `Role`)
+VALUES ('Admin', '', 'admin@hirenest', 'scrypt:32768:8:1$crvyrfs5n6uNhICX$c4e65141e06c389c9a6b88e396edf6bb11d425c72b1bec2c045b0af7ac221526afb189e874c85fb93b7d1ece46640c6a8fb9bbb453f50060127cdd33fac96678', 'admin');
+
+-- Admin Profile
+INSERT INTO `Admin_Profiles` (`User_id`, `Display_name`, `Department`, `Access_level`, `Is_active`)
+VALUES (LAST_INSERT_ID(), 'Admin', 'Management', 'full', TRUE);
