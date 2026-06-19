@@ -131,9 +131,6 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
-            user_data = UserModel.get_by_id(user_id)
-            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
 
             if request.method == 'POST':
                 bio = request.form.get('bio', '').strip()
@@ -150,12 +147,7 @@ class JobSeekerRoutes:
 
                 flash('Failed to update profile. Please try again.', 'error')
 
-            return render_template(
-                'job_seeker_profile.html',
-                user=user_data,
-                profile=profile_data,
-                completion_percentage=completion_percentage,
-            )
+            return redirect(url_for('job_seeker.dashboard'))
 
         @self.blueprint.route('/job-seeker/profile/photo', methods=['POST'])
         def upload_photo():
