@@ -446,9 +446,13 @@ function pushAdminNotif(action, target, status) {
     info:    'announcement',
     muted:   'system',
   };
-  adminNotifs.unshift({
+
+  // Override: if the action mentions "report", force type to 'report'
+  let type = typeMap[status] || 'system';
+  if (action.toLowerCase().includes('report')) type = 'report';
+    adminNotifs.unshift({
     id:     Date.now(),
-    type:   typeMap[status] || 'system',
+    type:   type,
     title:  action,
     msg:    target,
     time:   new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
