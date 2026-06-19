@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.user import UserModel
+from app.modals.job_seeker_profile import JobSeekerProfileModel
 
 class ApplicantRoutes:
     def __init__(self):
@@ -101,6 +102,10 @@ class ApplicantRoutes:
                 return redirect(url_for("login.index"))
 
             user_id = session["user_id"]
+            seekers_id = JobSeekerProfileModel.ensure_profile_exists(user_id)
+            if not seekers_id:
+                flash("Job seeker profile could not be prepared.", "error")
+                return redirect(url_for("job_seeker.profile"))
             
             # Get job seeker profile
             from app.database import get_connection

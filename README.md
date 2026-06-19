@@ -64,7 +64,7 @@ In today's digital world, finding a suitable job has become difficult for many s
 - Notifications for new job postings matching user preferences
 - Save job alerts for later review
 
-### 🛡️ Admin Dashboard
+### 🛡️  Dashboard
 - Manage users, job posts, and overall platform activity
 
 ---
@@ -174,7 +174,7 @@ HireNest follows the **Agile Software Development Methodology**, structured arou
 | Sprint 2 | Job posting & listing |
 | Sprint 3 | Job search & filtering |
 | Sprint 4 | Application tracking & notifications |
-| Sprint 5 | Admin dashboard & messaging |
+| Sprint 5 |  dashboard & messaging |
 | Sprint 6 | Testing, feedback & final refinements |
 
 ---

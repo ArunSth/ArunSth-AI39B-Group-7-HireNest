@@ -8,6 +8,14 @@ class ApplicantManagementModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
+                    SELECT `Application_id`
+                    FROM `Applications`
+                    WHERE `Seekers_id`=%s AND `Job_id`=%s
+                    LIMIT 1
+                    """,
+                    (seekers_id, job_id),
+                )
+                return cur.fetchone()
                     INSERT INTO `Applications` (`Seekers_id`, `Job_id`, `Resume`, `Cover_letter`, `Status`)
                     VALUES (%s, %s, %s, %s, %s)
                     """,
@@ -23,12 +31,28 @@ class ApplicantManagementModel:
             conn.close()
 
     @staticmethod
+    def create_application(seekers_id, job_id, resume, cover_letter, status="Pending"):
+        if ApplicantManagementModel.has_applied(seekers_id, job_id):
+            return None
+
     def get_application_for_job(seekers_id, job_id):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
                 cur.execute(
                     """
+                    INSERT INTO `Applications`
+                        (`Seekers_id`, `Job_id`, `Resume`, `Cover_letter`, `Status`)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (seekers_id, job_id, resume, cover_letter, status),
+                )
+                conn.commit()
+                return cur.lastrowid
+        except Exception as e:
+            print(f"Error creating application: {e}")
+            conn.rollback()
+            return None
                     SELECT *
                     FROM `Applications`
                     WHERE `Seekers_id`=%s AND `Job_id`=%s

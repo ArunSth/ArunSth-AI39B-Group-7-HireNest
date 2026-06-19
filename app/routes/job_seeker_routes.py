@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 from app.modals.user import UserModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
+from app.modals.saved_job_model import SavedJobModel
 from app.modals.job_posting_model import JobPostingModel
 from datetime import datetime
 import os
@@ -12,12 +13,68 @@ class JobSeekerRoutes:
         self.blueprint = Blueprint('job_seeker', __name__)
 
     def register_routes(self):
+        """Register all job seeker routes"""
         """Register all job seeker routes."""
         self.job_seeker_dashboard()
         self.job_seeker_profile()
         return self.blueprint
 
     def job_seeker_dashboard(self):
+        @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
+        def dashboard():
+            if 'user_id' not in session or session.get('role') != 'job_seeker':
+                flash('Please log in as a job seeker to view your dashboard.', 'error')
+                return redirect(url_for('login.index'))
+
+            user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+
+            return render_template(
+                'seeker_dashboard.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage
+            )
+
+    def job_seeker_profile(self):
+
+        @self.blueprint.route('/job-seeker/profile', methods=['GET', 'POST'])
+        def profile():
+            if 'user_id' not in session or session.get('role') != 'job_seeker':
+                flash('Please log in as a job seeker to view your profile.', 'error')
+                return redirect(url_for('login.index'))
+
+            user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+
+            if request.method == 'POST':
+                bio = request.form.get('bio', '').strip()
+                location = request.form.get('location', '').strip()
+                education = request.form.get('education', '').strip()
+                skills = request.form.get('skills', '').strip()
+                experiences = request.form.get('experiences', '').strip()
+
+                if JobSeekerProfileModel.create_or_update_profile(user_id, bio, location, education, skills, experiences):
+                    new_completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+                    JobSeekerProfileModel.update_profile_completion(user_id, new_completion_percentage)
+                    flash('Profile updated successfully!', 'success')
+                    return redirect(url_for('job_seeker.profile'))
+                else:
+                    flash('Failed to update profile. Please try again.', 'error')
+
+            return render_template(
+                'job_seeker_profile.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage
+            )
+
         @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
         def dashboard():
             if 'user_id' not in session or session.get('role') != 'job_seeker':
@@ -79,6 +136,7 @@ class JobSeekerRoutes:
             applied_count = len(applications)
             rejected_count = sum(1 for app in applications if app.get('Status', '').lower() == 'rejected')
             alerts_count = sum(1 for interview in interviews if interview.get('Status', '').lower() == 'scheduled')
+            bookmarks_count = SavedJobModel.count_saved_jobs(seekers_id) if not profile_incomplete else 0
             recent_applications = applications[:4]
 
             recent_activities = []

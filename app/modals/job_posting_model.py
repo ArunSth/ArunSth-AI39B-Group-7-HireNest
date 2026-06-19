@@ -58,6 +58,151 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
+
+    @staticmethod
+    def search_jobs_for_seekers(filters, seekers_id=None):
+        conn = get_connection()
+        try:
+            query = """
+                SELECT
+                    j.`Job_id`,
+                    j.`Title`,
+                    j.`Description`,
+                    j.`Requirement`,
+                    j.`Salary`,
+                    j.`Location`,
+                    j.`Status`,
+                    j.`Job_type`,
+                    j.`Experience_level`,
+                    j.`Created_at`,
+                    e.`Employee_id`,
+                    e.`Company_name`,
+                    e.`Industry`,
+                    e.`Logo`
+            """
+            params = []
+
+            if seekers_id:
+                query += """,
+                    CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
+                    CASE WHEN a.`Application_id` IS NULL THEN 0 ELSE 1 END AS `Has_applied`
+                """
+            else:
+                query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
+
+            query += """
+                FROM `Jobs` j
+                JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+            """
+
+            if seekers_id:
+                query += """
+                    LEFT JOIN `Saved_Jobs` sj
+                        ON sj.`Job_id` = j.`Job_id` AND sj.`Seekers_id` = %s
+                    LEFT JOIN `Applications` a
+                        ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
+                """
+                params.extend([seekers_id, seekers_id])
+
+            query += " WHERE LOWER(j.`Status`) = 'active'"
+
+            keyword = filters.get("keyword")
+            if keyword:
+                query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
+
+            company = filters.get("company")
+            if company:
+                query += " AND e.`Company_name` LIKE %s"
+                params.append(f"%{company}%")
+
+            location = filters.get("location")
+            if location:
+                query += " AND j.`Location` LIKE %s"
+                params.append(f"%{location}%")
+
+            industry = filters.get("industry")
+            if industry:
+                query += " AND e.`Industry` LIKE %s"
+                params.append(f"%{industry}%")
+
+            job_type = filters.get("job_type")
+            if job_type and job_type != "All Types":
+                query += " AND j.`Job_type` = %s"
+                params.append(job_type)
+
+            experience_level = filters.get("experience_level")
+            if experience_level and experience_level != "All Levels":
+                query += " AND j.`Experience_level` = %s"
+                params.append(experience_level)
+
+            salary_min = filters.get("salary_min")
+            if salary_min:
+                query += " AND j.`Salary` >= %s"
+                params.append(salary_min)
+
+            salary_max = filters.get("salary_max")
+            if salary_max:
+                query += " AND j.`Salary` <= %s"
+                params.append(salary_max)
+
+            query += " ORDER BY j.`Created_at` DESC"
+
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchall()
+        except Exception as e:
+            print(f"Error searching seeker jobs: {e}")
+            return []
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_job_detail_for_seeker(job_id, seekers_id=None):
+        conn = get_connection()
+        try:
+            query = """
+                SELECT
+                    j.*,
+                    e.`Employee_id`,
+                    e.`Company_name`,
+                    e.`Industry`,
+                    e.`Logo`,
+                    e.`Website`,
+                    e.`Description` AS `Company_description`
+            """
+            params = []
+
+            if seekers_id:
+                query += """,
+                    CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
+                    CASE WHEN a.`Application_id` IS NULL THEN 0 ELSE 1 END AS `Has_applied`
+                """
+            else:
+                query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
+
+            query += """
+                FROM `Jobs` j
+                JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+            """
+
+            if seekers_id:
+                query += """
+                    LEFT JOIN `Saved_Jobs` sj
+                        ON sj.`Job_id` = j.`Job_id` AND sj.`Seekers_id` = %s
+                    LEFT JOIN `Applications` a
+                        ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
+                """
+                params.extend([seekers_id, seekers_id])
+
+            query += " WHERE j.`Job_id`=%s"
+            params.append(job_id)
+
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchone()
+        finally:
+            conn.close()
  
     @staticmethod
     def get_jobs_by_employer(employee_id):
