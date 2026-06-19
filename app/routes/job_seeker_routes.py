@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 from app.modals.user import UserModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
+from app.modals.saved_job_model import SavedJobModel
 from datetime import datetime
 import os
 import base64
@@ -13,7 +14,6 @@ class JobSeekerRoutes:
 
     def register_routes(self):
         """Register all job seeker routes"""
-        self.job_seeker_dashboard()
         self.job_seeker_profile()
         return self.blueprint
 
@@ -25,6 +25,7 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
             user_data = UserModel.get_by_id(user_id)
             profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
@@ -45,6 +46,7 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
             user_data = UserModel.get_by_id(user_id)
             profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
@@ -121,7 +123,7 @@ class JobSeekerRoutes:
             applied_count = len(applications)
             rejected_count = sum(1 for app in applications if app.get('Status', '').lower() == 'rejected')
             alerts_count = sum(1 for interview in interviews if interview.get('Status', '').lower() == 'scheduled')
-            bookmarks_count = 0
+            bookmarks_count = SavedJobModel.count_saved_jobs(seekers_id) if not profile_incomplete else 0
             recent_applications = applications[:4]
 
             recent_activities = []

@@ -20,6 +20,7 @@ from app.routes.notificationroutes import NotificationRoutes
 from app.routes.job_alert_routes import JobAlertRoutes
 from app.routes.review_routes import ReviewRoutes
 from app.routes.subscription_routes import SubscriptionRoutes
+from app.routes.seeker_job_routes import SeekerJobRoutes
 
 from app.routes.admin_routes import AdminRoutes
 
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(ForgetPasswordRoutes().forget_password())
     app.register_blueprint(LogoutRoutes().logout())
     app.register_blueprint(JobSeekerRoutes().register_routes())
+    app.register_blueprint(SeekerJobRoutes().register_routes())
     app.register_blueprint(EmployerRoutes().employer_profile())
     app.register_blueprint(JobPostingRoutes().job_posting())
     app.register_blueprint(ApplicantRoutes().applicant_management())

@@ -2,6 +2,49 @@ from app.database import get_connection
 
 class ApplicantManagementModel:
     @staticmethod
+    def has_applied(seekers_id, job_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT `Application_id`
+                    FROM `Applications`
+                    WHERE `Seekers_id`=%s AND `Job_id`=%s
+                    LIMIT 1
+                    """,
+                    (seekers_id, job_id),
+                )
+                return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def create_application(seekers_id, job_id, resume, cover_letter, status="Pending"):
+        if ApplicantManagementModel.has_applied(seekers_id, job_id):
+            return None
+
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO `Applications`
+                        (`Seekers_id`, `Job_id`, `Resume`, `Cover_letter`, `Status`)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (seekers_id, job_id, resume, cover_letter, status),
+                )
+                conn.commit()
+                return cur.lastrowid
+        except Exception as e:
+            print(f"Error creating application: {e}")
+            conn.rollback()
+            return None
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_applications_for_employer(employee_id):
         """Get all applications for jobs posted by employer"""
         conn = get_connection()

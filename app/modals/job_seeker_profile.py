@@ -3,6 +3,40 @@ from app.database import get_connection
 
 class JobSeekerProfileModel:
     @staticmethod
+    def ensure_profile_exists(user_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT `Seekers_id`
+                    FROM `Job_Seekers`
+                    WHERE `User_id`=%s
+                    LIMIT 1
+                    """,
+                    (user_id,),
+                )
+                existing_profile = cur.fetchone()
+                if existing_profile:
+                    return existing_profile["Seekers_id"]
+
+                cur.execute(
+                    """
+                    INSERT INTO `Job_Seekers` (`User_id`, `Profile_completion_percentage`)
+                    VALUES (%s, 0.0)
+                    """,
+                    (user_id,),
+                )
+                conn.commit()
+                return cur.lastrowid
+        except Exception as e:
+            print(f"Error ensuring job seeker profile exists: {e}")
+            conn.rollback()
+            return None
+        finally:
+            conn.close()
+
+    @staticmethod
     def create_or_update_profile(user_id, bio, location, education, skills, experiences, resume=None):
         conn = get_connection()
         try:

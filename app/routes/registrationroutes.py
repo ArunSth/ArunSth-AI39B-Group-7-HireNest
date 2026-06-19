@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from app.modals.user import UserModel
+from app.modals.job_seeker_profile import JobSeekerProfileModel
 
 
 class RegistrationRoutes:
@@ -65,6 +66,8 @@ class RegistrationRoutes:
                     session['email'] = user['Email']
                     session['role'] = user.get('Role', role)
                     session['name'] = f"{first_name or ''} {last_name or ''}".strip()
+                    if role == 'job_seeker':
+                        JobSeekerProfileModel.ensure_profile_exists(user['User_id'])
 
                 if role == 'employer':
                     redirect_url = url_for('employer.profile')
