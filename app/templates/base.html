@@ -27,31 +27,10 @@
     </div>
 
     <nav class="nav-links">
-      <a href="#">Find Jobs</a>
-      <a href="#">Companies</a>
-      <a href="#">Resources</a>
-      {% if session.get('user_id') %}
-        <a href="{{ url_for('messages.index') }}">Messages</a>
-        <a href="{{ url_for('notifications.index') }}">Notifications</a>
-        <a href="{{ url_for('job_alerts.index') }}">Job Alerts</a>
-      {% endif %}
     </nav>
 
     <div class="nav-icons">
-      <i class="fa-solid fa-sun" id="theme-toggle"></i>
-      {% if session.get('user_id') %}
-        <a href="{{ url_for('notifications.index') }}" class="notification" aria-label="Notifications" style="text-decoration:none;color:inherit;position:relative;">
-          <i class="fa-regular fa-bell"></i>
-          <span id="nav-notification-badge" class="dot" style="display:none;"></span>
-        </a>
-        <a href="{{ url_for('messages.index') }}" aria-label="Messages" style="text-decoration:none;color:inherit;position:relative;">
-          <i class="fa-regular fa-message"></i>
-          <span id="nav-message-badge" class="dot" style="display:none;"></span>
-        </a>
-      {% else %}
-        <i class="fa-regular fa-bell notification"><span class="dot"></span></i>
-      {% endif %}
-      <i class="fa-regular fa-user"></i>
+      <i class="fa-solid fa-solid" id="theme-toggle"></i>
     </div>
 
     <div class="auth-buttons">
@@ -68,35 +47,12 @@
         <a href="{{ url_for('logout.process_logout') }}" class="signup-btn" style="text-decoration:none;">Log Out</a>
       {% else %}
         <!-- Guest state -->
-      <button class="login-btn" id="login-nav-btn">Log In</button>
-
-      <div class="dropdown-container">
-        <button class="signup-btn" id="signup-nav-btn">
-          Sign In <i class="fa-solid fa-chevron-down"></i>
-        </button>
-
-        <div class="dropdown-menu">
-          <div class="dropdown-item" id="target-candidate">
-            <div class="dropdown-icon purple-badge">
-              <i class="fa-solid fa-user"></i>
-            </div>
-            <div class="dropdown-text">
-              <h4>Sign in (Job Seeker)</h4>
-              <p>Find your dream job</p>
-            </div>
-          </div>
-
-          <div class="dropdown-item" id="target-recruiter">
-            <div class="dropdown-icon pink-badge">
-              <i class="fa-solid fa-briefcase"></i>
-            </div>
-            <div class="dropdown-text">
-              <h4>Sign in (Employer)</h4>
-              <p>Hire top talent</p>
-            </div>
-          </div>
-        </div>
-      </div>
+         <a href="/login" class="login-btn" style="text-decoration:none;">
+          Log In
+        </a>
+        <a href="/register" class="signup-btn" style="text-decoration:none;">
+          Sign Up
+        </a>
       {% endif %}
     </div>
   </header>
@@ -128,7 +84,7 @@
           <i class="fa-solid fa-bullseye"></i>
         </div>
         <h3>Precise Matching</h3>
-        <p>Our AI-powered algorithm matches you with jobs that fit your skills and career goals perfectly.</p>
+        <p>Our algorithm help matches you with jobs that fit your skills and career goals perfectly.</p>
       </div>
 
       <div class="feature-card">
@@ -177,7 +133,6 @@
         </div>
         <h3>Resume Builder</h3>
         <p>Create professional resumes with our easy-to-use builder and templates.</p>
-        <a href="#" class="card-link">Try it now &rarr;</a>
       </div>
 
       <div class="feature-card">
@@ -192,8 +147,8 @@
         <div class="icon-wrapper color-purple">
           <i class="fa-regular fa-comment-dots"></i>
         </div>
-        <h3>Live Chat</h3>
-        <p>Connect with recruiters and hiring managers in real-time.</p>
+        <h3>Message</h3>
+        <p>Connect with recruiters and hiring managers in Message.</p>
       </div>
     </div>
   </section>
@@ -213,7 +168,7 @@
 
         <div class="form-group signup-only">
           <label for="user-name">Full Name</label>
-          <input type="text" name="user-name" id="user-name" placeholder="Ram Sharma" required>
+          <input type="text" name="user-name" id="user-name" placeholder="Your Name" required>
         </div>
         <div class="form-group signup-only">
           <label for="user-phone">Phone Number</label>
@@ -265,30 +220,30 @@
       <div class="footer-links-col">
         <h3>For Job Seekers</h3>
         <ul>
-          <li><a href="#">Browse Jobs</a></li>
-          <li><a href="#">Career Advice</a></li>
-          <li><a href="#">Resume Builder</a></li>
-          <li><a href="#">Salary Guide</a></li>
+          <li><a>Browse Jobs</a></li>
+          <li><a>Career Advice</a></li>
+          <li><a>Resume Builder</a></li>
+          <li><a>Salary Guide</a></li>
         </ul>
       </div>
 
       <div class="footer-links-col">
         <h3>For Employers</h3>
         <ul>
-          <li><a href="#">Post a Job</a></li>
-          <li><a href="#">Pricing</a></li>
-          <li><a href="#">Talent Search</a></li>
-          <li><a href="#">Hiring Resources</a></li>
+          <li><a>Post a Job</a></li>
+          <li><a>Pricing</a></li>
+          <li><a>Talent Search</a></li>
+          <li><a>Hiring Resources</a></li>
         </ul>
       </div>
 
       <div class="footer-links-col">
         <h3>Company</h3>
         <ul>
-          <li><a href="#">About Us</a></li>
-          <li><a href="#">Contact</a></li>
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
+          <li><a href="{{ url_for('login.index') }}">About Us</a></li>
+          <li><a href="{{ url_for('messages.index') }}">Contact</a></li>
+          <li><a href="{{ url_for('login.index') }}">Privacy Policy</a></li>
+          <li><a href="{{ url_for('login.index') }}">Terms of Service</a></li>
         </ul>
       </div>
     </div>

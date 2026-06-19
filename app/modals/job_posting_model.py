@@ -28,22 +28,27 @@ class JobPostingModel:
     def search_jobs(keyword, location, job_type):
         conn = get_connection()
         try:
-            query = "SELECT * FROM `Jobs` WHERE `Status` = 'active'"
+            query = """
+                SELECT j.*, e.`Company_name`, e.`Industry`, e.`Logo`
+                FROM `Jobs` j
+                JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                WHERE j.`Status` = 'active'
+            """
             params = []
  
             if keyword:
-                query += " AND (`Title` LIKE %s OR `Description` LIKE %s)"
-                params.extend([f"%{keyword}%", f"%{keyword}%"])
+                query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
+                params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
  
             if location:
-                query += " AND `Location` LIKE %s"
+                query += " AND j.`Location` LIKE %s"
                 params.append(f"%{location}%")
  
-            if job_type != "All Types":
-                query += " AND `Job_type` = %s"
+            if job_type and job_type != "All Types":
+                query += " AND j.`Job_type` = %s"
                 params.append(job_type)
  
-            query += " ORDER BY `Created_at` DESC"
+            query += " ORDER BY j.`Created_at` DESC"
  
             with conn.cursor() as cur:
                 cur.execute(query, params)
@@ -78,10 +83,87 @@ class JobPostingModel:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT * FROM `Jobs` WHERE `Job_id`=%s",
+                    """
+                    SELECT j.*, e.`Company_name`, e.`Industry`, e.`Website`, e.`Logo`
+                    FROM `Jobs` j
+                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    WHERE j.`Job_id`=%s
+                    """,
                     (job_id,),
                 )
                 return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_saved_jobs(seekers_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT j.*, e.`Company_name`, e.`Industry`, s.`Saved_id`
+                    FROM `Saved_Jobs` s
+                    JOIN `Jobs` j ON s.`Job_id` = j.`Job_id`
+                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    WHERE s.`Seekers_id`=%s
+                    ORDER BY s.`Saved_id` DESC
+                    """,
+                    (seekers_id,),
+                )
+                return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_saved_job_ids(seekers_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s", (seekers_id,))
+                return {row["Job_id"] for row in cur.fetchall()}
+        finally:
+            conn.close()
+
+    @staticmethod
+    def save_job(seekers_id, job_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT `Saved_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s AND `Job_id`=%s",
+                    (seekers_id, job_id),
+                )
+                if cur.fetchone():
+                    return True
+                cur.execute(
+                    "INSERT INTO `Saved_Jobs` (`Seekers_id`, `Job_id`) VALUES (%s, %s)",
+                    (seekers_id, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error saving job: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def unsave_job(seekers_id, job_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "DELETE FROM `Saved_Jobs` WHERE `Seekers_id`=%s AND `Job_id`=%s",
+                    (seekers_id, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error removing saved job: {e}")
+            conn.rollback()
+            return False
         finally:
             conn.close()
  
