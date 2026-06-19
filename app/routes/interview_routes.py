@@ -159,7 +159,7 @@ class InterviewRoutes:
                     seeker = cur.fetchone()
                     if not seeker:
                         flash("Job seeker profile not found.", "error")
-                        return redirect(url_for("job_seeker.profile"))
+                        return redirect(url_for("job_seeker.dashboard"))
                     
                     seekers_id = seeker['Seekers_id']
             finally:

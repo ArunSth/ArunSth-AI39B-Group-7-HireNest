@@ -72,7 +72,7 @@ class RegistrationRoutes:
                 if role == 'employer':
                     redirect_url = url_for('employer.profile')
                 else:
-                    redirect_url = url_for('job_seeker.profile')
+                    redirect_url = url_for('job_seeker.dashboard')
 
                 success_msg = 'Welcome to HireNest! Your account was created successfully.'
                 if is_ajax:

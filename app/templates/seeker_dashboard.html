@@ -19,6 +19,7 @@
         <span>Dashboard</span>
       </a>
       <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item">
+      <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item">
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
@@ -39,18 +40,19 @@
         <span>Company Reviews</span>
       </a>
       <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
+      <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item">
         <i class="fas fa-bookmark"></i>
-        <span>Bookmarks</span>
+        <span>Saved Jobs</span>
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('job_alerts.index') }}" class="nav-item">
         <i class="fas fa-paper-plane"></i>
-        <span>Requests</span>
+        <span>Job Alerts</span>
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('messages.index') }}" class="nav-item">
         <i class="fas fa-headset"></i>
-        <span>Contact Us</span>
+        <span>Messages</span>
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
@@ -85,6 +87,7 @@
           </div>
           <div class="seeker-quick-actions">
             <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
+            <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--primary">
               <i class="fas fa-search"></i>
               <span>Search Opportunities</span>
             </a>
@@ -189,16 +192,6 @@
             </div>
             <a href="{{ url_for('reviews.reviews_index') }}" class="btn-secondary">Go to Reviews</a>
           </div>
-          <div class="company-info">
-            <p>Access employer review pages for companies tied to your recent applications.</p>
-          </div>
-        </div>
-      </div>
-              <span class="seeker-kicker">Reserved</span>
-              <h2>Membership area</h2>
-              <p>This space is ready for future subscription and premium job seeker features.</p>
-            </div>
-          </div>
         </section>
 
         <section class="seeker-dashboard-grid">
@@ -232,6 +225,7 @@
                 <h3>No recent applications yet</h3>
                 <p>Search opportunities and apply when you find the right fit.</p>
                 <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
+                <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
               </div>
               {% endif %}
             </div>
@@ -243,15 +237,15 @@
                   <h2>Recommended for you</h2>
                 </div>
               </div>
-              {% if recent_applications %}
+              {% if recommended_jobs %}
               <div class="seeker-recommendation-grid">
-                {% for app in recent_applications %}
+                {% for job in recommended_jobs %}
                 <div class="seeker-recommendation-card">
                   <div>
-                    <h3>{{ app.job_title }}</h3>
-                    <p>{{ app.Company_name }}</p>
+                    <h3>{{ job.Title }}</h3>
+                    <p>{{ job.Company_name }}</p>
                   </div>
-                  <span>{{ app.Location or 'Remote' }}</span>
+                  <span>{{ job.Location or 'Remote' }}</span>
                 </div>
                 {% endfor %}
               </div>

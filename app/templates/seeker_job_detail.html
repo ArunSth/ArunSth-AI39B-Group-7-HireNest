@@ -12,6 +12,10 @@
       </div>
       <div class="topbar-right">
         <a href="{{ url_for('seeker_jobs.index') }}" class="btn-secondary">Back to Search</a>
+        <p class="topbar-subtitle">{{ job.Company_name }} &middot; {{ job.Location or 'Remote' }}</p>
+      </div>
+      <div class="topbar-right">
+        <a href="{{ url_for('job_posting.browse_jobs') }}" class="btn-secondary">Back to Jobs</a>
       </div>
     </div>
 
@@ -108,6 +112,69 @@
           </form>
           {% endif %}
         </aside>
+      <div style="max-width: 900px;">
+        <div class="table-container" style="margin-bottom: 30px;">
+          <div style="padding: 30px;">
+            <div style="display:flex; justify-content:space-between; gap:20px; align-items:flex-start; margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
+              <div>
+                <h3 style="font-size:28px; margin-bottom:10px;">{{ job.Title }}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                  <i class="fas fa-building"></i> {{ job.Company_name }}
+                  &nbsp; <i class="fas fa-map-marker-alt"></i> {{ job.Location or 'Remote' }}
+                </p>
+                <span style="display:inline-block; padding:6px 12px; background:var(--light-purple); color:var(--primary-purple); border-radius:6px; font-size:13px; font-weight:600;">
+                  {{ job.Job_type or 'Full-time' }}
+                </span>
+              </div>
+              <form method="POST" action="{{ url_for('job_posting.save_job', job_id=job.Job_id) }}">
+                <input type="hidden" name="action" value="{{ 'remove' if is_saved else 'save' }}">
+                <button type="submit" class="btn-secondary">
+                  <i class="fas fa-bookmark"></i> {{ 'Saved' if is_saved else 'Save Job' }}
+                </button>
+              </form>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
+              <div>
+                <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">Salary</p>
+                <p style="font-size:20px; font-weight:700; color:var(--primary-purple);">{{ "Rs. {:,.0f}".format(job.Salary) if job.Salary else 'Not specified' }}</p>
+              </div>
+              <div>
+                <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">Experience</p>
+                <p style="font-size:20px; font-weight:700;">{{ job.Experience_level or 'Entry-level' }}</p>
+              </div>
+            </div>
+
+            <div style="margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
+              <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:12px; font-weight:600;">Description</p>
+              <p style="line-height:1.8; color:var(--text-primary);">{{ job.Description }}</p>
+            </div>
+
+            <div style="margin-bottom:30px;">
+              <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:12px; font-weight:600;">Requirements & Skills</p>
+              <p style="line-height:1.8; color:var(--text-primary);">{{ job.Requirement }}</p>
+            </div>
+
+            {% if application %}
+            <div class="alert alert-info" style="margin-top: 20px;">
+              You already applied for this job. Current status: {{ application.Status|replace('_', ' ')|title }}.
+            </div>
+            {% else %}
+            <form method="POST" action="{{ url_for('job_posting.apply_job', job_id=job.Job_id) }}" class="profile-form" style="margin-top:30px; padding-top:30px; border-top:1px solid var(--border-color);">
+              <div class="form-group">
+                <label for="cover_letter">Cover Letter</label>
+                <textarea id="cover_letter" name="cover_letter" rows="5" placeholder="Write a short note for the employer..."></textarea>
+              </div>
+              {% if seeker_profile and seeker_profile.Resume %}
+              <p style="color: var(--text-secondary); font-size: 14px;">Resume attached from profile: {{ seeker_profile.Resume }}</p>
+              {% else %}
+              <p style="color: var(--primary-red); font-size: 14px;">No resume found on your profile. You can still apply, but uploading a resume is recommended.</p>
+              {% endif %}
+              <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> Apply Now</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -137,4 +204,5 @@
   .applied-note { display:flex; gap:10px; align-items:center; padding:14px; border-radius:8px; background:rgba(34,197,94,.1); color:#16a34a; margin-bottom:14px; font-weight:700; }
   @media (max-width: 900px) { .job-detail-layout { grid-template-columns:1fr; } }
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}

@@ -3,9 +3,9 @@ from app.modals.job_seeker_profile import JobSeekerProfileModel
 from app.modals.user import UserModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
 from app.modals.saved_job_model import SavedJobModel
+from app.modals.job_posting_model import JobPostingModel
 from datetime import datetime
 import os
-import base64
 
 
 class JobSeekerRoutes:
@@ -14,6 +14,8 @@ class JobSeekerRoutes:
 
     def register_routes(self):
         """Register all job seeker routes"""
+        """Register all job seeker routes."""
+        self.job_seeker_dashboard()
         self.job_seeker_profile()
         return self.blueprint
 
@@ -88,7 +90,9 @@ class JobSeekerRoutes:
             conn = get_connection()
             applications = []
             interviews = []
+            recommended_jobs = []
             profile_incomplete = False
+            bookmarks_count = 0
             try:
                 with conn.cursor() as cur:
                     cur.execute('SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s', (user_id,))
@@ -99,7 +103,7 @@ class JobSeekerRoutes:
                         seekers_id = seeker['Seekers_id']
                         cur.execute(
                             '''
-                            SELECT 
+                            SELECT
                                 a.`Application_id`,
                                 a.`Status`,
                                 a.`Applied_at`,
@@ -117,6 +121,15 @@ class JobSeekerRoutes:
                         )
                         applications = cur.fetchall()
                         interviews = InterviewSchedulingModel.get_interviews_for_applicant(seekers_id)
+                        bookmarks_count = len(JobPostingModel.get_saved_job_ids(seekers_id))
+                        keyword = ''
+                        if profile_data and profile_data.get('Skills'):
+                            keyword = profile_data['Skills'].split(',')[0].strip()
+                        recommended_jobs = JobPostingModel.search_jobs(
+                            keyword,
+                            profile_data.get('Location') if profile_data else '',
+                            'All Types',
+                        )[:4]
             finally:
                 conn.close()
 
@@ -130,15 +143,15 @@ class JobSeekerRoutes:
             for app in applications[:3]:
                 recent_activities.append({
                     'title': f"Applied to {app.get('job_title', 'Job')}",
-                    'subtitle': f"{app.get('Company_name', 'Company')} • {app.get('Status', 'Pending').title()}",
-                    'time': app['Applied_at'].strftime('%d %b %Y') if app.get('Applied_at') else 'N/A'
+                    'subtitle': f"{app.get('Company_name', 'Company')} - {app.get('Status', 'Pending').title()}",
+                    'time': app['Applied_at'].strftime('%d %b %Y') if app.get('Applied_at') else 'N/A',
                 })
 
             for interview in interviews[:2]:
                 recent_activities.append({
                     'title': f"Interview {interview.get('Status', 'Scheduled').title()}",
                     'subtitle': f"{interview.get('job_title', 'Position')} at {interview.get('Company_name', '')}",
-                    'time': interview['Interview_date'].strftime('%d %b') if interview.get('Interview_date') else 'N/A'
+                    'time': interview['Interview_date'].strftime('%d %b') if interview.get('Interview_date') else 'N/A',
                 })
 
             profile_alert_title = 'Complete your profile'
@@ -160,11 +173,60 @@ class JobSeekerRoutes:
                 rejected_count=rejected_count,
                 bookmarks_count=bookmarks_count,
                 recent_applications=recent_applications,
+                recommended_jobs=recommended_jobs,
                 recent_activities=recent_activities,
                 profile_alert_title=profile_alert_title,
                 profile_alert_text=profile_alert_text,
                 profile_action_text=profile_action_text,
-                profile_incomplete=profile_incomplete
+                profile_incomplete=profile_incomplete,
+            )
+
+    def job_seeker_profile(self):
+        @self.blueprint.route('/job-seeker/profile', methods=['GET', 'POST'])
+        def profile():
+            if 'user_id' not in session or session.get('role') != 'job_seeker':
+                flash('Please log in as a job seeker to view your profile.', 'error')
+                return redirect(url_for('login.index'))
+
+            user_id = session['user_id']
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+            profile_sections_completed = sum(
+                1
+                for value in (
+                    profile_data and profile_data.get('Bio'),
+                    profile_data and profile_data.get('Location'),
+                    profile_data and profile_data.get('Education'),
+                    profile_data and profile_data.get('Skills'),
+                    profile_data and profile_data.get('Experiences'),
+                    profile_data and profile_data.get('Resume'),
+                )
+                if value
+            )
+
+            if request.method == 'POST':
+                bio = request.form.get('bio', '').strip()
+                location = request.form.get('location', '').strip()
+                education = request.form.get('education', '').strip()
+                skills = request.form.get('skills', '').strip()
+                experiences = request.form.get('experiences', '').strip()
+
+                if JobSeekerProfileModel.create_or_update_profile(user_id, bio, location, education, skills, experiences):
+                    new_completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+                    JobSeekerProfileModel.update_profile_completion(user_id, new_completion_percentage)
+                    flash('Profile updated successfully!', 'success')
+                    return redirect(url_for('job_seeker.profile'))
+
+                flash('Failed to update profile. Please try again.', 'error')
+
+            return render_template(
+                'job_seeker_profile.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage,
+                profile_sections_completed=profile_sections_completed,
+                profile_sections_total=6,
             )
 
         @self.blueprint.route('/job-seeker/profile/photo', methods=['POST'])
@@ -199,8 +261,8 @@ class JobSeekerRoutes:
 
             if JobSeekerProfileModel.update_photo(user_id, filename):
                 return jsonify({'status': 'success', 'message': 'Photo uploaded!', 'filename': filename}), 200
-            else:
-                return jsonify({'status': 'error', 'message': 'Failed to save photo'}), 500
+
+            return jsonify({'status': 'error', 'message': 'Failed to save photo'}), 500
 
         @self.blueprint.route('/job-seeker/profile/resume', methods=['POST'])
         def upload_resume():
@@ -227,10 +289,10 @@ class JobSeekerRoutes:
                     new_pct = JobSeekerProfileModel.calculate_profile_completion(user_id)
                     JobSeekerProfileModel.update_profile_completion(user_id, new_pct)
                     return jsonify({'status': 'success', 'message': 'Resume uploaded successfully!', 'filename': filename}), 200
-                else:
-                    return jsonify({'status': 'error', 'message': 'Failed to save resume path to database'}), 500
-            else:
-                return jsonify({'status': 'error', 'message': 'Invalid file type. Accepted: PDF, DOCX (max 10MB)'}), 400
+
+                return jsonify({'status': 'error', 'message': 'Failed to save resume path to database'}), 500
+
+            return jsonify({'status': 'error', 'message': 'Invalid file type. Accepted: PDF, DOCX (max 10MB)'}), 400
 
         @self.blueprint.route('/job-seeker/profile/resume/delete', methods=['POST'])
         def delete_resume():
@@ -250,10 +312,10 @@ class JobSeekerRoutes:
                     new_pct = JobSeekerProfileModel.calculate_profile_completion(user_id)
                     JobSeekerProfileModel.update_profile_completion(user_id, new_pct)
                     return jsonify({'status': 'success', 'message': 'Resume deleted successfully!'}), 200
-                else:
-                    return jsonify({'status': 'error', 'message': 'Failed to delete resume from database'}), 500
-            else:
-                return jsonify({'status': 'error', 'message': 'No resume found to delete'}), 404
+
+                return jsonify({'status': 'error', 'message': 'Failed to delete resume from database'}), 500
+
+            return jsonify({'status': 'error', 'message': 'No resume found to delete'}), 404
 
         return self.blueprint
 

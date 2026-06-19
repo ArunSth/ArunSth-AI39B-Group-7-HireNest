@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>{{ 'Saved Jobs' if saved_only else 'Search Opportunities' }}</h2>
+        <p class="topbar-subtitle">{{ 'Jobs you bookmarked for later.' if saved_only else 'Browse active jobs and apply from one place.' }}</p>
+      </div>
+    </div>
+
+    <div class="content">
+      {% if not saved_only %}
+      <form method="GET" action="{{ url_for('job_posting.browse_jobs') }}" class="profile-form" style="margin-bottom: 24px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="keyword">Keyword</label>
+            <input id="keyword" name="keyword" type="text" value="{{ keyword }}" placeholder="Title, skill, or keyword">
+          </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input id="location" name="location" type="text" value="{{ location }}" placeholder="City or remote">
+          </div>
+          <div class="form-group">
+            <label for="job_type">Job Type</label>
+            <select id="job_type" name="job_type">
+              {% for option in ['All Types', 'Full-time', 'Part-time', 'Contract', 'Internship', 'Remote'] %}
+              <option value="{{ option }}" {% if job_type == option %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" type="submit"><i class="fas fa-search"></i> Search</button>
+      </form>
+      {% endif %}
+
+      <div class="table-container">
+        <div class="table-responsive">
+          {% if jobs %}
+          <table>
+            <thead>
+              <tr>
+                <th>Job</th>
+                <th>Company</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Salary</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for job in jobs %}
+              <tr>
+                <td><strong>{{ job.Title }}</strong></td>
+                <td>{{ job.Company_name }}</td>
+                <td>{{ job.Location or 'Remote' }}</td>
+                <td>{{ job.Job_type or 'Full-time' }}</td>
+                <td>{{ "Rs. {:,.0f}".format(job.Salary) if job.Salary else 'Not specified' }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <a href="{{ url_for('job_posting.seeker_job_detail', job_id=job.Job_id) }}" class="btn-small btn-view">
+                      <i class="fas fa-eye"></i> View
+                    </a>
+                    <form method="POST" action="{{ url_for('job_posting.save_job', job_id=job.Job_id) }}" style="display:inline;">
+                      <input type="hidden" name="action" value="{{ 'remove' if job.Job_id in saved_job_ids else 'save' }}">
+                      <button type="submit" class="btn-small btn-secondary">
+                        <i class="fas fa-bookmark"></i> {{ 'Saved' if job.Job_id in saved_job_ids else 'Save' }}
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
+            <i class="fas fa-briefcase" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
+            <h3 style="color: var(--text-primary); margin-bottom: 10px;">No jobs found</h3>
+            <p>{{ 'Saved jobs will appear here.' if saved_only else 'Try a different keyword, location, or job type.' }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}

@@ -112,6 +112,14 @@ class ApplicantRoutes:
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
+                    cur.execute("SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s", (user_id,))
+                    seeker = cur.fetchone()
+                    if not seeker:
+                        flash("Job seeker profile not found.", "error")
+                        return redirect(url_for("job_seeker.dashboard"))
+                    
+                    seekers_id = seeker['Seekers_id']
+                    
                     # Get all applications for this seeker
                     cur.execute(
                         """

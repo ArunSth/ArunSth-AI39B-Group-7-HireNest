@@ -18,6 +18,14 @@
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>
+    <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item {% if request.path == '/jobs' %}active{% endif %}">
+      <i class="fas fa-briefcase"></i>
+      <span>Search Opportunities</span>
+    </a>
+    <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
+      <i class="fas fa-bookmark"></i>
+      <span>Saved Jobs</span>
+    </a>
     <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item {% if 'applications' in request.path %}active{% endif %}">
       <i class="fas fa-file-alt"></i>
       <span>Applications</span>
