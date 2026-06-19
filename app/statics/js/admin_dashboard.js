@@ -150,7 +150,7 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
     const tab = link.dataset.tab;
- 
+
     document.querySelectorAll('.nav-link[data-tab]').forEach(l => {
       l.classList.remove('active');
       const arrow = l.querySelector('.arrow');
@@ -160,12 +160,16 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
     const arrow = document.createElement('i');
     arrow.className = 'fa-solid fa-chevron-right arrow';
     link.appendChild(arrow);
- 
+
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     const target = document.getElementById('tab-' + tab);
     if (target) target.classList.add('active');
- 
+
     document.getElementById('sidebar')?.classList.remove('open');
+
+    // Refresh data when switching to these tabs
+    if (tab === 'job-moderation') loadModerationJobsFromDB();
+    if (tab === 'analytics')      updateAnalytics();
   });
 });
  
@@ -422,13 +426,7 @@ document.getElementById('sendAnnouncementForm')?.addEventListener('submit', e =>
   });
 })();
  
-// Refresh when tab is opened
-document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
-  link.addEventListener('click', () => {
-    if (link.dataset.tab === 'analytics') updateAnalytics();
-  });
-});
- 
+
  
 // ════════════════════════════════════════════
 // ADMIN NOTIFICATION DROPDOWN
@@ -1440,6 +1438,12 @@ function loadModerationJobsFromDB() {
       });
 
       renderModeration(JOBS);
+
+      // Update active jobs count with real DB number
+      const activeFromDB = JOBS.filter(j => j.status === 'Approved').length;
+      const flaskBase    = parseInt(document.getElementById('stat-active-jobs')?.dataset.flask || '0');
+      setEl('stat-active-jobs', flaskBase + activeFromDB);
+
       updateStats();
     })
     .catch(err => console.error('Could not load jobs for moderation:', err));
@@ -1454,16 +1458,18 @@ function persistState() {
 // INIT — do NOT call renderUsers here, Jinja already rendered them
 // ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Store Flask's active_jobs value so we can add to it later
   const activeJobsEl = document.getElementById('stat-active-jobs');
   if (activeJobsEl) activeJobsEl.dataset.flask = activeJobsEl.textContent;
- 
+
   updateStats();
-  // Jobs and reports start empty — populated by JS actions
   renderModeration(JOBS);
   renderReports(REPORTS);
   renderRoleBreakdown();
   updatePlatformHealth();
   updateAnalytics();
-  loadModerationJobsFromDB(); 
+  loadModerationJobsFromDB();
+
+  // Auto-refresh moderation jobs every 30 seconds
+  // so new employer jobs appear without a page reload
+  setInterval(loadModerationJobsFromDB, 30000);
 });
