@@ -464,7 +464,7 @@
 
   <!-- ── SIDEBAR ─────────────────────────────────────────── -->
   <aside class="sidebar" id="sidebar">
-    <a href="/" class="sidebar-brand">
+    <a href="{{ url_for('job_seeker.dashboard') }}" class="sidebar-brand">
       <div class="brand-icon"><i class="fa-solid fa-layer-group"></i></div>
       <span class="brand-name">HireNest</span>
     </a>
@@ -505,8 +505,11 @@
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Main</div>
+      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item">
+        <i class="fa-solid fa-house"></i> Dashboard
+      </a>
       <a href="#overview" class="nav-item active" onclick="showTab('overview',this)">
-        <i class="fa-solid fa-house"></i> Overview
+        <i class="fa-solid fa-chart-simple"></i> Profile Summary
       </a>
       <a href="#profile" class="nav-item" onclick="showTab('profile',this)">
         <i class="fa-solid fa-user-pen"></i> Edit Profile
@@ -518,13 +521,11 @@
 
 
       <div class="nav-section-label">Activity</div>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
         <i class="fa-solid fa-paper-plane"></i> Applications
-        <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item">
         <i class="fa-solid fa-bookmark"></i> Saved Jobs
-        <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
       </a>     
       <a href="{{ url_for('messages.index') }}" class="nav-item">
         <i class="fa-regular fa-message"></i> Messages
@@ -535,9 +536,8 @@
       <a href="{{ url_for('job_alerts.index') }}" class="nav-item">
         <i class="fa-solid fa-bell-concierge"></i> Job Alerts
       </a>
-      <a href="#" class="nav-item">
+      <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item">
         <i class="fa-solid fa-magnifying-glass"></i> Find Jobs
-        <span style="margin-left:auto;font-size:11px;background:rgba(232,168,56,0.15);color:var(--amber);padding:2px 8px;border-radius:10px;">Soon</span>
       </a>
     </nav>
 
@@ -555,7 +555,7 @@
         <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
           <i class="fa-solid fa-bars"></i>
         </button>
-        <h1 class="page-title">Your <span>Dashboard</span></h1>
+        <h1 class="page-title">Profile <span>Settings</span></h1>
       </div>
       <div class="topbar-actions">
         <div class="badge-pill">

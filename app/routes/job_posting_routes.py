@@ -40,7 +40,7 @@ class JobPostingRoutes:
             seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
             if not seeker_profile:
                 flash("Complete your job seeker profile first.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             jobs = JobPostingModel.get_saved_jobs(seeker_profile["Seekers_id"])
             saved_job_ids = {job["Job_id"] for job in jobs}
@@ -94,7 +94,7 @@ class JobPostingRoutes:
             seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
             if not seeker_profile:
                 flash("Complete your job seeker profile before applying.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             existing_application = ApplicantManagementModel.get_application_for_job(seeker_profile["Seekers_id"], job_id)
             if existing_application:
@@ -124,7 +124,7 @@ class JobPostingRoutes:
             seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
             if not seeker_profile:
                 flash("Complete your job seeker profile first.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             action = request.form.get("action", "save")
             if action == "remove":
