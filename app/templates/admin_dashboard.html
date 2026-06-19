@@ -197,8 +197,8 @@
             <div class="table-card" style="max-width:100%">
                 <div class="chart-head">
                     <h3>All Users</h3>
-                    <button class="action-btn purple" onclick="openModal('addUserModal')">
-                        <i class="fa-solid fa-plus"></i> Add User
+                    <button class="action-btn ghost" onclick="window.location.reload()">
+                        <i class="fa-solid fa-rotate-right"></i> Refresh
                     </button>
                 </div>
                 <table class="admin-table">
@@ -285,8 +285,8 @@
             <div class="table-card" style="max-width:100%">
                 <div class="chart-head">
                     <h3>Job Listings <span class="count-badge" id="modCount">0</span></h3>
-                    <button class="action-btn purple" onclick="openModal('addJobModal')">
-                        <i class="fa-solid fa-plus"></i> Add Job
+                    <button class="action-btn ghost" onclick="loadModerationJobsFromDB();showToast('Jobs refreshed','success')">
+                       <i class="fa-solid fa-rotate-right"></i> Refresh
                     </button>
                 </div>
                 <table class="admin-table">
@@ -592,79 +592,7 @@
     </div>
 </div>
  
-<!-- Add User -->
-<div class="modal-overlay" id="addUserModal">
-    <div class="modal">
-        <div class="modal-head">
-            <h3>Add New User</h3>
-            <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
-        </div>
-        <form id="addUserForm">
-            <div class="form-field">
-                <label>Full Name <span class="req">*</span></label>
-                <input type="text" name="userName" placeholder="e.g. Ram Sharma" required>
-            </div>
-            <div class="form-field">
-                <label>Email Address <span class="req">*</span></label>
-                <input type="email" name="userEmail" placeholder="ram@example.com" required>
-            </div>
-            <div class="form-field">
-                <label>Role</label>
-                <select name="userRole">
-                    <option>Job Seeker</option>
-                    <option>Employer</option>
-                    <option>Admin</option>
-                </select>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="action-btn ghost" onclick="closeModal('addUserModal')">Cancel</button>
-                <button type="submit" class="action-btn purple"><i class="fa-solid fa-plus"></i> Add User</button>
-            </div>
-        </form>
-    </div>
-</div>
- 
-<!-- Add Job -->
-<div class="modal-overlay" id="addJobModal">
-    <div class="modal modal-lg">
-        <div class="modal-head">
-            <h3>Submit Job for Moderation</h3>
-            <button class="modal-close" onclick="closeModal('addJobModal')">&times;</button>
-        </div>
-        <form id="addJobForm">
-            <div class="detail-grid">
-                <div class="form-field">
-                    <label>Job Title <span class="req">*</span></label>
-                    <input type="text" name="jobTitle" placeholder="e.g. Frontend Developer" required>
-                </div>
-                <div class="form-field">
-                    <label>Company <span class="req">*</span></label>
-                    <input type="text" name="jobCompany" placeholder="e.g. TechCorp" required>
-                </div>
-                <div class="form-field">
-                    <label>Job Type</label>
-                    <select name="jobType">
-                        <option>Full-time</option><option>Part-time</option>
-                        <option>Remote</option><option>Contract</option><option>Internship</option>
-                    </select>
-                </div>
-                <div class="form-field">
-                    <label>Location</label>
-                    <input type="text" name="jobLocation" placeholder="e.g. Kathmandu, Nepal">
-                </div>
-            </div>
-            <div class="form-field">
-                <label>Description</label>
-                <textarea name="jobDescription" placeholder="Job responsibilities and requirements..." style="width:100%;min-height:80px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;resize:vertical;font-family:inherit"></textarea>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="action-btn ghost" onclick="closeModal('addJobModal')">Cancel</button>
-                <button type="submit" class="action-btn purple"><i class="fa-solid fa-plus"></i> Submit Job</button>
-            </div>
-        </form>
-    </div>
-</div>
- 
+
 <!-- File Report -->
 <div class="modal-overlay" id="addReportModal">
     <div class="modal modal-lg">
