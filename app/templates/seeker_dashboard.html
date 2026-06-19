@@ -22,7 +22,7 @@
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
-      <a href="#profile-details" class="nav-item">
+      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
@@ -50,7 +50,7 @@
         <i class="fas fa-headset"></i>
         <span>Messages</span>
       </a>
-      <a href="#profile-details" class="nav-item">
+      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
@@ -88,7 +88,7 @@
               <i class="fas fa-search"></i>
               <span>Search Opportunities</span>
             </a>
-            <a href="#profile-details" class="seeker-action seeker-action--secondary">
+            <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--secondary">
               <i class="fas fa-user-edit"></i>
               <span>Update Profile</span>
             </a>
@@ -140,7 +140,7 @@
             <h2>Complete your job seeker profile</h2>
             <p>Your dashboard is available, but applications, interviews, alerts, and recommendations work best after your profile is created.</p>
           </div>
-          <a href="#profile-details" class="seeker-action seeker-action--primary">Complete Profile</a>
+          <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--primary">Complete Profile</a>
         </section>
         {% endif %}
 
@@ -151,7 +151,7 @@
                 <span class="seeker-kicker">Profile completion</span>
                 <h2>{{ profile_alert_title }}</h2>
               </div>
-              <a href="#profile-details" class="seeker-link-action">{{ profile_action_text }}</a>
+              <a href="{{ url_for('job_seeker.profile') }}" class="seeker-link-action">{{ profile_action_text }}</a>
             </div>
             <p>{{ profile_alert_text }}</p>
             <div class="seeker-progress-track" aria-label="Profile completion">
@@ -172,111 +172,6 @@
               <span class="{% if profile and profile.Location %}seeker-step-done{% endif %}">Location</span>
               <span class="{% if profile and profile.Education %}seeker-step-done{% endif %}">Education</span>
               <span class="{% if profile and profile.Skills %}seeker-step-done{% endif %}">Skills</span>
-            </div>
-          </div>
-
-          <div class="seeker-panel" id="profile-details">
-            <div class="seeker-panel-heading">
-              <div>
-                <span class="seeker-kicker">Profile details</span>
-                <h2>Edit profile</h2>
-              </div>
-            </div>
-            <div class="seeker-profile-media">
-              <div class="seeker-profile-photo">
-                {% if profile and profile.Profile_photo %}
-                  <img src="{{ url_for('static', filename='uploads/photos/' ~ profile.Profile_photo) }}" alt="Profile photo" id="seekerPhotoPreview">
-                {% else %}
-                  <div class="seeker-profile-photo-placeholder" id="seekerPhotoPlaceholder">
-                    {{ user.First_name[0] | upper if user.First_name else 'J' }}
-                  </div>
-                {% endif %}
-              </div>
-              <div>
-                <h3>Profile photo</h3>
-                <p>Upload a JPG, PNG, WEBP, or GIF image under 5MB.</p>
-                <label class="seeker-action seeker-action--secondary seeker-upload-action" for="photoInput">
-                  <i class="fas fa-camera"></i>
-                  <span>Change Photo</span>
-                </label>
-                <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp,image/gif">
-              </div>
-            </div>
-
-            <form method="POST" action="{{ url_for('job_seeker.profile') }}" class="profile-form" id="profileForm">
-              <div class="form-group">
-                <label>Bio</label>
-                <textarea name="bio" rows="3" placeholder="Tell employers about yourself">{{ profile.Bio if profile else '' }}</textarea>
-              </div>
-              <div class="form-group">
-                <label>Location</label>
-                <input type="text" name="location" value="{{ profile.Location if profile else '' }}" placeholder="City, Country">
-              </div>
-              <div class="form-group">
-                <label>Education</label>
-                <input type="text" name="education" value="{{ profile.Education if profile else '' }}" placeholder="Degree, school, or certification">
-              </div>
-              <div class="form-group">
-                <label>Skills</label>
-                <input type="text" name="skills" id="skillsInput" value="{{ profile.Skills if profile else '' }}" placeholder="Python, SQL, communication">
-              </div>
-              <div class="form-group">
-                <label>Experience</label>
-                <textarea name="experiences" rows="3" placeholder="Summarize your relevant experience">{{ profile.Experiences if profile else '' }}</textarea>
-              </div>
-              <button type="submit" class="seeker-action seeker-action--primary">
-                <i class="fas fa-save"></i>
-                <span>Save Profile</span>
-              </button>
-            </form>
-
-            <div class="seeker-resume-manager">
-              <div class="seeker-panel-heading seeker-panel-heading--compact">
-                <div>
-                  <span class="seeker-kicker">Resume</span>
-                  <h2>Resume upload</h2>
-                </div>
-                {% if profile and profile.Resume %}
-                  <span class="seeker-chip">Uploaded</span>
-                {% endif %}
-              </div>
-
-              {% if profile and profile.Resume %}
-              <div class="seeker-resume-existing">
-                <i class="fas fa-file-pdf"></i>
-                <div>
-                  <h3>{{ profile.Resume }}</h3>
-                  <p>
-                    Uploaded:
-                    {% if profile.Resume_upload_date %}
-                      {{ profile.Resume_upload_date.strftime('%d %b %Y') }}
-                    {% else %}
-                      Unknown date
-                    {% endif %}
-                  </p>
-                </div>
-                <button type="button" class="seeker-danger-action" id="deleteResumeBtn">
-                  <i class="fas fa-trash"></i>
-                  <span>Remove</span>
-                </button>
-              </div>
-              <p>Upload a new file below to replace the current resume.</p>
-              {% else %}
-              <p>No resume uploaded yet. Add a PDF or DOCX file so employers can review your background.</p>
-              {% endif %}
-
-              <div class="seeker-resume-drop-zone" id="resumeDropZone">
-                <i class="fas fa-cloud-arrow-up"></i>
-                <p>Drop your resume here or <span>browse files</span></p>
-                <small>PDF or DOCX - max 10MB</small>
-              </div>
-              <input type="file" id="resumeInput" accept=".pdf,.docx">
-              <div class="seeker-upload-progress" id="uploadProgress">
-                <div class="seeker-upload-progress-track">
-                  <div class="seeker-upload-progress-fill" id="uploadBar"></div>
-                </div>
-                <p id="uploadStatusText">Uploading...</p>
-              </div>
             </div>
           </div>
 
@@ -426,150 +321,4 @@
 
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const toast = document.createElement('div');
-  toast.id = 'seekerToast';
-  toast.innerHTML = '<i class="fas fa-circle-check"></i><span></span>';
-  document.body.appendChild(toast);
-
-  function showToast(message, isError = false) {
-    toast.querySelector('span').textContent = message;
-    toast.querySelector('i').className = isError ? 'fas fa-circle-exclamation' : 'fas fa-circle-check';
-    toast.classList.toggle('is-error', isError);
-    toast.classList.add('show');
-    window.clearTimeout(toast.hideTimer);
-    toast.hideTimer = window.setTimeout(() => toast.classList.remove('show'), 3200);
-  }
-
-  const photoInput = document.getElementById('photoInput');
-  if (photoInput) {
-    photoInput.addEventListener('change', async () => {
-      const file = photoInput.files[0];
-      if (!file) return;
-
-      const formData = new FormData();
-      formData.append('photo', file);
-      showToast('Uploading photo...');
-
-      try {
-        const response = await fetch('{{ url_for("job_seeker.upload_photo") }}', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await response.json();
-
-        if (data.status !== 'success') {
-          showToast(data.message || 'Photo upload failed', true);
-          return;
-        }
-
-        showToast('Photo updated!');
-        const reader = new FileReader();
-        reader.onload = event => {
-          const existing = document.getElementById('seekerPhotoPreview');
-          const placeholder = document.getElementById('seekerPhotoPlaceholder');
-
-          if (existing) {
-            existing.src = event.target.result;
-            return;
-          }
-
-          if (placeholder) {
-            const img = document.createElement('img');
-            img.id = 'seekerPhotoPreview';
-            img.alt = 'Profile photo';
-            img.src = event.target.result;
-            placeholder.replaceWith(img);
-          }
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        showToast('Network error during photo upload', true);
-      }
-    });
-  }
-
-  const resumeInput = document.getElementById('resumeInput');
-  const resumeDropZone = document.getElementById('resumeDropZone');
-
-  if (resumeDropZone) {
-    resumeDropZone.addEventListener('click', () => resumeInput.click());
-    resumeDropZone.addEventListener('dragover', event => {
-      event.preventDefault();
-      resumeDropZone.classList.add('is-dragging');
-    });
-    resumeDropZone.addEventListener('dragleave', () => resumeDropZone.classList.remove('is-dragging'));
-    resumeDropZone.addEventListener('drop', event => {
-      event.preventDefault();
-      resumeDropZone.classList.remove('is-dragging');
-      const file = event.dataTransfer.files[0];
-      if (file) uploadResume(file);
-    });
-  }
-
-  if (resumeInput) {
-    resumeInput.addEventListener('change', () => {
-      if (resumeInput.files[0]) uploadResume(resumeInput.files[0]);
-    });
-  }
-
-  async function uploadResume(file) {
-    const progress = document.getElementById('uploadProgress');
-    const bar = document.getElementById('uploadBar');
-    const statusText = document.getElementById('uploadStatusText');
-    const formData = new FormData();
-    formData.append('resume', file);
-
-    progress.classList.add('show');
-    bar.style.width = '30%';
-    statusText.textContent = `Uploading ${file.name}...`;
-
-    try {
-      bar.style.width = '70%';
-      const response = await fetch('{{ url_for("job_seeker.upload_resume") }}', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await response.json();
-      bar.style.width = '100%';
-
-      if (data.status === 'success') {
-        statusText.textContent = 'Upload complete!';
-        showToast('Resume uploaded successfully!');
-        window.setTimeout(() => window.location.href = '{{ url_for("job_seeker.dashboard") }}#profile-details', 900);
-        return;
-      }
-
-      statusText.textContent = data.message || 'Upload failed';
-      showToast(data.message || 'Resume upload failed', true);
-    } catch (error) {
-      statusText.textContent = 'Network error';
-      showToast('Network error during resume upload', true);
-    }
-  }
-
-  const deleteResumeBtn = document.getElementById('deleteResumeBtn');
-  if (deleteResumeBtn) {
-    deleteResumeBtn.addEventListener('click', async () => {
-      if (!window.confirm('Remove your resume?')) return;
-
-      try {
-        const response = await fetch('{{ url_for("job_seeker.delete_resume") }}', { method: 'POST' });
-        const data = await response.json();
-
-        if (data.status === 'success') {
-          showToast('Resume removed');
-          window.setTimeout(() => window.location.href = '{{ url_for("job_seeker.dashboard") }}#profile-details', 900);
-          return;
-        }
-
-        showToast(data.message || 'Resume delete failed', true);
-      } catch (error) {
-        showToast('Network error during resume delete', true);
-      }
-    });
-  }
-});
-</script>
 {% endblock %}
