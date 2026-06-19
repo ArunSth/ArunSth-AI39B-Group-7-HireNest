@@ -68,6 +68,133 @@ body {
   background: var(--light-bg);
   color: var(--text-primary);
   min-height: 100vh;
+  padding-top: 76px;
+}
+
+.employer-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 30px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+.employer-navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.employer-navbar__logo {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.employer-navbar__logo img {
+  width: 52px;
+  height: 52px;
+  max-width: 52px;
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+
+.employer-navbar__brand-text {
+  display: flex;
+  align-items: center;
+}
+
+.employer-navbar__brand-text h1 {
+  display: block;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.employer-navbar__theme {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.employer-theme-toggle {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.employer-theme-toggle:hover {
+  background: var(--light-bg);
+  transform: translateY(-1px);
+}
+
+.employer-theme-toggle i {
+  font-size: 18px;
+}
+
+.employer-navbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.employer-navbar__greeting {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.employer-navbar__link {
+  color: var(--primary-purple);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.employer-navbar__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary-purple), var(--secondary-purple));
+  color: var(--white);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employer-navbar__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(109, 93, 252, 0.22);
 }
 
 /* Dashboard Container */
@@ -95,6 +222,43 @@ body {
   margin-bottom: 40px;
   text-decoration: none;
   color: var(--text-primary);
+}
+
+.sidebar-logo--employer {
+  gap: 12px;
+}
+
+.sidebar-logo--employer .sidebar-logo-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, var(--primary-red), var(--primary-purple));
+  border-radius: 12px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 22px;
+}
+
+.sidebar-logo--employer .sidebar-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sidebar-logo--employer .sidebar-logo-text h3 {
+  display: block;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sidebar-logo--employer .sidebar-logo-text p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .sidebar-logo-icon {
@@ -1608,8 +1772,8 @@ table tbody tr:hover {
 
 .seeker-stat-tile span,
 .seeker-row-meta,
-.seeker-side-row > span,
-.seeker-recommendation-card > span {
+.seeker-side-row>span,
+.seeker-recommendation-card>span {
   color: var(--text-secondary);
   font-size: 13px;
 }
@@ -1789,12 +1953,12 @@ table tbody tr:hover {
   background: #F8FAFC;
 }
 
-.seeker-resume-existing > i {
+.seeker-resume-existing>i {
   color: var(--primary-red);
   font-size: 26px;
 }
 
-.seeker-resume-existing > div {
+.seeker-resume-existing>div {
   min-width: 0;
   flex: 1;
 }
@@ -2071,6 +2235,7 @@ table tbody tr:hover {
 }
 
 @media (max-width: 768px) {
+
   .seeker-welcome-hero,
   .seeker-panel-heading,
   .seeker-profile-warning,

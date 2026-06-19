@@ -1,77 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subscription Plans — HireNest</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-</head>
-<body>
-  <div class="dashboard-container">
-    {% include 'sidebar_employer.html' %}
-    <main class="main-content">
-      <div class="topbar">
-        <div>
-          <h2>Subscription Plans</h2>
-          <p>Choose a plan that fits your hiring needs.</p>
-        </div>
-      </div>
+{% extends 'employer_base.html' %}
 
-      <section class="section">
-        <div class="card-grid">
-          {% for plan in plans %}
-            <article class="company-card">
-              <div class="card-header">
-                <div>
-                  <h3>{{ plan.Plan_name }}</h3>
-                  <p>{{ plan.Description }}</p>
-                </div>
-              </div>
-              <div class="company-info">
-                <p><strong>Price:</strong> ${{ plan.Price }}</p>
-                <p><strong>Billing cycle:</strong> {{ plan.Billing_cycle }}</p>
-                <p><strong>Max job posts:</strong> {{ plan.Max_job_posts if plan.Max_job_posts else 'Unlimited' }}</p>
-                <p><strong>Features:</strong></p>
-                <ul>
-                  {% for feature in plan.Features %}
-                    <li>{{ feature[0] if feature is iterable and feature|length > 0 else feature }}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-              <form method="POST" class="action-row">
-                <input type="hidden" name="plan_id" value="{{ plan.Plan_id }}">
-                <button type="submit" class="btn-primary">Subscribe</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      </section>
+{% block page_title %}Subscription Plans{% endblock %}
+{% block page_subtitle %}Choose a plan that fits your hiring needs.{% endblock %}
 
-      <section class="section">
-        <div class="company-card">
-          <div class="card-header">
-            <div>
-              <h3>Active Subscription</h3>
-            </div>
+{% block content %}
+<section class="section">
+  <div class="card-grid">
+    {% for plan in plans %}
+      <article class="company-card">
+        <div class="card-header">
+          <div>
+            <h3>{{ plan.Plan_name }}</h3>
+            <p>{{ plan.Description }}</p>
           </div>
-          {% if active_subscription %}
-            <div class="company-info">
-              <p><strong>Plan:</strong> {{ active_subscription.Plan_name }}</p>
-              <p><strong>Price:</strong> ${{ active_subscription.Price }}</p>
-              <p><strong>Until:</strong> {{ active_subscription.End_date }}</p>
-              <p><strong>Status:</strong> {{ active_subscription.Status }}</p>
-              <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}">
-                <button type="submit" class="btn-secondary">Cancel Subscription</button>
-              </form>
-            </div>
-          {% else %}
-            <div class="company-info">
-              <p>You do not have an active subscription currently.</p>
-            </div>
-          {% endif %}
         </div>
-      </section>
-    </main>
+        <div class="company-info">
+          <p><strong>Price:</strong> ${{ plan.Price }}</p>
+          <p><strong>Billing cycle:</strong> {{ plan.Billing_cycle }}</p>
+          <p><strong>Max job posts:</strong> {{ plan.Max_job_posts if plan.Max_job_posts else 'Unlimited' }}</p>
+          <p><strong>Features:</strong></p>
+          <ul>
+            {% for feature in plan.Features %}
+              <li>{{ feature[0] if feature is iterable and feature|length > 0 else feature }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <form method="POST" class="action-row">
+          <input type="hidden" name="plan_id" value="{{ plan.Plan_id }}">
+          <button type="submit" class="btn-primary">Subscribe</button>
+        </form>
+      </article>
+    {% endfor %}
   </div>
-</body>
-</html>
+</section>
+
+<section class="section">
+  <div class="company-card">
+    <div class="card-header">
+      <div>
+        <h3>Active Subscription</h3>
+      </div>
+    </div>
+    {% if active_subscription %}
+      <div class="company-info">
+        <p><strong>Plan:</strong> {{ active_subscription.Plan_name }}</p>
+        <p><strong>Price:</strong> ${{ active_subscription.Price }}</p>
+        <p><strong>Until:</strong> {{ active_subscription.End_date }}</p>
+        <p><strong>Status:</strong> {{ active_subscription.Status }}</p>
+        <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}">
+          <button type="submit" class="btn-secondary">Cancel Subscription</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="company-info">
+        <p>You do not have an active subscription currently.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
