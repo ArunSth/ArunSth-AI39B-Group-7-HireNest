@@ -18,7 +18,7 @@ class ReviewRoutes:
             seekers_id = self._get_seeker_id(session["user_id"])
             if seekers_id is None:
                 flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             from app.database import get_connection
             conn = get_connection()
@@ -55,7 +55,7 @@ class ReviewRoutes:
             seekers_id = self._get_seeker_id(session["user_id"])
             if seekers_id is None:
                 flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             review_summary = ReviewController.get_review_summary(employee_id)
             reviews = ReviewController.get_reviews_by_employee(employee_id)
@@ -105,7 +105,7 @@ class ReviewRoutes:
             seekers_id = self._get_seeker_id(session["user_id"])
             if seekers_id is None:
                 flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             review = ReviewController.get_review(review_id)
             if not review or review.get("Seekers_id") != seekers_id or review.get("Employee_id") != employee_id:
@@ -156,7 +156,7 @@ class ReviewRoutes:
             seekers_id = self._get_seeker_id(session["user_id"])
             if seekers_id is None:
                 flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.profile"))
+                return redirect(url_for("job_seeker.dashboard"))
 
             if ReviewController.delete_review(review_id, seekers_id):
                 flash("Review deleted successfully.", "success")

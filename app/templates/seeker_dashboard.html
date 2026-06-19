@@ -22,7 +22,7 @@
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
+      <a href="#profile-details" class="nav-item">
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
@@ -50,7 +50,7 @@
         <i class="fas fa-headset"></i>
         <span>Messages</span>
       </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
+      <a href="#profile-details" class="nav-item">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
@@ -88,7 +88,7 @@
               <i class="fas fa-search"></i>
               <span>Search Opportunities</span>
             </a>
-            <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--secondary">
+            <a href="#profile-details" class="seeker-action seeker-action--secondary">
               <i class="fas fa-user-edit"></i>
               <span>Update Profile</span>
             </a>
@@ -140,7 +140,7 @@
             <h2>Complete your job seeker profile</h2>
             <p>Your dashboard is available, but applications, interviews, alerts, and recommendations work best after your profile is created.</p>
           </div>
-          <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--primary">Complete Profile</a>
+          <a href="#profile-details" class="seeker-action seeker-action--primary">Complete Profile</a>
         </section>
         {% endif %}
 
@@ -151,7 +151,7 @@
                 <span class="seeker-kicker">Profile completion</span>
                 <h2>{{ profile_alert_title }}</h2>
               </div>
-              <a href="{{ url_for('job_seeker.profile') }}" class="seeker-link-action">{{ profile_action_text }}</a>
+              <a href="#profile-details" class="seeker-link-action">{{ profile_action_text }}</a>
             </div>
             <p>{{ profile_alert_text }}</p>
             <div class="seeker-progress-track" aria-label="Profile completion">
@@ -173,6 +173,41 @@
               <span class="{% if profile and profile.Education %}seeker-step-done{% endif %}">Education</span>
               <span class="{% if profile and profile.Skills %}seeker-step-done{% endif %}">Skills</span>
             </div>
+          </div>
+
+          <div class="seeker-panel" id="profile-details">
+            <div class="seeker-panel-heading">
+              <div>
+                <span class="seeker-kicker">Profile details</span>
+                <h2>Edit profile</h2>
+              </div>
+            </div>
+            <form method="POST" action="{{ url_for('job_seeker.profile') }}" class="profile-form">
+              <div class="form-group">
+                <label>Bio</label>
+                <textarea name="bio" rows="3" placeholder="Tell employers about yourself">{{ profile.Bio if profile else '' }}</textarea>
+              </div>
+              <div class="form-group">
+                <label>Location</label>
+                <input type="text" name="location" value="{{ profile.Location if profile else '' }}" placeholder="City, Country">
+              </div>
+              <div class="form-group">
+                <label>Education</label>
+                <input type="text" name="education" value="{{ profile.Education if profile else '' }}" placeholder="Degree, school, or certification">
+              </div>
+              <div class="form-group">
+                <label>Skills</label>
+                <input type="text" name="skills" value="{{ profile.Skills if profile else '' }}" placeholder="Python, SQL, communication">
+              </div>
+              <div class="form-group">
+                <label>Experience</label>
+                <textarea name="experiences" rows="3" placeholder="Summarize your relevant experience">{{ profile.Experiences if profile else '' }}</textarea>
+              </div>
+              <button type="submit" class="seeker-action seeker-action--primary">
+                <i class="fas fa-save"></i>
+                <span>Save Profile</span>
+              </button>
+            </form>
           </div>
 
           <div class="seeker-panel seeker-membership-card">
