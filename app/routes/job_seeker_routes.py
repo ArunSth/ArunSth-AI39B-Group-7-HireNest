@@ -131,6 +131,21 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
+            profile_sections_completed = sum(
+                1
+                for value in (
+                    profile_data and profile_data.get('Bio'),
+                    profile_data and profile_data.get('Location'),
+                    profile_data and profile_data.get('Education'),
+                    profile_data and profile_data.get('Skills'),
+                    profile_data and profile_data.get('Experiences'),
+                    profile_data and profile_data.get('Resume'),
+                )
+                if value
+            )
 
             if request.method == 'POST':
                 bio = request.form.get('bio', '').strip()
@@ -143,11 +158,18 @@ class JobSeekerRoutes:
                     new_completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
                     JobSeekerProfileModel.update_profile_completion(user_id, new_completion_percentage)
                     flash('Profile updated successfully!', 'success')
-                    return redirect(url_for('job_seeker.dashboard'))
+                    return redirect(url_for('job_seeker.profile'))
 
                 flash('Failed to update profile. Please try again.', 'error')
 
-            return redirect(url_for('job_seeker.dashboard'))
+            return render_template(
+                'job_seeker_profile.html',
+                user=user_data,
+                profile=profile_data,
+                completion_percentage=completion_percentage,
+                profile_sections_completed=profile_sections_completed,
+                profile_sections_total=6,
+            )
 
         @self.blueprint.route('/job-seeker/profile/photo', methods=['POST'])
         def upload_photo():

@@ -42,7 +42,7 @@
         {% if session.get('role') == 'employer' %}
           <a href="{{ url_for('employer.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
         {% else %}
-          <a href="{{ url_for('job_seeker.dashboard') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
+          <a href="{{ url_for('job_seeker.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
         {% endif %}
         <a href="{{ url_for('logout.process_logout') }}" class="signup-btn" style="text-decoration:none;">Log Out</a>
       {% else %}
@@ -195,6 +195,7 @@
     </div>
   </div>
 
+  {% if session.get('role') != 'job_seeker' %}
   <footer class="main-footer">
     <div class="footer-container">
       <div class="footer-brand">
@@ -252,6 +253,7 @@
       <p>&copy; 2026 HireNest. All rights reserved.</p>
     </div>
   </footer>
+  {% endif %}
 
   <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
