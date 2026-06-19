@@ -11,10 +11,6 @@
         <p class="topbar-subtitle">{{ job.Company_name }}{% if job.Industry %} · {{ job.Industry }}{% endif %}</p>
       </div>
       <div class="topbar-right">
-        <a href="{{ url_for('seeker_jobs.index') }}" class="btn-secondary">Back to Search</a>
-        <p class="topbar-subtitle">{{ job.Company_name }} &middot; {{ job.Location or 'Remote' }}</p>
-      </div>
-      <div class="topbar-right">
         <a href="{{ url_for('seeker_jobs.index') }}" class="btn-secondary">Back to Jobs</a>
       </div>
     </div>
