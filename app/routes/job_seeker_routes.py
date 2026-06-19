@@ -70,6 +70,7 @@ class JobSeekerRoutes:
                 profile=profile_data,
                 completion_percentage=completion_percentage
             )
+        
 
         @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
         def dashboard():
