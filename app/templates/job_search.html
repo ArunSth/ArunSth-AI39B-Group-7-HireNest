@@ -14,7 +14,7 @@
 
     <div class="content">
       {% if not saved_only %}
-      <form method="GET" action="{{ url_for('job_posting.browse_jobs') }}" class="profile-form" style="margin-bottom: 24px;">
+      <form method="GET" action="{{ url_for('seeker_jobs.index') }}" class="profile-form" style="margin-bottom: 24px;">
         <div class="form-row">
           <div class="form-group">
             <label for="keyword">Keyword</label>
@@ -61,10 +61,10 @@
                 <td>{{ "Rs. {:,.0f}".format(job.Salary) if job.Salary else 'Not specified' }}</td>
                 <td>
                   <div class="action-buttons">
-                    <a href="{{ url_for('job_posting.seeker_job_detail', job_id=job.Job_id) }}" class="btn-small btn-view">
+                    <a href="{{ url_for('seeker_jobs.detail', job_id=job.Job_id) }}" class="btn-small btn-view">
                       <i class="fas fa-eye"></i> View
                     </a>
-                    <form method="POST" action="{{ url_for('job_posting.save_job', job_id=job.Job_id) }}" style="display:inline;">
+                    <form method="POST" action="{{ url_for('seeker_jobs.save', job_id=job.Job_id) }}" style="display:inline;">
                       <input type="hidden" name="action" value="{{ 'remove' if job.Job_id in saved_job_ids else 'save' }}">
                       <button type="submit" class="btn-small btn-secondary">
                         <i class="fas fa-bookmark"></i> {{ 'Saved' if job.Job_id in saved_job_ids else 'Save' }}

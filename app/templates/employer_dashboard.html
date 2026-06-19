@@ -58,6 +58,11 @@
           <p class="topbar-subtitle">Everything you need to manage hiring from one place.</p>
         </div>
         <div class="topbar-right">
+          <i class="fa-solid fa-sun" id="theme-toggle" style="cursor:pointer;"></i>
+          <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-badge" id="notifBadge"></span>
+          </button>
           <div class="user-profile">
             <div class="user-avatar">{{ user.First_name[0] }}{{ user.Last_name[0] if user.Last_name else '' }}</div>
             <div>
@@ -66,6 +71,7 @@
             </div>
           </div>
         </div>
+      {% include 'partials/notification_dropdown.html' %}
       </div>
 
       <section class="section overview-section">
@@ -293,5 +299,6 @@
   </div>
 
   <script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@
         <i class="fas fa-home"></i>
         <span>Dashboard</span>
       </a>
-      <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item">
+      <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item">
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
@@ -45,7 +45,7 @@
         <i class="fas fa-star"></i>
         <span>Company Reviews</span>
       </a>
-      <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item">
+      <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
         <i class="fas fa-bookmark"></i>
         <span>Saved Jobs</span>
       </a>
@@ -106,7 +106,7 @@
               <i class="fas fa-house"></i>
               <span>Back to Dashboard</span>
             </a>
-            <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--primary">
+            <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
               <i class="fas fa-search"></i>
               <span>Browse Jobs</span>
             </a>
@@ -297,7 +297,7 @@
                 <h2>Profile tips</h2>
                 <p>Use a clear photo, a current resume, and concise skills to improve employer confidence.</p>
             </div>
-              <a href="{{ url_for('job_posting.browse_jobs') }}" class="btn-secondary">Find Jobs</a>
+              <a href="{{ url_for('seeker_jobs.index') }}" class="btn-secondary">Find Jobs</a>
             </div>
           </div>
         </section>

@@ -39,6 +39,9 @@ class MessageRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            if not MessageController.can_message(user_id, conversation_id):
+                return redirect(url_for('messages.index'))
+
             conversations = MessageController.fetch_conversations(user_id)
             selected_user = UserModel.get_by_id(conversation_id)
             messages = MessageController.fetch_conversation(

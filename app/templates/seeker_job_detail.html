@@ -15,7 +15,7 @@
         <p class="topbar-subtitle">{{ job.Company_name }} &middot; {{ job.Location or 'Remote' }}</p>
       </div>
       <div class="topbar-right">
-        <a href="{{ url_for('job_posting.browse_jobs') }}" class="btn-secondary">Back to Jobs</a>
+        <a href="{{ url_for('seeker_jobs.index') }}" class="btn-secondary">Back to Jobs</a>
       </div>
     </div>
 
@@ -48,6 +48,13 @@
                 <span>{{ job.Experience_level or 'Entry-level' }}</span>
                 <span>{{ job.Industry or 'Industry not specified' }}</span>
               </div>
+              {% if job.employer_user_id %}
+              <div style="margin-top: 16px;">
+                <a href="{{ url_for('messages.conversation', conversation_id=job.employer_user_id) }}" class="btn-secondary action-wide">
+                  <i class="fas fa-envelope"></i> Message Employer
+                </a>
+              </div>
+              {% endif %}
             </div>
           </div>
 
@@ -126,7 +133,7 @@
                   {{ job.Job_type or 'Full-time' }}
                 </span>
               </div>
-              <form method="POST" action="{{ url_for('job_posting.save_job', job_id=job.Job_id) }}">
+              <form method="POST" action="{{ url_for('seeker_jobs.save', job_id=job.Job_id) }}">
                 <input type="hidden" name="action" value="{{ 'remove' if is_saved else 'save' }}">
                 <button type="submit" class="btn-secondary">
                   <i class="fas fa-bookmark"></i> {{ 'Saved' if is_saved else 'Save Job' }}
@@ -160,7 +167,7 @@
               You already applied for this job. Current status: {{ application.Status|replace('_', ' ')|title }}.
             </div>
             {% else %}
-            <form method="POST" action="{{ url_for('job_posting.apply_job', job_id=job.Job_id) }}" class="profile-form" style="margin-top:30px; padding-top:30px; border-top:1px solid var(--border-color);">
+            <form method="POST" action="{{ url_for('seeker_jobs.apply', job_id=job.Job_id) }}" class="profile-form" style="margin-top:30px; padding-top:30px; border-top:1px solid var(--border-color);">
               <div class="form-group">
                 <label for="cover_letter">Cover Letter</label>
                 <textarea id="cover_letter" name="cover_letter" rows="5" placeholder="Write a short note for the employer..."></textarea>

@@ -15,6 +15,8 @@
     .notification.unread { background: #fff7e6; border-color: #fbbf24; }
     .muted { color:#64748b;font-size:.9rem; }
     .btn { display:inline-block; padding:6px 10px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; color:#111827; cursor:pointer; text-decoration:none; font-size:.88rem; }
+    .notice-link { color: inherit; text-decoration: none; display: block; flex: 1; }
+    .notice-link:hover h3 { color: #b45309; }
   </style>
 </head>
 <body>
@@ -36,11 +38,11 @@
       {% for item in notifications %}
         <article class="card notification {% if not item.Is_read %}unread{% endif %}">
           <div class="row">
-            <div>
+            <a class="notice-link" href="{{ url_for('notifications.open_notification', notification_id=item.Notification_id) }}">
               <h3 style="margin:0 0 4px 0;">{{ item.Title or 'Notification' }}</h3>
               <p style="margin:0;">{{ item.Message }}</p>
               <p class="muted">{{ item.Created_at }}</p>
-            </div>
+            </a>
             {% if not item.Is_read %}
               <button class="btn" data-notice-id="{{ item.Notification_id }}" type="button">Mark read</button>
             {% endif %}

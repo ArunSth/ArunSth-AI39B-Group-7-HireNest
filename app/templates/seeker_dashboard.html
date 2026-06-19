@@ -19,7 +19,6 @@
         <span>Dashboard</span>
       </a>
       <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item">
-      <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item">
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
@@ -40,7 +39,6 @@
         <span>Company Reviews</span>
       </a>
       <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
-      <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item">
         <i class="fas fa-bookmark"></i>
         <span>Saved Jobs</span>
       </a>
@@ -87,7 +85,7 @@
           </div>
           <div class="seeker-quick-actions">
             <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
-            <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--primary">
+            <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
               <i class="fas fa-search"></i>
               <span>Search Opportunities</span>
             </a>
@@ -225,7 +223,7 @@
                 <h3>No recent applications yet</h3>
                 <p>Search opportunities and apply when you find the right fit.</p>
                 <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
-                <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
+                <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
               </div>
               {% endif %}
             </div>

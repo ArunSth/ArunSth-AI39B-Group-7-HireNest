@@ -1,0 +1,79 @@
+<div class="notif-dropdown" id="notifDropdown">
+  <div class="notif-dropdown-header">
+    <h3>Notifications</h3>
+    <button type="button" id="markAllReadBtn">Mark all read</button>
+  </div>
+  <div id="notifItems">
+    <div class="notif-empty">Loading notifications...</div>
+  </div>
+</div>
+<script>
+  const notifToggle = document.getElementById('notifToggle');
+  const notifDropdown = document.getElementById('notifDropdown');
+  const notifBadge = document.getElementById('notifBadge');
+  const notifItems = document.getElementById('notifItems');
+  const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+  const notificationUrlTemplate = '{{ url_for("notifications.open_notification", notification_id=0) }}';
+
+  async function fetchNotifications() {
+    const response = await fetch('{{ url_for("notifications.recent") }}');
+    if (!response.ok) return;
+    const data = await response.json();
+    updateNotifBadge(data.unread_count);
+    renderNotifications(data.notifications);
+  }
+
+  function updateNotifBadge(count) {
+    if (!notifBadge) return;
+    if (count > 0) {
+      notifBadge.textContent = count;
+      notifBadge.style.display = 'inline-flex';
+    } else {
+      notifBadge.style.display = 'none';
+    }
+  }
+
+  function renderNotifications(items) {
+    if (!notifItems) return;
+    if (!items || items.length === 0) {
+      notifItems.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+      return;
+    }
+
+    notifItems.innerHTML = items.map(item => {
+      const unreadClass = item.Is_read ? '' : 'unread';
+      const url = notificationUrlTemplate.replace('0', item.Notification_id);
+      return `
+        <a href="${url}" class="notif-item ${unreadClass}">
+          <h4>${item.Title}</h4>
+          <p>${item.Message}</p>
+          <time>${item.Created_at}</time>
+        </a>
+      `;
+    }).join('');
+  }
+
+  notifToggle?.addEventListener('click', async () => {
+    notifDropdown?.classList.toggle('visible');
+    if (notifDropdown?.classList.contains('visible')) {
+      await fetchNotifications();
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', fetchNotifications);
+
+  markAllReadBtn?.addEventListener('click', async () => {
+    const response = await fetch('{{ url_for("notifications.mark_all_read") }}', { method: 'POST' });
+    if (response.ok) {
+      await fetchNotifications();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!notifDropdown || !notifToggle) return;
+    if (!notifDropdown.contains(event.target) && !notifToggle.contains(event.target)) {
+      notifDropdown.classList.remove('visible');
+    }
+  });
+</script>

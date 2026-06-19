@@ -1,5 +1,4 @@
 from app.database import get_connection
-from app.modals.notification import NotificationModel
 
 
 class MessageModel:
@@ -12,8 +11,12 @@ class MessageModel:
                     """
                     SELECT m.*, sender.First_name AS sender_first_name,
                            sender.Last_name AS sender_last_name,
+                           sender.Email AS sender_email,
+                           sender.Role AS sender_role,
                            receiver.First_name AS receiver_first_name,
-                           receiver.Last_name AS receiver_last_name
+                           receiver.Last_name AS receiver_last_name,
+                           receiver.Email AS receiver_email,
+                           receiver.Role AS receiver_role
                     FROM `Messages` m
                     JOIN `User` sender ON sender.User_id = m.Sender_id
                     JOIN `User` receiver ON receiver.User_id = m.Receiver_id
@@ -31,8 +34,8 @@ class MessageModel:
                     'User_id': other_user_id,
                     'First_name': row['receiver_first_name'] if row['Sender_id'] == user_id else row['sender_first_name'],
                     'Last_name': row['receiver_last_name'] if row['Sender_id'] == user_id else row['sender_last_name'],
-                    'Email': None,
-                    'Role': None,
+                    'Email': row['receiver_email'] if row['Sender_id'] == user_id else row['sender_email'],
+                    'Role': row['receiver_role'] if row['Sender_id'] == user_id else row['sender_role'],
                 }
 
                 if other_user_id not in conversations:
@@ -77,6 +80,19 @@ class MessageModel:
                     (user_id, other_user_id, other_user_id, user_id),
                 )
                 return cur.fetchall() or []
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_by_id(message_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT * FROM `Messages` WHERE `Message_id`=%s",
+                    (message_id,),
+                )
+                return cur.fetchone()
         finally:
             conn.close()
 

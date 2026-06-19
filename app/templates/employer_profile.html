@@ -8,6 +8,11 @@
         <p class="topbar-subtitle">Update your company information to help job seekers learn more about your organization.</p>
       </div>
       <div class="topbar-right">
+        <i class="fa-solid fa-sun" id="theme-toggle" style="cursor:pointer;"></i>
+        <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-badge" id="notifBadge"></span>
+        </button>
         <div class="user-profile">
           <div class="user-avatar">{{ (user.First_name or 'U')|first }}</div>
           <div>
@@ -16,6 +21,7 @@
           </div>
         </div>
       </div>
+      {% include 'partials/notification_dropdown.html' %}
     </div>
 
     <div class="content profile-page-shell">
@@ -144,7 +150,7 @@
   </div>
 </div>
 
-{% block scripts %}
+
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_profile.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -161,7 +167,7 @@
     const formData = new FormData();
     formData.append('logo', file);
 
-    fetch('{{ url_for('employer.upload_logo') }}', {
+    fetch("{{ url_for('employer.upload_logo') }}", {
       method: 'POST',
       body: formData
     })
@@ -180,4 +186,4 @@
       });
   });
 </script>
-{% endblock %}
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>

@@ -18,11 +18,11 @@
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>
-    <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item {% if request.path == '/jobs' %}active{% endif %}">
+    <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item {% if request.path == '/jobs' %}active{% endif %}">
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>
-    <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
+    <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
       <i class="fas fa-bookmark"></i>
       <span>Saved Jobs</span>
     </a>
@@ -41,6 +41,10 @@
     <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item {% if 'interview' in request.path %}active{% endif %}">
       <i class="fas fa-video"></i>
       <span>Interviews</span>
+    </a>
+    <a href="{{ url_for('messages.index') }}" class="nav-item {% if request.path.startswith('/messages') %}active{% endif %}">
+      <i class="fas fa-comments"></i>
+      <span>Messages</span>
     </a>
     <a href="{{ url_for('reviews.reviews_index') }}" class="nav-item {% if 'reviews' in request.path %}active{% endif %}">
       <i class="fas fa-star"></i>

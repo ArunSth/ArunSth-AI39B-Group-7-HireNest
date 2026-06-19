@@ -35,7 +35,6 @@
     <aside class="sidebar">
       <h2>Messages</h2>
       <p>Employers and job seekers can exchange messages here.</p>
-      <a href="{{ url_for('notifications.index') }}" style="color:#f59e0b;text-decoration:none;display:inline-block;margin-bottom:12px;">← Notifications</a>
       <div class="conversation-list">
         {% if conversations %}
           {% for item in conversations %}
@@ -60,7 +59,6 @@
             <h3 style="margin:0;">{{ selected_user.First_name }} {{ selected_user.Last_name }}</h3>
             <small>{{ selected_user.Email }}</small>
           </div>
-          <a href="{{ url_for('notifications.index') }}" style="color:#0f172a;text-decoration:none;">Notification Center</a>
         </header>
         <div class="chat-body" id="chat-body">
           {% for msg in messages %}
