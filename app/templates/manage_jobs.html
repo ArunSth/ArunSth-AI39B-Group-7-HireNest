@@ -74,7 +74,7 @@
                     </span>
                   </td>
                   <td style="text-align: center;">
-                    <strong style="font-size: 18px; color: var(--primary-purple);">0</strong>
+                    <strong style="font-size: 18px; color: var(--primary-purple);">{{ job_app_counts.get(job.Job_id, 0) }}</strong>
                   </td>
                   <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
                   <td>
@@ -116,7 +116,7 @@
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="/static/js/employer_dashboard.js"></script>
+<script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
 {% endblock %}

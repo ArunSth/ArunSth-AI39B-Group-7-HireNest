@@ -2,12 +2,140 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.modals.job_posting_model import JobPostingModel
 from app.modals.employer_profile import EmployerProfileModel
 from app.modals.user import UserModel
+from app.modals.applicant_management_model import ApplicantManagementModel
+from app.modals.job_seeker_profile import JobSeekerProfileModel
 
 class JobPostingRoutes:
     def __init__(self):
         self.blueprint = Blueprint("job_posting", __name__)
 
     def job_posting(self):
+        @self.blueprint.route("/jobs", methods=["GET"])
+        def browse_jobs():
+            keyword = request.args.get("keyword", "").strip()
+            location = request.args.get("location", "").strip()
+            job_type = request.args.get("job_type", "All Types").strip()
+            jobs = JobPostingModel.search_jobs(keyword, location, job_type)
+            saved_job_ids = set()
+            if session.get("user_id") and session.get("role") == "job_seeker":
+                seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+                if seeker_profile:
+                    saved_job_ids = JobPostingModel.get_saved_job_ids(seeker_profile["Seekers_id"])
+            return render_template(
+                "job_search.html",
+                jobs=jobs,
+                keyword=keyword,
+                location=location,
+                job_type=job_type,
+                saved_job_ids=saved_job_ids,
+                saved_only=False,
+            )
+
+        @self.blueprint.route("/saved-jobs", methods=["GET"])
+        def saved_jobs():
+            if "user_id" not in session or session.get("role") != "job_seeker":
+                flash("Please log in as a job seeker to view saved jobs.", "error")
+                return redirect(url_for("login.index"))
+
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            if not seeker_profile:
+                flash("Complete your job seeker profile first.", "error")
+                return redirect(url_for("job_seeker.profile"))
+
+            jobs = JobPostingModel.get_saved_jobs(seeker_profile["Seekers_id"])
+            saved_job_ids = {job["Job_id"] for job in jobs}
+            return render_template(
+                "job_search.html",
+                jobs=jobs,
+                keyword="",
+                location="",
+                job_type="All Types",
+                saved_job_ids=saved_job_ids,
+                saved_only=True,
+            )
+
+        @self.blueprint.route("/jobs/<int:job_id>", methods=["GET"])
+        def seeker_job_detail(job_id):
+            if "user_id" not in session or session.get("role") != "job_seeker":
+                flash("Please log in as a job seeker to view job details.", "error")
+                return redirect(url_for("login.index"))
+
+            job = JobPostingModel.get_job_by_id(job_id)
+            if not job or job.get("Status") != "active":
+                flash("Job not found.", "error")
+                return redirect(url_for("job_posting.browse_jobs"))
+
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            application = None
+            is_saved = False
+            if seeker_profile:
+                application = ApplicantManagementModel.get_application_for_job(seeker_profile["Seekers_id"], job_id)
+                is_saved = job_id in JobPostingModel.get_saved_job_ids(seeker_profile["Seekers_id"])
+
+            return render_template(
+                "seeker_job_detail.html",
+                job=job,
+                seeker_profile=seeker_profile,
+                application=application,
+                is_saved=is_saved,
+            )
+
+        @self.blueprint.route("/jobs/<int:job_id>/apply", methods=["POST"])
+        def apply_job(job_id):
+            if "user_id" not in session or session.get("role") != "job_seeker":
+                flash("Please log in as a job seeker to apply.", "error")
+                return redirect(url_for("login.index"))
+
+            job = JobPostingModel.get_job_by_id(job_id)
+            if not job or job.get("Status") != "active":
+                flash("Job not found.", "error")
+                return redirect(url_for("job_posting.browse_jobs"))
+
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            if not seeker_profile:
+                flash("Complete your job seeker profile before applying.", "error")
+                return redirect(url_for("job_seeker.profile"))
+
+            existing_application = ApplicantManagementModel.get_application_for_job(seeker_profile["Seekers_id"], job_id)
+            if existing_application:
+                flash("You have already applied for this job.", "error")
+                return redirect(url_for("job_posting.seeker_job_detail", job_id=job_id))
+
+            cover_letter = request.form.get("cover_letter", "").strip()
+            application_id = ApplicantManagementModel.create_application(
+                seeker_profile["Seekers_id"],
+                job_id,
+                seeker_profile.get("Resume"),
+                cover_letter,
+            )
+            if application_id:
+                flash("Application submitted successfully.", "success")
+                return redirect(url_for("applicant.seeker_applications"))
+
+            flash("Failed to submit application. Please try again.", "error")
+            return redirect(url_for("job_posting.seeker_job_detail", job_id=job_id))
+
+        @self.blueprint.route("/jobs/<int:job_id>/save", methods=["POST"])
+        def save_job(job_id):
+            if "user_id" not in session or session.get("role") != "job_seeker":
+                flash("Please log in as a job seeker to save jobs.", "error")
+                return redirect(url_for("login.index"))
+
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            if not seeker_profile:
+                flash("Complete your job seeker profile first.", "error")
+                return redirect(url_for("job_seeker.profile"))
+
+            action = request.form.get("action", "save")
+            if action == "remove":
+                JobPostingModel.unsave_job(seeker_profile["Seekers_id"], job_id)
+                flash("Job removed from saved jobs.", "success")
+            else:
+                JobPostingModel.save_job(seeker_profile["Seekers_id"], job_id)
+                flash("Job saved.", "success")
+
+            return redirect(request.referrer or url_for("job_posting.browse_jobs"))
+
         @self.blueprint.route("/employer/jobs", methods=["GET"])
         def list_jobs():
             if "user_id" not in session or session.get("role") != "employer":
@@ -32,9 +160,12 @@ class JobPostingRoutes:
                 conn.close()
 
             jobs = JobPostingModel.get_jobs_by_employer(employee_id)
+            job_app_counts = {}
+            for job in jobs:
+                job_app_counts[job["Job_id"]] = JobPostingModel.get_application_count(job["Job_id"])
             user_data = UserModel.get_by_id(user_id)
             
-            return render_template("manage_jobs.html", user=user_data, jobs=jobs)
+            return render_template("manage_jobs.html", user=user_data, jobs=jobs, job_app_counts=job_app_counts)
 
         @self.blueprint.route("/employer/jobs/create", methods=["GET", "POST"])
         def create_job():

@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 from app.modals.user import UserModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
+from app.modals.job_posting_model import JobPostingModel
 from datetime import datetime
 import os
 import base64
@@ -13,7 +14,6 @@ class JobSeekerRoutes:
 
     def register_routes(self):
         """Register all job seeker routes"""
-        self.job_seeker_dashboard()
         self.job_seeker_profile()
         return self.blueprint
 
@@ -86,7 +86,9 @@ class JobSeekerRoutes:
             conn = get_connection()
             applications = []
             interviews = []
+            recommended_jobs = []
             profile_incomplete = False
+            bookmarks_count = 0
             try:
                 with conn.cursor() as cur:
                     cur.execute('SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s', (user_id,))
@@ -115,13 +117,17 @@ class JobSeekerRoutes:
                         )
                         applications = cur.fetchall()
                         interviews = InterviewSchedulingModel.get_interviews_for_applicant(seekers_id)
+                        bookmarks_count = len(JobPostingModel.get_saved_job_ids(seekers_id))
+                        keyword = ''
+                        if profile_data and profile_data.get('Skills'):
+                            keyword = profile_data['Skills'].split(',')[0].strip()
+                        recommended_jobs = JobPostingModel.search_jobs(keyword, profile_data.get('Location') if profile_data else '', 'All Types')[:4]
             finally:
                 conn.close()
 
             applied_count = len(applications)
             rejected_count = sum(1 for app in applications if app.get('Status', '').lower() == 'rejected')
             alerts_count = sum(1 for interview in interviews if interview.get('Status', '').lower() == 'scheduled')
-            bookmarks_count = 0
             recent_applications = applications[:4]
 
             recent_activities = []
@@ -158,6 +164,7 @@ class JobSeekerRoutes:
                 rejected_count=rejected_count,
                 bookmarks_count=bookmarks_count,
                 recent_applications=recent_applications,
+                recommended_jobs=recommended_jobs,
                 recent_activities=recent_activities,
                 profile_alert_title=profile_alert_title,
                 profile_alert_text=profile_alert_text,

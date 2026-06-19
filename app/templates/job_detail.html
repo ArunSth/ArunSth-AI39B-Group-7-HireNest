@@ -56,7 +56,7 @@
                 <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px;">Salary</p>
                 <p style="font-size: 20px; font-weight: 700; color: var(--primary-purple);">
                   {% if job.Salary %}
-                    ₹{{ "{:,.0f}".format(job.Salary) }}
+                    Rs. {{ "{:,.0f}".format(job.Salary) }}
                   {% else %}
                     <span style="color: var(--text-secondary);">Not Specified</span>
                   {% endif %}
@@ -103,9 +103,9 @@
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="/static/js/employer_dashboard.js"></script>
+<script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
 <script>
 function updateJobStatus(jobId, status) {
   fetch(`/employer/jobs/${jobId}/status`, {

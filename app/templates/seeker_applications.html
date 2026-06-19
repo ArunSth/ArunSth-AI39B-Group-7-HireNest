@@ -2,39 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">
-        <i class="fas fa-user"></i>
-      </div>
-      <div class="sidebar-logo-text">
-        <h3>HireNest</h3>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item active">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span>Applications</span>
-      </a>
-      <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item">
-        <i class="fas fa-video"></i>
-        <span>Interviews</span>
-      </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
-        <i class="fas fa-user"></i>
-        <span>My Profile</span>
-      </a>
-      <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
+  {% include 'sidebar_job_seeker.html' %}
 
   <div class="main-content">
     <div class="topbar">
@@ -77,7 +45,7 @@
                   <td>{{ app.Applied_at.strftime('%d %b %Y') if app.Applied_at else 'N/A' }}</td>
                   <td>
                     <div class="action-buttons">
-                      <a href="javascript:void(0)" class="btn-small btn-view" onclick="viewDetails({{ app.Application_id }})">
+                      <a href="{{ url_for('job_posting.seeker_job_detail', job_id=app.Job_id) }}" class="btn-small btn-view">
                         <i class="fas fa-eye"></i> Details
                       </a>
                       {% if app.Employee_id %}
@@ -110,9 +78,4 @@
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script>
-function viewDetails(appId) {
-  alert('Viewing details for application ' + appId);
-}
-</script>
 {% endblock %}
