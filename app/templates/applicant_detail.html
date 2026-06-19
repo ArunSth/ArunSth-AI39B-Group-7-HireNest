@@ -1,17 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}{{ applicant.First_name }} {{ applicant.Last_name }} - Application Details{% endblock %}
+{% block page_subtitle %}Review applicant information and next steps.{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>{{ applicant.First_name }} {{ applicant.Last_name }} - Application Details</h2>
-      </div>
-    </div>
-
-    <div class="content">
       <div style="max-width: 1000px;">
         <!-- Applicant Info Card -->
         <div class="table-container" style="margin-bottom: 30px;">

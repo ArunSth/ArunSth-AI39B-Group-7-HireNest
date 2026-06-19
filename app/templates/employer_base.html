@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block page_title %}Employer Workspace - HireNest{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% set employer_display_name = profile.Company_name if profile and profile.Company_name else (user.First_name if user and user.First_name else 'Employer') %}
+  {% if (not profile or not profile.Company_name) and user and user.Last_name %}
+    {% set employer_display_name = employer_display_name ~ ' ' ~ user.Last_name %}
+  {% endif %}
+  {% set employer_user_name = user.First_name if user and user.First_name else 'Employer' %}
+  {% if user and user.Last_name %}
+    {% set employer_user_name = employer_user_name ~ ' ' ~ user.Last_name %}
+  {% endif %}
+  {% set employer_initials = (user.First_name[0] if user and user.First_name else 'E') ~ (user.Last_name[0] if user and user.Last_name else '') %}
+
+  <header class="employer-navbar">
+    <div class="employer-navbar__brand">
+      <a href="{{ url_for('employer.dashboard') }}" class="employer-navbar__logo" aria-label="HireNest home">
+        <img src="{{ url_for('static', filename='images/hirenest-logo.svg') }}" alt="" loading="eager" decoding="async">
+      </a>
+      <div class="employer-navbar__brand-text">
+        <h1>HireNest</h1>
+      </div>
+    </div>
+
+    <div class="employer-navbar__theme">
+      <button type="button" id="theme-toggle" class="employer-theme-toggle" aria-label="Toggle theme">
+        <i class="fa-solid fa-sun"></i>
+      </button>
+    </div>
+
+    <div class="employer-navbar__actions">
+      <span class="employer-navbar__greeting">Hi, {{ employer_user_name }}</span>
+      <a href="{{ url_for('employer.profile') }}" class="employer-navbar__link">My Profile</a>
+      <a href="{{ url_for('logout.process_logout') }}" class="employer-navbar__button">Log Out</a>
+    </div>
+  </header>
+
+  <div class="dashboard-container">
+    {% include 'sidebar_employer.html' %}
+
+    <main class="main-content">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h2>{% block page_title_inner %}{{ self.page_title() }}{% endblock %}</h2>
+          <p class="topbar-subtitle">{% block page_subtitle %}Everything you need to manage hiring from one place.{% endblock %}</p>
+        </div>
+        <div class="topbar-right">
+          {% block topbar_right %}
+          <div class="user-profile">
+            <div class="user-avatar">{{ employer_initials }}</div>
+            <div>
+              <div class="user-name">{{ employer_user_name }}</div>
+              <div class="user-role">Employer</div>
+            </div>
+          </div>
+          {% endblock %}
+        </div>
+      </div>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% block extra_scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
+</body>
+</html>

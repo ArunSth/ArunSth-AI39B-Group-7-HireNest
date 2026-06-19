@@ -1,22 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice — HireNest</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-</head>
-<body>
-  <div class="dashboard-container">
-    {% include 'sidebar_employer.html' %}
-    <main class="main-content">
-      <div class="topbar">
-        <div>
-          <h2>Invoice</h2>
-          <p>Payment invoice details for your subscription.</p>
-        </div>
-      </div>
+{% extends 'employer_base.html' %}
 
+{% block page_title %}Invoice{% endblock %}
+{% block page_subtitle %}Payment invoice details for your subscription.{% endblock %}
+
+{% block content %}
       <section class="section">
         <div class="company-card">
           <div class="card-header">
@@ -50,7 +37,4 @@
       </section>
 
       <a href="{{ url_for('subscriptions.payment_history') }}" class="btn-secondary">Back to payment history</a>
-    </main>
-  </div>
-</body>
-</html>
+{% endblock %}
