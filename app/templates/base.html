@@ -48,15 +48,17 @@
     <div class="auth-buttons">
       {% if session.get('user_id') %}
         <!-- Logged-in state -->
-        {% if session.get('role') != 'job_seeker' %}
+        {% if session.get('role') == 'job_seeker' %}
+          <a href="{{ url_for('job_seeker.profile') }}" class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px; text-decoration:none;">
+            Hi, {{ session.get('name', 'User') }}
+          </a>
+        {% else %}
           <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px;">
             Hi, {{ session.get('name', 'User') }}
           </span>
         {% endif %}
         {% if session.get('role') == 'employer' %}
           <a href="{{ url_for('employer.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
-        {% else %}
-          <a href="{{ url_for('job_seeker.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
         {% endif %}
         <a href="{{ url_for('logout.process_logout') }}" class="signup-btn" style="text-decoration:none;">Log Out</a>
       {% else %}

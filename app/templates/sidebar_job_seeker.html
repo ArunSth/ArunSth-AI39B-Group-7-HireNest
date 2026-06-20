@@ -66,14 +66,8 @@
 
     <a href="{{ url_for('messages.index') }}"
        class="nav-item {% if 'messages' in request.path %}active{% endif %}">
-      <i class="fas fa-headset"></i>
+      <i class="fas fa-comments"></i>
       <span>Messages</span>
-    </a>
-
-    <a href="{{ url_for('job_seeker.profile') }}"
-       class="nav-item {% if 'profile' in request.path %}active{% endif %}">
-      <i class="fas fa-user"></i>
-      <span>Profile</span>
     </a>
 
     <a href="{{ url_for('logout.process_logout') }}" class="nav-item">

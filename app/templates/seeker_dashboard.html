@@ -7,14 +7,7 @@
   <div class="main-content">
     <div class="topbar">
       <div class="topbar-left">
-        <h2>Welcome back, {{ user.First_name or 'Job Seeker' }}!</h2>
-        <p class="topbar-subtitle">Track your applications, interviews, and next steps in one place.</p>
-      </div>
-      <div class="topbar-right">
-        <div class="user-profile">
-          <div class="user-avatar">{{ user.First_name[0] if user.First_name else 'J' }}</div>
-          <div class="user-name">{{ user.First_name or 'Seeker' }}</div>
-        </div>
+        <h2>Candidate Dashboard</h2>
       </div>
     </div>
 
@@ -23,7 +16,7 @@
         <section class="seeker-welcome-hero">
           <div class="seeker-welcome-copy">
             <span class="seeker-kicker">Candidate home</span>
-            <h1>Welcome back, {{ user.First_name or 'Job Seeker' }}</h1>
+            <h1>Manage your job search from one place</h1>
             <p>Keep your profile strong, track applications, and stay ready for your next opportunity.</p>
           </div>
           <div class="seeker-quick-actions">
