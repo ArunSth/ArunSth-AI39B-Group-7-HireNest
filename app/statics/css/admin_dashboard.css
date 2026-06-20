@@ -718,3 +718,177 @@ td.empty-state { border: none; }
   border-left: 4px solid #6a67f1;
   padding-left: 8px;
 }
+
+/* ── COMPANY JOBS GRID ── */
+.company-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 20px;
+  margin-top: 4px;
+}
+
+.company-job-card {
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.company-job-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.09);
+  border-color: #F3D7D7;
+}
+
+.cjc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.cjc-head .cjc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--danger);
+}
+.cjc-head .cjc-tag i { font-size: 11px; }
+
+.cjc-count-badge {
+  background: var(--purple-lt);
+  color: var(--purple);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.cjc-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.cjc-avatar {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--purple), #8B7CF6);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+.cjc-identity-text { min-width: 0; }
+.cjc-company {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cjc-website {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--purple);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: color 0.15s;
+}
+.cjc-website i { font-size: 10px; flex-shrink: 0; }
+.cjc-website:hover { color: #5a4bd1; text-decoration: underline; }
+
+.cjc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+.cjc-stat label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--light);
+  margin-bottom: 3px;
+}
+.cjc-stat span { font-size: 19px; font-weight: 700; color: var(--text); }
+.cjc-stat.pending span  { color: #D97706; }
+.cjc-stat.approved span { color: #16A34A; }
+.cjc-stat.rejected span { color: var(--danger); }
+.cjc-stat.total span    { color: var(--purple); }
+
+.cjc-view-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--danger);
+  background: var(--white);
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.cjc-view-btn:hover {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(239,68,68,0.28);
+}
+
+/* job rows inside the modal */
+.cjc-job-row {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+.cjc-job-row:hover { border-color: var(--purple); }
+.cjc-job-row:last-child { margin-bottom: 0; }
+.cjc-job-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cjc-job-row-head strong { font-size: 14.5px; }
+.cjc-job-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.cjc-job-meta b { color: var(--text); font-weight: 600; }
+.cjc-job-desc {
+  font-size: 13px;
+  line-height: 1.65;
+  background: var(--bg);
+  border-radius: 9px;
+  padding: 12px 14px;
+  color: var(--text);
+}

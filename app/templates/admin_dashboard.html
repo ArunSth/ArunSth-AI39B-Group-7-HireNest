@@ -28,6 +28,9 @@
             <a href="#" class="nav-link" data-tab="job-moderation">
                 <i class="fa-solid fa-briefcase-medical"></i><span>Job Moderation</span>
             </a>
+            <a href="#" class="nav-link" data-tab="company-jobs">
+                <i class="fa-solid fa-building"></i><span>Company Jobs</span>
+            </a>
             <a href="#" class="nav-link" data-tab="reported-jobs">
                 <i class="fa-solid fa-flag"></i><span>Reported Jobs</span>
             </a>
@@ -297,6 +300,39 @@
                 </table>
             </div>
         </div>
+
+        <!-- ── COMPANY JOBS ── -->
+<div class="tab-content" id="tab-company-jobs">
+    <div class="page-head">
+        <h1>Company Jobs</h1>
+        <p>Track how many jobs each company has posted and review them at a glance.</p>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="companySearch" placeholder="Search company or website..." oninput="renderCompanyJobs()">
+        </div>
+    </div>
+
+    <div class="company-jobs-grid" id="companyJobsGrid">
+        <!-- cards injected by JS -->
+    </div>
+</div>
+
+<!-- ── VIEW COMPANY JOBS MODAL ── -->
+<div class="modal-overlay" id="viewCompanyJobsModal">
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <h3 id="companyJobsModalTitle">Company Jobs</h3>
+            <button class="modal-close" onclick="closeModal('viewCompanyJobsModal')">&times;</button>
+        </div>
+        <div id="companyJobsModalBody"></div>
+        <div class="modal-footer">
+            <button class="action-btn ghost" onclick="closeModal('viewCompanyJobsModal')">Close</button>
+        </div>
+    </div>
+</div>
  
         <!-- ── REPORTED JOBS ── -->
         <div class="tab-content" id="tab-reported-jobs">
