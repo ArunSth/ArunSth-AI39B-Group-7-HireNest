@@ -10,11 +10,6 @@
         <h2>Saved Jobs</h2>
         <p class="topbar-subtitle">Your bookmarked opportunities in one place.</p>
       </div>
-      <div class="topbar-right">
-        <a href="{{ url_for('seeker_jobs.index') }}" class="btn-primary">
-          <i class="fas fa-search"></i> Search Jobs
-        </a>
-      </div>
     </div>
 
     <div class="content">
@@ -62,7 +57,6 @@
         <i class="far fa-bookmark" style="font-size:56px;margin-bottom:18px;opacity:.25;"></i>
         <h3 style="color:var(--text-primary);margin-bottom:8px;">No saved jobs yet</h3>
         <p style="margin-bottom:20px;">Save jobs from search results to revisit them later.</p>
-        <a href="{{ url_for('seeker_jobs.index') }}" class="btn-primary">Search Jobs</a>
       </div>
       {% endif %}
     </div>

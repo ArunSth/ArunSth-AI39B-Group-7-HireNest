@@ -5,13 +5,17 @@
   {% include 'sidebar_job_seeker.html' %}
   <main class="main-content">
     <div class="topbar">
-      <div>
-        <h2>Company Reviews</h2>
-        <p>Choose a company to view and submit reviews for your applications.</p>
+      <div class="topbar-left">
+        <div>
+          <h2>Company Reviews</h2>
+          <p>Choose a company to view and submit reviews for your applications.</p>
+        </div>
       </div>
     </div>
 
-    <section class="section">
+    <div class="content">
+      <div class="seeker-dashboard-shell">
+        <section class="section">
       <div class="section-header">
         <h3>Your companies</h3>
         <p>Companies from your applications are listed below.</p>
@@ -46,6 +50,12 @@
       </div>
       {% endif %}
     </section>
+  </div>
+</div>
   </main>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 {% endblock %}

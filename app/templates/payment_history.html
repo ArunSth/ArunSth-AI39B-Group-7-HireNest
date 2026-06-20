@@ -1,61 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment History — HireNest</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-</head>
-<body>
-  <div class="dashboard-container">
-    {% include 'sidebar_employer.html' %}
-    <main class="main-content">
-      <div class="topbar">
-        <div>
-          <h2>Payment History</h2>
-          <p>View payments made for employer subscriptions.</p>
-        </div>
-      </div>
+{% extends 'employer_base.html' %}
 
-      <section class="section">
-        <div class="table-container">
-          {% if payments %}
-          <table>
-            <thead>
-              <tr>
-                <th>Transaction</th>
-                <th>Plan</th>
-                <th>Amount</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Paid At</th>
-                <th>Invoice</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for payment in payments %}
-              <tr>
-                <td>{{ payment.Transaction_reference }}</td>
-                <td>{{ payment.Plan_name or 'N/A' }}</td>
-                <td>${{ payment.Amount }}</td>
-                <td>{{ payment.Payment_method }}</td>
-                <td>{{ payment.Status }}</td>
-                <td>{{ payment.Paid_at.strftime('%d %b %Y %H:%M') if payment.Paid_at else 'N/A' }}</td>
-                <td>
-                  <a href="{{ url_for('subscriptions.invoice', payment_id=payment.Payment_id) }}" class="btn-small btn-secondary">View Invoice</a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          {% else %}
-            <div class="empty-state">
-              <p>No payments have been recorded yet.</p>
-            </div>
-          {% endif %}
-        </div>
-      </section>
-    </main>
+{% block page_title %}Payment History{% endblock %}
+{% block page_subtitle %}View payments made for employer subscriptions.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="table-container">
+    {% if payments %}
+    <table>
+      <thead>
+        <tr>
+          <th>Transaction</th>
+          <th>Plan</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Paid At</th>
+          <th>Invoice</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in payments %}
+        {% set payment_amount_display =
+          'NPR 0/month' if payment.Plan_name == 'Free'
+          else 'NPR 4,000/month' if payment.Plan_name == 'Basic'
+          else 'NPR 8,000/month' if payment.Plan_name == 'Growth'
+          else 'NPR 13,500/month' if payment.Plan_name == 'Premium'
+          else 'NPR ' ~ payment.Amount
+        %}
+        <tr>
+          <td>{{ payment.Transaction_reference }}</td>
+          <td>{{ payment.Plan_name or 'N/A' }}</td>
+          <td>{{ payment_amount_display }}</td>
+          <td>{{ payment.Payment_method }}</td>
+          <td>{{ payment.Status }}</td>
+          <td>{{ payment.Paid_at.strftime('%d %b %Y, %H:%M') if payment.Paid_at else 'N/A' }} NST</td>
+          <td>
+            <a href="{{ url_for('subscriptions.invoice', payment_id=payment.Payment_id) }}" class="btn-small btn-secondary">View Invoice</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="empty-state">
+        <p>No payments have been recorded yet.</p>
+      </div>
+    {% endif %}
   </div>
-</body>
-</html>
+</section>
+{% endblock %}

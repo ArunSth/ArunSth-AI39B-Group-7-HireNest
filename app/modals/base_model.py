@@ -14,6 +14,7 @@ def create_all():
 			`Email` VARCHAR(150) UNIQUE,
 			`Password` VARCHAR(255),
 			`Role` VARCHAR(50),
+			`Last_active_at` TIMESTAMP NULL,
 			`Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 		""",
@@ -122,6 +123,8 @@ def create_all():
 			`User_id` INT,
 			`Title` VARCHAR(150),
 			`Message` TEXT,
+			`Type` VARCHAR(50) NULL,
+			`Reference_id` INT NULL,
 			`Is_read` BOOLEAN DEFAULT FALSE,
 			`Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
@@ -133,6 +136,9 @@ def create_all():
 			`Sender_id` INT,
 			`Receiver_id` INT,
 			`Message` TEXT,
+			`Is_read` BOOLEAN NOT NULL DEFAULT FALSE,
+			`Created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			`Status` VARCHAR(20) NOT NULL DEFAULT 'sent',
 			FOREIGN KEY (`Sender_id`) REFERENCES `User`(`User_id`),
 			FOREIGN KEY (`Receiver_id`) REFERENCES `User`(`User_id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -458,6 +464,11 @@ def run_migrations():
                     ALTER TABLE `Messages`
                     ADD COLUMN `Created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 """)
+            if not _column_exists(cur, 'Messages', 'Status'):
+                cur.execute("""
+                    ALTER TABLE `Messages`
+                    ADD COLUMN `Status` VARCHAR(20) NOT NULL DEFAULT 'sent'
+                """)
 
             if not _column_exists(cur, 'Notification', 'Type'):
                 cur.execute("""
@@ -493,6 +504,12 @@ def run_migrations():
                 cur.execute("""
                     ALTER TABLE `Job_Alerts`
                     ADD COLUMN `Created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                """)
+
+            if not _column_exists(cur, 'User', 'Last_active_at'):
+                cur.execute("""
+                    ALTER TABLE `User`
+                    ADD COLUMN `Last_active_at` TIMESTAMP NULL
                 """)
 
             conn.commit()

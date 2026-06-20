@@ -1,131 +1,125 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Interviews{% endblock %}
+{% block page_subtitle %}Track scheduled interviews and hiring progress.{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Interviews</h2>
+<div class="interviews-page-shell">
+  <section class="interviews-hero">
+    <div>
+      <div class="eyebrow"><i class="fas fa-calendar-check"></i> Employer scheduling</div>
+      <h3>Interviews</h3>
+      <p>Track scheduled interviews, status updates, and candidate conversations in a clean employer workspace that matches the dashboard.</p>
+    </div>
+    <div class="interviews-summary">
+      <span class="interviews-pill"><i class="fas fa-video"></i> {{ interviews|length }} scheduled</span>
+      <span class="interviews-pill"><i class="fas fa-clock"></i> {{ status_counts|length if status_counts else 0 }} status groups</span>
+      <span class="interviews-pill"><i class="fas fa-user-check"></i> Ready to review</span>
+    </div>
+  </section>
+
+  <div class="stats-grid interviews-stats-grid">
+    <div class="stat-card interviews-stat-card">
+      <div class="stat-info">
+        <h4>Total Scheduled</h4>
+        <div class="stat-value">{{ interviews|length }}</div>
+      </div>
+      <div class="stat-icon purple-bg">
+        <i class="fas fa-video"></i>
       </div>
     </div>
 
-    <div class="content interviews-page-shell">
-      <section class="interviews-hero">
-        <div>
-          <div class="eyebrow"><i class="fas fa-calendar-check"></i> Employer scheduling</div>
-          <h3>Interviews</h3>
-          <p>Track scheduled interviews, status updates, and candidate conversations in a clean employer workspace that matches the dashboard.</p>
+    {% if status_counts %}
+      {% for status_count in status_counts %}
+      <div class="stat-card interviews-stat-card">
+        <div class="stat-info">
+          <h4>{{ status_count.Status|replace('_', ' ')|title }}</h4>
+          <div class="stat-value">{{ status_count.count }}</div>
         </div>
-        <div class="interviews-summary">
-          <span class="interviews-pill"><i class="fas fa-video"></i> {{ interviews|length }} scheduled</span>
-          <span class="interviews-pill"><i class="fas fa-clock"></i> {{ status_counts|length if status_counts else 0 }} status groups</span>
-          <span class="interviews-pill"><i class="fas fa-user-check"></i> Ready to review</span>
+        <div class="stat-icon red-bg">
+          <i class="fas fa-clock"></i>
         </div>
-      </section>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
 
-      <div class="stats-grid interviews-stats-grid">
-        <div class="stat-card interviews-stat-card">
-          <div class="stat-info">
-            <h4>Total Scheduled</h4>
-            <div class="stat-value">{{ interviews|length }}</div>
+  <section class="section interviews-section-card">
+    <div class="section-header">
+      <div>
+        <h3>All Interviews</h3>
+        <p class="muted">Manage upcoming rounds, view statuses, and keep candidate communication organized.</p>
+      </div>
+    </div>
+    <div class="table-container">
+      <div class="table-responsive">
+        {% if interviews %}
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate Name</th>
+              <th>Job Position</th>
+              <th>Date & Time</th>
+              <th>Mode</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for interview in interviews %}
+            <tr>
+              <td>
+                <strong>{{ interview.First_name }} {{ interview.Last_name }}</strong>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                  {{ interview.Email }}
+                </div>
+              </td>
+              <td>{{ interview.job_title }}</td>
+              <td>
+                <div>
+                  <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
+                  <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                    {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span style="display: inline-block; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  {{ interview.Mode }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge badge-{{ interview.Status|lower }}">
+                  {{ interview.Status|replace('_', ' ')|title }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <a href="/employer/interview/{{ interview.Interview_id }}" class="btn-small btn-view">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                  <a href="/employer/interview/{{ interview.Interview_id }}/edit" class="btn-small btn-edit">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state interviews-empty-state">
+          <div class="interviews-empty-state__icon">
+            <i class="fas fa-calendar-alt"></i>
           </div>
-          <div class="stat-icon purple-bg">
-            <i class="fas fa-video"></i>
-          </div>
+          <h3>No interviews scheduled yet</h3>
+          <p>Schedule interviews with qualified candidates and they will appear here in this polished overview.</p>
         </div>
-
-        {% if status_counts %}
-          {% for status_count in status_counts %}
-          <div class="stat-card interviews-stat-card">
-            <div class="stat-info">
-              <h4>{{ status_count.Status|replace('_', ' ')|title }}</h4>
-              <div class="stat-value">{{ status_count.count }}</div>
-            </div>
-            <div class="stat-icon red-bg">
-              <i class="fas fa-clock"></i>
-            </div>
-          </div>
-          {% endfor %}
         {% endif %}
       </div>
-
-      <section class="section interviews-section-card">
-        <div class="section-header">
-          <div>
-            <h3>All Interviews</h3>
-            <p class="muted">Manage upcoming rounds, view statuses, and keep candidate communication organized.</p>
-          </div>
-        </div>
-        <div class="table-container">
-          <div class="table-responsive">
-            {% if interviews %}
-            <table>
-              <thead>
-                <tr>
-                  <th>Candidate Name</th>
-                  <th>Job Position</th>
-                  <th>Date & Time</th>
-                  <th>Mode</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for interview in interviews %}
-                <tr>
-                  <td>
-                    <strong>{{ interview.First_name }} {{ interview.Last_name }}</strong>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                      {{ interview.Email }}
-                    </div>
-                  </td>
-                  <td>{{ interview.job_title }}</td>
-                  <td>
-                    <div>
-                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
-                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span style="display: inline-block; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                      {{ interview.Mode }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="status-badge badge-{{ interview.Status|lower }}">
-                      {{ interview.Status|replace('_', ' ')|title }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                      <a href="/employer/interview/{{ interview.Interview_id }}" class="btn-small btn-view">
-                        <i class="fas fa-eye"></i> View
-                      </a>
-                      <a href="/employer/interview/{{ interview.Interview_id }}/edit" class="btn-small btn-edit">
-                        <i class="fas fa-edit"></i> Edit
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state interviews-empty-state">
-              <i class="fas fa-calendar-alt"></i>
-              <h3>No interviews scheduled yet.</h3>
-              <p>Schedule interviews with qualified candidates and they will appear here in this polished overview.</p>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </section>
     </div>
-  </div>
+  </section>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
@@ -133,4 +127,7 @@
 <link rel="stylesheet" href="/static/css/employer_interviews.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="/static/js/employer_dashboard.js"></script>
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_interviews.css') }}">
 {% endblock %}

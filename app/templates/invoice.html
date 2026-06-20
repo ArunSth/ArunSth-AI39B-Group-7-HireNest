@@ -15,8 +15,28 @@
           <h2>Invoice</h2>
           <p>Payment invoice details for your subscription.</p>
         </div>
+        <div class="topbar-right">
+          <i class="fa-solid fa-sun" id="theme-toggle" style="cursor:pointer;"></i>
+          <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-badge" id="notifBadge"></span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar">{{ user.First_name[0] if user.First_name else 'U' }}{{ user.Last_name[0] if user.Last_name else '' }}</div>
+            <div>
+              <div class="user-name">{{ user.First_name }} {{ user.Last_name }}</div>
+              <div class="user-role">Employer</div>
+            </div>
+          </div>
+        </div>
+        {% include 'partials/notification_dropdown.html' %}
       </div>
+{% extends 'employer_base.html' %}
 
+{% block page_title %}Invoice{% endblock %}
+{% block page_subtitle %}Payment invoice details for your subscription.{% endblock %}
+
+{% block content %}
       <section class="section">
         <div class="company-card">
           <div class="card-header">
@@ -24,10 +44,17 @@
               <h3>Invoice Summary</h3>
             </div>
           </div>
+          {% set invoice_amount_display =
+            'NPR 0/month' if payment.Plan_name == 'Free'
+            else 'NPR 4,000/month' if payment.Plan_name == 'Basic'
+            else 'NPR 8,000/month' if payment.Plan_name == 'Growth'
+            else 'NPR 13,500/month' if payment.Plan_name == 'Premium'
+            else 'NPR ' ~ payment.Amount
+          %}
           <div class="company-info">
             <p><strong>Transaction reference:</strong> {{ payment.Transaction_reference }}</p>
             <p><strong>Plan:</strong> {{ payment.Plan_name or 'N/A' }}</p>
-            <p><strong>Amount:</strong> ${{ payment.Amount }}</p>
+            <p><strong>Amount:</strong> {{ invoice_amount_display }}</p>
             <p><strong>Payment method:</strong> {{ payment.Payment_method }}</p>
             <p><strong>Status:</strong> {{ payment.Status }}</p>
             <p><strong>Paid at:</strong> {{ payment.Paid_at.strftime('%d %b %Y %H:%M') if payment.Paid_at else 'N/A' }}</p>
@@ -52,5 +79,7 @@
       <a href="{{ url_for('subscriptions.payment_history') }}" class="btn-secondary">Back to payment history</a>
     </main>
   </div>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
+{% endblock %}

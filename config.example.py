@@ -13,5 +13,4 @@ MYSQL_DATABASE = "HireNest"
 AUTO_INIT_DB = True
 
 UPLOAD_FOLDER = 'uploads'
-
 # Alternatively, set environment variables: MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE

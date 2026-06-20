@@ -1,17 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Schedule Interview - {{ applicant.First_name }} {{ applicant.Last_name }}{% endblock %}
+{% block page_subtitle %}Set a time and details for the interview.{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Schedule Interview - {{ applicant.First_name }} {{ applicant.Last_name }}</h2>
-      </div>
-    </div>
-
-    <div class="content">
       <div class="section" style="max-width: 900px;">
         <!-- Applicant Summary -->
         <div class="table-container" style="margin-bottom: 30px;">

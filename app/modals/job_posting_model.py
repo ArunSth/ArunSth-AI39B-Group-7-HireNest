@@ -229,7 +229,7 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT j.*, e.`Company_name`, e.`Industry`, e.`Website`, e.`Logo`
+                    SELECT j.*, e.`Company_name`, e.`Industry`, e.`Website`, e.`Logo`, e.`User_id` AS employer_user_id
                     FROM `Jobs` j
                     JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
                     WHERE j.`Job_id`=%s

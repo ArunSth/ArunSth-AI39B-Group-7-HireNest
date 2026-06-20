@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container" 
+     id="assessment-container"
+     data-started="{{ (attempt.Started_at.isoformat() if attempt.Started_at else '') }}"
+     data-duration="{{ assessment.Duration_minutes or 0 }}">
+     
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2><i class="fas fa-pencil-alt"></i> {{ assessment.Title }}</h2>
+        <p class="topbar-subtitle">Answer all questions and click Submit when finished.</p>
+      </div>
+      <div class="topbar-right">
+        <div id="timer" class="timer-badge">
+          <i class="fas fa-clock"></i>
+          <span id="timer-text">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <form id="assessment-form"
+              method="post"
+              action="{{ url_for('skill_assessment.take', attempt_id=attempt.Attempt_id) }}">
+
+          {% if csrf_token %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% endif %}
+
+          {% for q in questions %}
+          <div class="question-card">
+            <div class="question-head">
+              <span class="q-no">Q{{ loop.index }}.</span>
+              <span class="q-marks">{{ q.Marks }} mark{{ 's' if q.Marks != 1 else '' }}</span>
+            </div>
+            <p class="q-text">{{ q.Question_text }}</p>
+            <div class="q-options">
+              {% for opt in q.options %}
+                <label class="q-option">
+                  <input type="radio"
+                         name="q_{{ q.Question_id }}"
+                         value="{{ opt.Option_id if opt.Option_id is defined else opt }}"
+                         required />
+                  <span>{{ opt.Option_text if opt.Option_text is defined else opt }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="action-row" style="margin-top:24px;">
+            <button type="submit" class="btn-primary" id="submit-btn">
+              <i class="fas fa-check"></i> Submit Assessment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Read elements securely using standard DOM datasets. No more fake IDE errors!
+    var container = document.getElementById('assessment-container');
+    var startedIso = container.dataset.started;
+    var durationMinutes = parseInt(container.dataset.duration, 10) || 0;
+
+    var startMs = startedIso ? new Date(startedIso).getTime() : Date.now();
+    if (isNaN(startMs)) { startMs = Date.now(); }
+    var endTime = startMs + (durationMinutes * 60 * 1000);
+
+    var el = document.getElementById('timer-text');
+    var form = document.getElementById('assessment-form');
+    var submitted = false;
+
+    function updateTimer() {
+      if (submitted) return;
+
+      var now = Date.now();
+      var distance = endTime - now;
+
+      if (distance <= 0) {
+        submitted = true;
+        el.textContent = "00:00";
+        alert("Time's up! Your answers will be submitted automatically.");
+        
+        form.querySelectorAll('input[required]').forEach(function (i) {
+          i.required = false;
+        });
+        form.submit();
+        return;
+      }
+
+      var m = Math.floor(distance / (1000 * 60));
+      var s = Math.floor((distance % (1000 * 60)) / 1000);
+      el.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+    }
+
+    var timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    form.addEventListener('submit', function () {
+      submitted = true;
+      clearInterval(timerInterval);
+      var btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    });
+  })();
+</script>
+{% endblock %}
