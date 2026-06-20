@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,8 +18,11 @@
     .notice-link { color: inherit; text-decoration: none; display: block; flex: 1; }
     .notice-link:hover h3 { color: #b45309; }
   </style>
+  {% if session.get('role') == 'job_seeker' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seeker_dashboard_override.css') }}" />
+  {% endif %}
 </head>
-<body>
+<body{% if session.get('role') == 'job_seeker' %} class="job-seeker-layout"{% endif %}>
   <div class="wrap">
     <div class="card">
       <div class="row">
@@ -70,5 +73,8 @@
       if (data.status === 'success' || data.updated >= 0) window.location.reload();
     });
   </script>
+  {% if session.get('role') == 'job_seeker' %}
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+  {% endif %}
 </body>
 </html>

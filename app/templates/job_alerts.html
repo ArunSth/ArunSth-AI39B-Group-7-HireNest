@@ -1,113 +1,523 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Job Alerts — HireNest</title>
+{% extends 'base.html' %}
+
+{% block scripts %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fb; color: #162033; }
-    .wrap { max-width: 1080px; margin: 0 auto; padding: 24px; }
-    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; }
-    .card { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); }
-    label { display:block; font-weight:700; margin-bottom:6px; font-size:.92rem; }
-    input, select { width:100%; padding: 10px 12px; border:1px solid #cbd5e1; border-radius:10px; margin-bottom:10px; }
-    button { background:#111827; color:#fff; border:0; border-radius:10px; padding:10px 12px; cursor:pointer; }
-    .alert-card { border:1px solid #e5e7eb; border-radius:12px; padding:12px; margin-bottom:10px; }
-    .chip { display:inline-block; padding:4px 8px; border-radius:999px; background:#e0f2fe; color:#075985; font-size:.82rem; margin-right:6px; }
-    .chip.active { background:#dcfce7; color:#166534; }
+    .alert-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .alert-card {
+      background: var(--white);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .alert-card.active {
+      border-color: rgba(34, 197, 94, 0.35);
+      box-shadow: 0 18px 40px rgba(34, 197, 94, 0.08);
+    }
+
+    .alert-card__header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .alert-card__title {
+      margin: 0;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .alert-card__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .alert-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .alert-chip--active {
+      background: rgba(34, 197, 94, 0.12);
+      color: #15803d;
+    }
+
+    .alert-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .alert-tags span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .alert-card__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 6px;
+    }
+
+    .alert-match-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .alert-match-item {
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .alert-match-item h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .alert-match-item p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .alert-match-item .alert-chip {
+      background: var(--surface-muted);
+    }
+
+    .alert-form .form-group {
+      margin-bottom: 18px;
+    }
+
+    .alert-form label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .alert-form input,
+    .alert-form select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0 14px;
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+
+    .alert-form input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .alert-form .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .alert-form .checkbox-row input {
+      width: auto;
+      height: auto;
+      margin: 0;
+    }
+
+    .alert-summary-card {
+      display: grid;
+      gap: 8px;
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+    }
+
+    .alert-summary-card h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+    }
+
+    .alert-summary-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .empty-state {
+      padding: 28px;
+      border-radius: 18px;
+      border: 1px solid var(--border-color);
+      background: var(--surface);
+      text-align: center;
+    }
+
+    .empty-state-heading {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    @media (max-width: 900px) {
+      .alert-summary-grid,
+      .seeker-dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .alert-card__actions {
+        justify-content: flex-start;
+      }
+    }
   </style>
-</head>
-<body>
-  <div class="wrap">
-    <h2 style="margin-top:0;">Job Alerts</h2>
-    <p style="color:#475569;">Create and manage job alerts for your preferred keywords, locations, and work types.</p>
-
-    <div class="grid">
-      <section class="card">
-        <h3 style="margin-top:0;">Create a new alert</h3>
-        <form id="create-alert-form">
-          <label>Keyword</label>
-          <input type="text" name="keyword" placeholder="e.g. Python Developer" required />
-          <label>Location</label>
-          <input type="text" name="location" placeholder="e.g. Kathmandu" />
-          <label>Frequency</label>
-          <select name="frequency">
-            <option value="instant">Instant</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-          </select>
-          <label>Job type</label>
-          <input type="text" name="job_type" placeholder="Full-time" />
-          <label>Industry</label>
-          <input type="text" name="industry" placeholder="Technology" />
-          <label><input type="checkbox" name="is_active" value="1" checked /> Active</label>
-          <button type="submit">Save alert</button>
-        </form>
-      </section>
-
-      <section class="card">
-        <h3 style="margin-top:0;">Your alerts</h3>
-        {% if alerts %}
-          {% for alert in alerts %}
-            <article class="alert-card">
-              <strong>{{ alert.Keyword or 'General' }}</strong>
-              <div style="margin:6px 0; color:#475569;">{{ alert.Location or 'Any location' }}</div>
-              <div style="margin-bottom:8px;">
-                <span class="chip">{{ alert.Frequency or 'instant' }}</span>
-                {% if alert.Job_type %}<span class="chip">{{ alert.Job_type }}</span>{% endif %}
-                {% if alert.Industry %}<span class="chip">{{ alert.Industry }}</span>{% endif %}
-                <span class="chip active">{{ 'Active' if alert.Is_active else 'Inactive' }}</span>
-              </div>
-              <form class="inline-form" data-alert-id="{{ alert.Alert_id }}">
-                <input type="hidden" name="keyword" value="{{ alert.Keyword }}" />
-                <input type="hidden" name="location" value="{{ alert.Location }}" />
-                <input type="hidden" name="frequency" value="{{ alert.Frequency or 'instant' }}" />
-                <input type="hidden" name="job_type" value="{{ alert.Job_type or '' }}" />
-                <input type="hidden" name="industry" value="{{ alert.Industry or '' }}" />
-                <input type="hidden" name="is_active" value="{{ '1' if alert.Is_active else '0' }}" />
-                <button type="submit">Update</button>
-                <button type="button" data-delete-id="{{ alert.Alert_id }}" style="background:#b91c1c; margin-left:6px;">Delete</button>
-              </form>
-            </article>
-          {% endfor %}
-        {% else %}
-          <div>No job alerts yet.</div>
-        {% endif %}
-      </section>
-    </div>
-  </div>
-
   <script>
-    document.getElementById('create-alert-form')?.addEventListener('submit', async function (event) {
-      event.preventDefault();
-      const formData = new FormData(this);
-      const response = await fetch('{{ url_for("job_alerts.create_alert") }}', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const data = await response.json();
-      alert(data.message || 'Saved');
-      if (data.status === 'success') window.location.reload();
-    });
+    document.addEventListener('DOMContentLoaded', () => {
+      async function submitAlertForm(form, url) {
+        const formData = new FormData(form);
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        return response.json();
+      }
 
-    document.querySelectorAll('[data-delete-id]').forEach(btn => {
-      btn.addEventListener('click', async function () {
-        const id = this.getAttribute('data-delete-id');
-        const response = await fetch('{{ url_for("job_alerts.delete_alert", alert_id=0) }}'.replace('0', id), { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const data = await response.json();
-        alert(data.message || 'Deleted');
+      document.getElementById('create-alert-form')?.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const data = await submitAlertForm(this, '{{ url_for("job_alerts.create_alert") }}');
+        alert(data.message || 'Saved');
         if (data.status === 'success') window.location.reload();
       });
-    });
 
-    document.querySelectorAll('.inline-form').forEach(form => {
-      form.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        const id = this.getAttribute('data-alert-id');
-        const formData = new FormData(this);
-        const response = await fetch('{{ url_for("job_alerts.update_alert", alert_id=0) }}'.replace('0', id), { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-        const data = await response.json();
-        alert(data.message || 'Updated');
-        if (data.status === 'success') window.location.reload();
+      document.querySelectorAll('[data-delete-id]').forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const id = this.getAttribute('data-delete-id');
+          const response = await fetch('{{ url_for("job_alerts.delete_alert", alert_id=0) }}'.replace('0', id), {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await response.json();
+          alert(data.message || 'Deleted');
+          if (data.status === 'success') window.location.reload();
+        });
+      });
+
+      document.querySelectorAll('[data-edit-id]').forEach(btn => {
+        btn.addEventListener('click', async function () {
+          const alertId = this.getAttribute('data-edit-id');
+          const alertCard = this.closest('.alert-card');
+          if (!alertCard) return;
+
+          const keyword = alertCard.dataset.keyword || '';
+          const location = alertCard.dataset.location || '';
+          const frequency = alertCard.dataset.frequency || 'instant';
+          const jobType = alertCard.dataset.jobType || '';
+          const industry = alertCard.dataset.industry || '';
+          const isActive = alertCard.dataset.active || '1';
+          const nextActive = isActive === '1' ? '0' : '1';
+
+          const formData = new FormData();
+          formData.append('keyword', keyword);
+          formData.append('location', location);
+          formData.append('frequency', frequency);
+          formData.append('job_type', jobType);
+          formData.append('industry', industry);
+          formData.append('is_active', nextActive);
+
+          const response = await fetch('{{ url_for("job_alerts.update_alert", alert_id=0) }}'.replace('0', alertId), {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+          const data = await response.json();
+          alert(data.message || 'Updated');
+          if (data.status === 'success') window.location.reload();
+        });
       });
     });
   </script>
-</body>
-</html>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Job Alerts</h2>
+        <p class="topbar-subtitle">Turn keywords, locations and industries into match-ready alerts and see top previewed jobs at a glance.</p>
+      </div>
+    </div>
+
+    <div class="content">
+      {% set total_matches = 0 %}
+      {% for item in matched_alerts %}
+        {% set total_matches = total_matches + item.count %}
+      {% endfor %}
+      <div class="seeker-dashboard-shell">
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Alert center</span>
+            <h1>Keep new opportunities within reach</h1>
+            <p>Save alerts for the roles you want, then let HireNest deliver the best matches directly to your dashboard.</p>
+          </div>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('job_seeker.dashboard') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-house"></i>
+              <span>Back to Dashboard</span>
+            </a>
+            <a href="{{ url_for('messages.index') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-headset"></i>
+              <span>Messages</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="seeker-stat-grid" aria-label="Job alert summary">
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Alerts configured</p>
+              <strong>{{ alerts|length }}</strong>
+              <span>Live or paused alerts</span>
+            </div>
+            <i class="fas fa-bell"></i>
+          </div>
+
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Active alerts</p>
+              <strong>{{ alerts|selectattr('Is_active')|list|length }}</strong>
+              <span>Currently monitoring</span>
+            </div>
+            <i class="fas fa-check-circle"></i>
+          </div>
+
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Example matches</p>
+              {% set total_matches = 0 %}
+              {% for item in matched_alerts %}
+                {% set total_matches = total_matches + item.count %}
+              {% endfor %}
+              <strong>{{ total_matches }}</strong>
+              <span>Jobs previewed</span>
+            </div>
+            <i class="fas fa-briefcase"></i>
+          </div>
+
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Saved time</p>
+              <strong>Auto alerts</strong>
+              <span>New matches pushed to you</span>
+            </div>
+            <i class="fas fa-clock"></i>
+          </div>
+        </section>
+
+        <div class="seeker-dashboard-grid">
+          <div class="seeker-dashboard-main">
+            <section class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Create alert</span>
+                  <h2>New job alert</h2>
+                </div>
+              </div>
+              <p class="detail-text">Choose keywords, location, job type and industry. Activate the alert to start receiving preview matches here.</p>
+
+              <form id="create-alert-form" class="alert-form">
+                <div class="form-group">
+                  <label for="keyword">Keyword</label>
+                  <input id="keyword" type="text" name="keyword" placeholder="e.g. Python Developer" required />
+                </div>
+                <div class="form-group">
+                  <label for="location">Location</label>
+                  <input id="location" type="text" name="location" placeholder="e.g. Kathmandu" />
+                </div>
+                <div class="form-group">
+                  <label for="frequency">Frequency</label>
+                  <select id="frequency" name="frequency">
+                    <option value="instant">Instant</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="job_type">Job type</label>
+                  <input id="job_type" type="text" name="job_type" placeholder="Full-time" />
+                </div>
+                <div class="form-group">
+                  <label for="industry">Industry</label>
+                  <input id="industry" type="text" name="industry" placeholder="Technology" />
+                </div>
+                <div class="form-group checkbox-row">
+                  <input id="is_active" type="checkbox" name="is_active" value="1" checked />
+                  <label for="is_active">Activate this alert</label>
+                </div>
+                <div class="button-row">
+                  <button type="submit" class="seeker-action seeker-action--primary">Save alert</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Alerts</span>
+                  <h2>Your saved alerts</h2>
+                </div>
+              </div>
+
+              {% if alerts %}
+                <div class="alert-summary-grid">
+                  {% for alert in alerts %}
+                    <article class="alert-card {% if alert.Is_active %}active{% endif %}"
+                      data-alert-id="{{ alert.Alert_id }}"
+                      data-keyword="{{ alert.Keyword }}"
+                      data-location="{{ alert.Location }}"
+                      data-frequency="{{ alert.Frequency or 'instant' }}"
+                      data-job-type="{{ alert.Job_type or '' }}"
+                      data-industry="{{ alert.Industry or '' }}"
+                      data-active="{{ '1' if alert.Is_active else '0' }}"
+                    >
+                      <div class="alert-card__header">
+                        <div>
+                          <h3 class="alert-card__title">{{ alert.Keyword or 'General alert' }}</h3>
+                          <p class="alert-card__meta">{{ alert.Location or 'Any location' }} · {{ alert.Job_type or 'Any job type' }} · {{ alert.Industry or 'Any industry' }}</p>
+                        </div>
+                        <span class="alert-chip {% if alert.Is_active %}alert-chip--active{% endif %}">{{ 'Active' if alert.Is_active else 'Inactive' }}</span>
+                      </div>
+
+                      <div class="alert-tags">
+                        <span>{{ alert.Frequency or 'instant' }}</span>
+                        <span>{{ alert.Job_type or 'All types' }}</span>
+                        <span>{{ alert.Industry or 'All industries' }}</span>
+                      </div>
+
+                      <div class="alert-card__actions">
+                        <button class="seeker-action seeker-action--primary" type="button" data-edit-id="{{ alert.Alert_id }}">{{ 'Deactivate' if alert.Is_active else 'Activate' }}</button>
+                        <button class="seeker-action seeker-action--secondary" type="button" data-delete-id="{{ alert.Alert_id }}" style="background:#fee2e2; border-color:#fecaca; color:#b91c1c;">Delete</button>
+                      </div>
+                    </article>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-state">
+                  <h3 class="empty-state-heading">No saved alerts</h3>
+                  <p>Create your first alert to start receiving tailored job matches and notifications.</p>
+                </div>
+              {% endif %}
+            </section>
+          </div>
+
+          <aside class="seeker-dashboard-side">
+            <section class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Quick summary</span>
+                  <h2>Alert insights</h2>
+                </div>
+              </div>
+              <div class="alert-summary-grid">
+                <div class="alert-summary-card">
+                  <p>Total alerts</p>
+                  <h2>{{ alerts|length }}</h2>
+                </div>
+                <div class="alert-summary-card">
+                  <p>Active now</p>
+                  <h2>{{ alerts|selectattr('Is_active')|list|length }}</h2>
+                </div>
+                <div class="alert-summary-card">
+                  <p>Recent preview matches</p>
+                  <h2>{{ total_matches }}</h2>
+                </div>
+              </div>
+            </section>
+
+            <section class="seeker-panel">
+              <div class="seeker-panel-heading">
+                <div>
+                  <span class="seeker-kicker">Match preview</span>
+                  <h2>Top alert matches</h2>
+                </div>
+              </div>
+
+              {% if matched_alerts %}
+                <div class="alert-match-list">
+                  {% for item in matched_alerts %}
+                    <article class="alert-card">
+                      <div class="alert-card__header">
+                        <div>
+                          <h3 class="alert-card__title">{{ item.alert.Keyword or 'General alert' }}</h3>
+                          <p class="alert-card__meta">{{ item.alert.Location or 'Any location' }} · {{ item.alert.Job_type or 'Any type' }}</p>
+                        </div>
+                        <span class="alert-chip">{{ item.count }} matches</span>
+                      </div>
+
+                      {% if item.matches %}
+                        <div class="alert-match-list">
+                          {% for job in item.matches %}
+                            <div class="alert-match-item">
+                              <h4>{{ job.Title }}</h4>
+                              <p>{{ job.Company_name or 'Company' }} · {{ job.Location or 'Remote' }}</p>
+                              <span class="alert-chip">{{ job.Job_type or 'Job' }}</span>
+                            </div>
+                          {% endfor %}
+                        </div>
+                      {% else %}
+                        <p class="detail-text">No live matches yet for this alert.</p>
+                      {% endif %}
+                    </article>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-state">
+                  <h3 class="empty-state-heading">No matches available</h3>
+                  <p>Activate your alerts and check back later for matching jobs.</p>
+                </div>
+              {% endif %}
+            </section>
+          </aside>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+

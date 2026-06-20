@@ -11,8 +11,11 @@
   />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
   {% block scripts %}{% endblock %}
+  {% if session.get('role') == 'job_seeker' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/seeker_dashboard_override.css') }}" />
+  {% endif %}
 </head>
-<body>
+<body{% if session.get('role') == 'job_seeker' %} class="job-seeker-layout"{% endif %}>
 
   <header class="navbar">
     <div class="logo-section">
@@ -29,29 +32,26 @@
     <nav class="nav-links">
     </nav>
 
-    <div class="nav-icons">
-      <i class="fa-solid fa-solid" id="theme-toggle"></i>
+    <div class="nav-icons auth-group">
+      <i class="fa-solid fa-sun" id="theme-toggle" aria-label="Toggle theme"></i>
       {% if session.get('user_id') %}
         <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
           <i class="fa-solid fa-bell"></i>
           <span class="notif-badge" id="notifBadge"></span>
         </button>
-      {% endif %}
-    </div>
-    {% if session.get('user_id') %}
-      {% include 'partials/notification_dropdown.html' %}
-    {% endif %}
-
-    <div class="auth-buttons">
-      {% if session.get('user_id') %}
-        <!-- Logged-in state -->
-        <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px;">
-          Hi, {{ session.get('name', 'User') }}
-        </span>
+        {% if session.get('role') == 'job_seeker' %}
+          <a href="{{ url_for('job_seeker.profile') }}" class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin:0 8px; text-decoration:none; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
+            Hi, {{ session.get('name', 'User') }}
+          </a>
+        {% else %}
+          <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin:0 8px; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
+            Hi, {{ session.get('name', 'User') }}
+          </span>
+        {% endif %}
         {% if session.get('role') == 'employer' %}
           <a href="{{ url_for('employer.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
-        {% else %}
-          <a href="{{ url_for('job_seeker.profile') }}" class="login-btn" style="text-decoration:none;">My Profile</a>
         {% endif %}
         <a href="{{ url_for('logout.process_logout') }}" class="signup-btn" style="text-decoration:none;">Log Out</a>
       {% else %}
@@ -64,6 +64,9 @@
         </a>
       {% endif %}
     </div>
+    {% if session.get('user_id') %}
+      {% include 'partials/notification_dropdown.html' %}
+    {% endif %}
   </header>
 
   {% block content %}
