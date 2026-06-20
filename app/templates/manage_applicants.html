@@ -61,7 +61,7 @@
     <div class="stat-card applicants-stat-card">
       <div class="stat-info">
         <h4>Selected</h4>
-        <div class="stat-value">{{ status_map.get('accepted', 0) }}</div>
+        <div class="stat-value">{{ (status_map.get('accepted', 0) + status_map.get('hired', 0)) }}</div>
       </div>
       <div class="stat-icon purple-bg"><i class="fas fa-check-circle"></i></div>
     </div>
@@ -70,59 +70,68 @@
   <section class="section applicants-section-card">
     <div class="section-header">
       <div>
-        <h3>All Applications</h3>
-        <p class="muted">Review candidate applications and keep your recruitment pipeline organized.</p>
+        <h3>Applications by Job Title</h3>
+        <p class="muted">Group candidate progress by each posted role and review hiring activity at a glance.</p>
       </div>
     </div>
 
-    <div class="table-container">
-      <div class="table-responsive">
-        {% if applicants %}
-        <table>
-          <thead>
-            <tr>
-              <th>Applicant Name</th>
-              <th>Email</th>
-              <th>Job Title</th>
-              <th>Status</th>
-              <th>Applied Date</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for applicant in applicants %}
-            <tr>
-              <td><strong>{{ applicant.First_name }} {{ applicant.Last_name }}</strong></td>
-              <td>{{ applicant.Email }}</td>
-              <td>{{ applicant.job_title }}</td>
-              <td>
-                <span class="status-badge badge-{{ applicant.Status|lower }}">
-                  {{ applicant.Status|replace('_', ' ')|title }}
-                </span>
-              </td>
-              <td>{{ applicant.Applied_at.strftime('%d %b %Y') if applicant.Applied_at else 'N/A' }}</td>
-              <td>
-                <div class="action-buttons">
-                  <a href="/employer/applicant/{{ applicant.Application_id }}" class="btn-small btn-view">
-                    <i class="fas fa-eye"></i> View
-                  </a>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <div class="empty-state applicants-empty-state">
-          <div class="applicants-empty-state__icon">
-            <i class="fas fa-user-clock"></i>
-          </div>
-          <h3>No applications received yet</h3>
-          <p>Candidate applications will appear here once they apply to your posted jobs.</p>
+    <div id="confirm-modal" class="applicant-confirm-modal" hidden>
+      <div class="applicant-confirm-modal__dialog">
+        <h3 id="confirm-modal-title">Confirm action</h3>
+        <p id="confirm-modal-message"></p>
+        <div class="applicant-confirm-modal__actions">
+          <button type="button" id="confirm-modal-cancel" class="btn-secondary">Cancel</button>
+          <button type="button" id="confirm-modal-confirm" class="btn-primary">Confirm</button>
         </div>
-        {% endif %}
       </div>
     </div>
+
+    {% if job_groups %}
+    <div class="job-group-grid">
+      {% for job_group in job_groups %}
+      <article class="job-group-card">
+        <div class="job-group-card__header">
+          <div>
+            <span class="seeker-kicker">Job posting</span>
+            <h4>{{ job_group.job_title }}</h4>
+          </div>
+          <span class="job-group-card__pill">{{ job_group.total }} applicants</span>
+        </div>
+
+        <div class="job-group-card__stats">
+          <div>
+            <span>Pending</span>
+            <strong>{{ job_group.pending }}</strong>
+          </div>
+          <div>
+            <span>Shortlisted</span>
+            <strong>{{ job_group.shortlisted }}</strong>
+          </div>
+          <div>
+            <span>Rejected</span>
+            <strong>{{ job_group.rejected }}</strong>
+          </div>
+          <div>
+            <span>Selected</span>
+            <strong>{{ job_group.selected }}</strong>
+          </div>
+        </div>
+
+        <a href="{{ url_for('applicant.list_job_applicants', job_id=job_group.job_id) }}" class="seeker-link-action job-group-card__action">
+          View Applicants
+        </a>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state applicants-empty-state">
+      <div class="applicants-empty-state__icon">
+        <i class="fas fa-user-clock"></i>
+      </div>
+      <h3>No applications received yet</h3>
+      <p>Candidate applications will appear here once they apply to your posted jobs.</p>
+    </div>
+    {% endif %}
   </section>
 </div>
 {% endblock %}
