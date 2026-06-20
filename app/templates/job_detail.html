@@ -39,6 +39,11 @@
                     {{ app_count }} Applications
                   </span>
                 </div>
+                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 13px; color: var(--text-secondary);">Total Vacancies: <strong>{{ job.Vacancies or 1 }}</strong></span>
+                  <span style="font-size: 13px; color: var(--text-secondary);">Filled Vacancies: <strong>{{ job.Filled_vacancies or 0 }}</strong></span>
+                  <span style="font-size: 13px; color: var(--text-secondary);">Remaining Vacancies: <strong>{{ (job.Vacancies or 1) - (job.Filled_vacancies or 0) }}</strong></span>
+                </div>
               </div>
             </div>
 

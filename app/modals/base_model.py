@@ -374,7 +374,8 @@ def seed_admin():
     conn = get_connection()
     try:
         with conn.cursor() as cur:
-            cur.execute("SELECT User_id FROM `User` WHERE Email = %s", ('admin@hirenest',))
+            cur.execute("SELECT User_id FROM `User` WHERE Email = %s",
+                        ('admin@hirenest',))
             existing = cur.fetchone()
             password_hash = generate_password_hash('HireNest123')
 
@@ -392,7 +393,8 @@ def seed_admin():
                 )
                 user_id = cur.lastrowid
 
-            cur.execute("SELECT Admin_id FROM `Admin_Profiles` WHERE User_id = %s", (user_id,))
+            cur.execute(
+                "SELECT Admin_id FROM `Admin_Profiles` WHERE User_id = %s", (user_id,))
             if not cur.fetchone():
                 cur.execute(
                     "INSERT INTO `Admin_Profiles` (User_id, Display_name, Department, Access_level, Is_active) VALUES (%s,%s,%s,%s,%s)",
@@ -435,6 +437,36 @@ def run_migrations():
                 cur.execute("""
                     ALTER TABLE `Jobs`
                     ADD COLUMN `Experience_level` VARCHAR(50) DEFAULT 'Entry-level' AFTER `Job_type`
+                """)
+                conn.commit()
+
+            # Add Vacancies to Jobs if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Jobs'
+                  AND COLUMN_NAME = 'Vacancies'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Jobs`
+                    ADD COLUMN `Vacancies` INT NOT NULL DEFAULT 1 AFTER `Status`
+                """)
+                conn.commit()
+
+            # Add Filled_vacancies to Jobs if missing
+            cur.execute("""
+                SELECT COUNT(*) as cnt FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'Jobs'
+                  AND COLUMN_NAME = 'Filled_vacancies'
+            """)
+            row = cur.fetchone()
+            if row and row['cnt'] == 0:
+                cur.execute("""
+                    ALTER TABLE `Jobs`
+                    ADD COLUMN `Filled_vacancies` INT NOT NULL DEFAULT 0 AFTER `Vacancies`
                 """)
                 conn.commit()
 

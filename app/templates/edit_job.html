@@ -4,58 +4,96 @@
 {% block page_subtitle %}Update job details and posting settings.{% endblock %}
 
 {% block content %}
-      <div class="section" style="max-width: 900px;">
-        <div class="table-container">
+      <div class="section" style="max-width: 980px;">
+        <div class="table-container" style="padding: 0; overflow: hidden;">
           <form method="POST" data-validate>
-            <div style="padding: 30px;">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="title">Job Title *</label>
-                  <input type="text" id="title" name="title" value="{{ job.Title }}" required>
+            <div style="padding: 0;">
+              <section style="border-bottom: 1px solid #eef2f7; padding: 24px 28px;">
+                <h3 style="margin: 0 0 6px; font-size: 18px; color: #111827;">Job Information</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;">Review and adjust the core details for this role.</p>
+              </section>
+
+              <section style="padding: 24px 28px;">
+                <div class="form-row" style="gap: 18px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="title">Job Title *</label>
+                    <input type="text" id="title" name="title" value="{{ job.Title }}" required>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="job_type">Job Type *</label>
+                    <select id="job_type" name="job_type" required>
+                      <option value="Full-time" {% if job.Job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                      <option value="Part-time" {% if job.Job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                      <option value="Contract" {% if job.Job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                      <option value="Internship" {% if job.Job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="job_type">Job Type *</label>
-                  <select id="job_type" name="job_type" required>
-                    <option value="Full-time" {% if job.Job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
-                    <option value="Part-time" {% if job.Job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
-                    <option value="Contract" {% if job.Job_type == 'Contract' %}selected{% endif %}>Contract</option>
-                    <option value="Internship" {% if job.Job_type == 'Internship' %}selected{% endif %}>Internship</option>
-                  </select>
+
+                <div class="form-row" style="gap: 18px; margin-top: 18px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="location">Location *</label>
+                    <input type="text" id="location" name="location" value="{{ job.Location }}" required>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="experience_level">Experience Level *</label>
+                    <select id="experience_level" name="experience_level" required>
+                      <option value="Entry-level" {% if job.Experience_level == 'Entry-level' %}selected{% endif %}>Entry-level</option>
+                      <option value="Mid-level" {% if job.Experience_level == 'Mid-level' %}selected{% endif %}>Mid-level</option>
+                      <option value="Senior" {% if job.Experience_level == 'Senior' %}selected{% endif %}>Senior</option>
+                      <option value="Executive" {% if job.Experience_level == 'Executive' %}selected{% endif %}>Executive</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              <div class="form-group">
-                <label for="description">Job Description *</label>
-                <textarea id="description" name="description" required>{{ job.Description }}</textarea>
-              </div>
-
-              <div class="form-group">
-                <label for="requirement">Required Skills & Qualifications *</label>
-                <textarea id="requirement" name="requirement" required>{{ job.Requirement }}</textarea>
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="salary">Salary</label>
-                  <input type="number" id="salary" name="salary" value="{{ job.Salary if job.Salary else '' }}" step="0.01">
+              <section style="border-top: 1px solid #eef2f7; padding: 24px 28px;">
+                <h3 style="margin: 0 0 6px; font-size: 18px; color: #111827;">Job Details</h3>
+                <div class="form-group" style="margin-top: 16px;">
+                  <label for="description">Job Description *</label>
+                  <textarea id="description" name="description" required rows="6">{{ job.Description }}</textarea>
                 </div>
-                <div class="form-group">
-                  <label for="location">Location *</label>
-                  <input type="text" id="location" name="location" value="{{ job.Location }}" required>
+
+                <div class="form-group" style="margin-top: 18px;">
+                  <label for="requirement">Required Skills & Qualifications *</label>
+                  <textarea id="requirement" name="requirement" required rows="5">{{ job.Requirement }}</textarea>
                 </div>
-              </div>
+              </section>
 
-              <div class="form-group">
-                <label for="experience_level">Experience Level *</label>
-                <select id="experience_level" name="experience_level" required>
-                  <option value="Entry-level" {% if job.Experience_level == 'Entry-level' %}selected{% endif %}>Entry-level</option>
-                  <option value="Mid-level" {% if job.Experience_level == 'Mid-level' %}selected{% endif %}>Mid-level</option>
-                  <option value="Senior" {% if job.Experience_level == 'Senior' %}selected{% endif %}>Senior</option>
-                  <option value="Executive" {% if job.Experience_level == 'Executive' %}selected{% endif %}>Executive</option>
-                </select>
-              </div>
+              <section style="border-top: 1px solid #eef2f7; background: #f9fbff; padding: 24px 28px;">
+                <h3 style="margin: 0 0 6px; font-size: 18px; color: #111827;">Hiring Setup</h3>
+                <p style="margin: 0 0 18px; color: #6b7280; font-size: 14px;">Keep the hiring capacity accurate for this posting.</p>
 
-              <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <div class="form-row" style="gap: 18px; align-items: flex-start;">
+                  <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <label for="salary">Salary</label>
+                    <input type="number" id="salary" name="salary" value="{{ job.Salary if job.Salary else '' }}" step="0.01">
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <label for="vacancies" style="font-size: 15px; font-weight: 700; color: #111827;">Number of Open Positions</label>
+                    <input type="number" id="vacancies" name="vacancies" min="1" value="{{ job.Vacancies if job.Vacancies else 1 }}" required style="border-width: 2px; font-size: 16px; font-weight: 600;">
+                    <p style="margin: 6px 0 0; color: #6b7280; font-size: 13px;">These are the total candidates that can be hired for this job.</p>
+                  </div>
+                </div>
+
+                {% set filled_positions = job.Filled_vacancies or 0 %}
+                {% set total_vacancies = job.Vacancies or 1 %}
+                {% set remaining_positions = max(total_vacancies - filled_positions, 0) %}
+                <div style="margin-top: 18px; padding: 16px 18px; background: #ffffff; border: 1px solid #dbeafe; border-radius: 10px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <span style="font-size: 14px; color: #4b5563;">Filled Positions</span>
+                    <strong id="filled-count" data-filled="{{ filled_positions }}" style="font-size: 16px; color: #111827;">{{ filled_positions }}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+                    <span style="font-size: 14px; color: #4b5563;">Remaining Positions</span>
+                    <strong id="remaining-count" style="font-size: 16px; color: #0f766e;">{{ remaining_positions }}</strong>
+                  </div>
+                </div>
+
+                <p style="margin: 14px 0 0; color: #0f766e; font-size: 13px; font-weight: 500;">This job will automatically close when all positions are filled.</p>
+              </section>
+
+              <div style="display: flex; gap: 15px; margin: 24px 28px 28px;">
                 <button type="submit" class="btn-primary">
                   <i class="fas fa-save"></i> Save Changes
                 </button>
@@ -74,4 +112,24 @@
 {% block scripts %}
 <link rel="stylesheet" href="/static/css/employer_dashboard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+  function updateHiringSummary() {
+    const vacanciesInput = document.getElementById('vacancies');
+    const filledCount = document.getElementById('filled-count');
+    const remainingCount = document.getElementById('remaining-count');
+    if (!vacanciesInput || !filledCount || !remainingCount) return;
+
+    const total = Math.max(parseInt(vacanciesInput.value, 10) || 0, 0);
+    const filled = Math.max(parseInt(filledCount.dataset.filled || '0', 10), 0);
+    const remaining = Math.max(total - filled, 0);
+
+    remainingCount.textContent = remaining;
+  }
+
+  document.addEventListener('DOMContentLoaded', updateHiringSummary);
+  const vacanciesInput = document.getElementById('vacancies');
+  if (vacanciesInput) {
+    vacanciesInput.addEventListener('input', updateHiringSummary);
+  }
+</script>
 {% endblock %}

@@ -1,18 +1,47 @@
 from app.database import get_connection
 from datetime import datetime
- 
+
+
 class JobPostingModel:
     @staticmethod
-    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level"):
+    def calculate_vacancy_metrics(total_vacancies, filled_vacancies):
+        try:
+            total_vacancies = int(total_vacancies or 0)
+        except (TypeError, ValueError):
+            total_vacancies = 0
+
+        try:
+            filled_vacancies = int(filled_vacancies or 0)
+        except (TypeError, ValueError):
+            filled_vacancies = 0
+
+        total_vacancies = max(total_vacancies, 0)
+        filled_vacancies = max(filled_vacancies, 0)
+        remaining_vacancies = max(total_vacancies - filled_vacancies, 0)
+
+        return {
+            "total_vacancies": total_vacancies,
+            "filled_vacancies": filled_vacancies,
+            "remaining_vacancies": remaining_vacancies,
+            "is_filled": remaining_vacancies == 0 and total_vacancies > 0,
+        }
+
+    @staticmethod
+    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level", vacancies=1):
         conn = get_connection()
         try:
+            vacancies = max(int(vacancies or 1), 1)
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO `Jobs` (`Employee_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`, `Status`, `Job_type`, `Experience_level`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO `Jobs` (
+                        `Employee_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`,
+                        `Status`, `Job_type`, `Experience_level`, `Vacancies`, `Filled_vacancies`
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (employee_id, title, description, requirement, salary, location, "active", job_type, experience_level),
+                    (employee_id, title, description, requirement, salary,
+                     location, "active", job_type, experience_level, vacancies, 0),
                 )
                 conn.commit()
                 job_id = cur.lastrowid
@@ -23,7 +52,7 @@ class JobPostingModel:
             return None
         finally:
             conn.close()
- 
+
     @staticmethod
     def search_jobs(keyword, location, job_type):
         conn = get_connection()
@@ -35,21 +64,21 @@ class JobPostingModel:
                 WHERE j.`Status` = 'active'
             """
             params = []
- 
+
             if keyword:
                 query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
                 params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
- 
+
             if location:
                 query += " AND j.`Location` LIKE %s"
                 params.append(f"%{location}%")
- 
+
             if job_type and job_type != "All Types":
                 query += " AND j.`Job_type` = %s"
                 params.append(job_type)
- 
+
             query += " ORDER BY j.`Created_at` DESC"
- 
+
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
@@ -203,7 +232,7 @@ class JobPostingModel:
                 return cur.fetchone()
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_jobs_by_employer(employee_id):
         conn = get_connection()
@@ -211,7 +240,7 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT `Job_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`, `Status`, `Created_at`, `Job_type`, `Experience_level`
+                    SELECT `Job_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`, `Status`, `Created_at`, `Job_type`, `Experience_level`, `Vacancies`, `Filled_vacancies`
                     FROM `Jobs`
                     WHERE `Employee_id`=%s
                     ORDER BY `Created_at` DESC
@@ -221,7 +250,7 @@ class JobPostingModel:
                 return cur.fetchall()
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_job_by_id(job_id):
         conn = get_connection()
@@ -265,7 +294,8 @@ class JobPostingModel:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s", (seekers_id,))
+                cur.execute(
+                    "SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s", (seekers_id,))
                 return {row["Job_id"] for row in cur.fetchall()}
         finally:
             conn.close()
@@ -311,19 +341,22 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
     @staticmethod
-    def update_job(job_id, title, description, requirement, salary, location, job_type, experience_level):
+    def update_job(job_id, title, description, requirement, salary, location, job_type, experience_level, vacancies):
         conn = get_connection()
         try:
+            vacancies = max(int(vacancies or 1), 1)
             with conn.cursor() as cur:
                 cur.execute(
                     """
                     UPDATE `Jobs`
-                    SET `Title`=%s, `Description`=%s, `Requirement`=%s, `Salary`=%s, `Location`=%s, `Job_type`=%s, `Experience_level`=%s
+                    SET `Title`=%s, `Description`=%s, `Requirement`=%s, `Salary`=%s, `Location`=%s,
+                        `Job_type`=%s, `Experience_level`=%s, `Vacancies`=%s
                     WHERE `Job_id`=%s
                     """,
-                    (title, description, requirement, salary, location, job_type, experience_level, job_id),
+                    (title, description, requirement, salary,
+                     location, job_type, experience_level, vacancies, job_id),
                 )
                 conn.commit()
                 return True
@@ -333,7 +366,26 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
+    @staticmethod
+    def update_filled_vacancies(job_id, filled_vacancies):
+        conn = get_connection()
+        try:
+            filled_vacancies = max(int(filled_vacancies or 0), 0)
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE `Jobs` SET `Filled_vacancies`=%s WHERE `Job_id`=%s",
+                    (filled_vacancies, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error updating filled vacancies: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
     @staticmethod
     def delete_job(job_id):
         conn = get_connection()
@@ -348,7 +400,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
     @staticmethod
     def update_job_status(job_id, status):
         conn = get_connection()
@@ -366,7 +418,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_active_jobs():
         """Returns count of all active jobs."""
@@ -374,7 +426,8 @@ class JobPostingModel:
         try:
             with conn.cursor() as cur:
                 # FIX: was `Job` (wrong), correct table name is `Jobs`
-                cur.execute("SELECT COUNT(*) as total FROM `Jobs` WHERE `Status` = 'active'")
+                cur.execute(
+                    "SELECT COUNT(*) as total FROM `Jobs` WHERE `Status` = 'active'")
                 result = cur.fetchone()
                 return result['total'] if result else 0
         except Exception as e:
@@ -404,7 +457,7 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_application_count(job_id):
         conn = get_connection()
@@ -421,7 +474,7 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_total_jobs():
         """Returns total count of all jobs regardless of status."""

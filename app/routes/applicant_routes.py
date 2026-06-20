@@ -152,21 +152,32 @@ class ApplicantRoutes:
 
                 all_applications = ApplicantManagementModel.get_applications_for_job(
                     job_id)
-                already_hired = any(
-                    (app.get("Status") or "").lower() in ("hired", "accepted")
-                    and app.get("Application_id") != application_id
-                    for app in all_applications
+                job_record = JobPostingModel.get_job_by_id(job_id)
+                if not job_record:
+                    return jsonify({"status": "error", "message": "Job not found."}), 404
+
+                vacancy_metrics = JobPostingModel.calculate_vacancy_metrics(
+                    job_record.get("Vacancies") or 0,
+                    job_record.get("Filled_vacancies") or 0,
                 )
-                if already_hired:
+
+                if vacancy_metrics["remaining_vacancies"] <= 0:
                     return jsonify({
                         "status": "error",
-                        "message": "This job already has a hired applicant."
+                        "message": "This job has no remaining vacancies."
                     }), 400
 
                 if ApplicantManagementModel.update_application_status(application_id, "hired"):
-                    JobPostingModel.update_job_status(job_id, "closed")
+                    new_filled = (job_record.get("Filled_vacancies") or 0) + 1
+                    JobPostingModel.update_filled_vacancies(job_id, new_filled)
 
-                    job_record = JobPostingModel.get_job_by_id(job_id)
+                    updated_metrics = JobPostingModel.calculate_vacancy_metrics(
+                        job_record.get("Vacancies") or 0,
+                        new_filled,
+                    )
+                    if updated_metrics["remaining_vacancies"] == 0:
+                        JobPostingModel.update_job_status(job_id, "closed")
+
                     company_name = job_record.get(
                         "Company_name") if job_record else "the company"
                     job_title = applicant.get("job_title") or "this position"
@@ -175,28 +186,33 @@ class ApplicantRoutes:
                     if seeker_user_id:
                         NotificationController.create_notification(
                             seeker_user_id,
-                            "Congratulations! You have been selected",
-                            f"You have been selected for the position of {job_title} at {company_name}."
+                            "Application Update",
+                            "You have been selected for this position."
                         )
 
-                    for other in all_applications:
-                        other_id = other.get("Application_id")
-                        if other_id == application_id:
-                            continue
-                        if (other.get("Status") or "").lower() not in ("hired", "accepted"):
-                            ApplicantManagementModel.update_application_status(
-                                other_id, "rejected")
-                            other_user_id = other.get("job_seeker_user_id")
-                            if other_user_id:
-                                NotificationController.create_notification(
-                                    other_user_id,
-                                    "Application Update",
-                                    f"Your application for {job_title} was not selected at this time."
-                                )
+                    if updated_metrics["remaining_vacancies"] == 0:
+                        for other in all_applications:
+                            other_id = other.get("Application_id")
+                            if other_id == application_id:
+                                continue
+                            status_key = (other.get("Status") or "").lower()
+                            if status_key not in ("hired", "accepted", "rejected"):
+                                ApplicantManagementModel.update_application_status(
+                                    other_id, "rejected")
+                                other_user_id = other.get("job_seeker_user_id")
+                                if other_user_id:
+                                    NotificationController.create_notification(
+                                        other_user_id,
+                                        "Application Update",
+                                        "The position has been filled and your application was not selected."
+                                    )
+                        message = "Application marked as hired and the position is now filled."
+                    else:
+                        message = "Application marked as hired and the vacancy count has been updated."
 
                     return jsonify({
                         "status": "success",
-                        "message": "Application marked as hired and the vacancy has been closed."
+                        "message": message
                     }), 200
                 return jsonify({"status": "error", "message": "Failed to update application status."}), 500
 

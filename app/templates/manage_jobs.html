@@ -39,6 +39,7 @@
               <th>Job Type</th>
               <th>Salary</th>
               <th>Status</th>
+              <th>Vacancies</th>
               <th>Applications</th>
               <th>Posted Date</th>
               <th>Actions</th>
@@ -71,6 +72,11 @@
               <td>
                 <span class="status-badge badge-{{ job.Status|lower }}">
                   {{ job.Status|capitalize }}
+                </span>
+              </td>
+              <td>
+                <span class="job-type-pill">
+                  {{ job.Vacancies or 1 }} / {{ job.Filled_vacancies or 0 }} filled
                 </span>
               </td>
               <td class="jobs-app-count">
