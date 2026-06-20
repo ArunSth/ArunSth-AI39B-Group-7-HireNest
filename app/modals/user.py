@@ -47,23 +47,12 @@ class UserModel:
 
     @staticmethod
     def get_total_users():
-       conn = get_connection()
-       try:
-           with conn.cursor() as cur:
-               # Executes a count on the User table
-               cur.execute("SELECT COUNT(*) as total FROM `User`")
-               result = cur.fetchone()
-               return result['total'] if result else 0
-       finally:
-           conn.close()
-
-    @staticmethod
-    def get_by_email(email: str):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM `User` WHERE `Email`=%s", (email,))
-                return cur.fetchone()
+                cur.execute("SELECT COUNT(*) as total FROM `User`")
+                result = cur.fetchone()
+                return result['total'] if result else 0
         finally:
             conn.close()
 
