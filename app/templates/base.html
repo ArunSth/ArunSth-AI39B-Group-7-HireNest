@@ -32,28 +32,21 @@
     <nav class="nav-links">
     </nav>
 
-    <div class="nav-icons">
+    <div class="nav-icons auth-group">
       <i class="fa-solid fa-sun" id="theme-toggle" aria-label="Toggle theme"></i>
       {% if session.get('user_id') %}
         <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
           <i class="fa-solid fa-bell"></i>
           <span class="notif-badge" id="notifBadge"></span>
         </button>
-      {% endif %}
-    </div>
-    {% if session.get('user_id') %}
-      {% include 'partials/notification_dropdown.html' %}
-    {% endif %}
-
-    <div class="auth-buttons">
-      {% if session.get('user_id') %}
-        <!-- Logged-in state -->
         {% if session.get('role') == 'job_seeker' %}
-          <a href="{{ url_for('job_seeker.profile') }}" class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px; text-decoration:none;">
+          <a href="{{ url_for('job_seeker.profile') }}" class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin:0 8px; text-decoration:none; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
             Hi, {{ session.get('name', 'User') }}
           </a>
         {% else %}
-          <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin-right:8px;">
+          <span class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin:0 8px; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-user" aria-hidden="true"></i>
             Hi, {{ session.get('name', 'User') }}
           </span>
         {% endif %}
@@ -71,6 +64,9 @@
         </a>
       {% endif %}
     </div>
+    {% if session.get('user_id') %}
+      {% include 'partials/notification_dropdown.html' %}
+    {% endif %}
   </header>
 
   {% block content %}

@@ -213,14 +213,28 @@ body {
 .nav-icons {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 16px;
   font-size: 20px;
   color: var(--text-links);
+}
+
+.nav-icons i,
+.nav-icons button,
+.nav-icons a {
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav-icons i {
   cursor: pointer;
   transition: 0.2s;
+}
+
+.auth-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: 16px;
 }
 
 .nav-icons i:hover {

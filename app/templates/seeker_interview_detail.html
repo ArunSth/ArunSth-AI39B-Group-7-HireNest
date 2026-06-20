@@ -31,6 +31,7 @@
             <div class="detail-grid-3">
               <div>
 <<<<<<< HEAD
+<<<<<<< HEAD
                 <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Date</p>
                 <p style="font-size: 16px; font-weight: 700;">{{ interview.date_display or 'N/A' }}</p>
               </div>
@@ -38,13 +39,26 @@
                 <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Time</p>
                 <p style="font-size: 16px; font-weight: 700;">{{ interview.time_display or 'N/A' }}</p>
 =======
+=======
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
                 <p class="section-title-small">Date</p>
                 <p class="detail-heading">{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</p>
               </div>
               <div>
                 <p class="section-title-small">Time</p>
                 <p class="detail-heading">{{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}</p>
+<<<<<<< HEAD
 >>>>>>> ac475879447c339535de87afce9ea356c0c1c4be
+=======
+=======
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Date</p>
+                <p style="font-size: 16px; font-weight: 700;">{{ interview.date_display or 'N/A' }}</p>
+              </div>
+              <div>
+                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Time</p>
+                <p style="font-size: 16px; font-weight: 700;">{{ interview.time_display or 'N/A' }}</p>
+>>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
               </div>
               <div>
                 <p class="section-title-small">Mode</p>
@@ -55,6 +69,7 @@
             </div>
 
             <!-- Meeting Link -->
+<<<<<<< HEAD
 <<<<<<< HEAD
             <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
               <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Meeting Link</p>
@@ -67,6 +82,8 @@
                   <code style="color: var(--text-primary); font-family: 'Courier New', monospace;">
                     {{ interview.Meeting_link or 'No meeting details provided.' }}
 =======
+=======
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
             <div class="section-divider">
               <p class="section-title-small">Meeting Link</p>
               <div class="callout-box">
@@ -77,7 +94,22 @@
                 {% else %}
                   <code class="code-block">
                     {{ interview.Meeting_link }}
+<<<<<<< HEAD
 >>>>>>> ac475879447c339535de87afce9ea356c0c1c4be
+=======
+=======
+            <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Meeting Link</p>
+              <div style="background: var(--light-purple); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-purple);">
+                {% if interview.Meeting_link and interview.Meeting_link.startswith('http') %}
+                  <a href="{{ interview.Meeting_link }}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex;">
+                    <i class="fas fa-video"></i> Join Video Meeting
+                  </a>
+                {% else %}
+                  <code style="color: var(--text-primary); font-family: 'Courier New', monospace;">
+                    {{ interview.Meeting_link or 'No meeting details provided.' }}
+>>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
                   </code>
                 {% endif %}
               </div>

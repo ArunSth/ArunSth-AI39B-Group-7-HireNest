@@ -38,6 +38,13 @@
                   <td>
                     <div>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
+                      <div class="small-muted-text">
+                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
+=======
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
                       {% if interview.date_display %}
                         <strong>{{ interview.date_display }}</strong>
                       {% else %}
@@ -49,11 +56,15 @@
                         {% else %}
                           N/A
                         {% endif %}
+<<<<<<< HEAD
 =======
                       <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
                       <div class="small-muted-text">
                         {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
 >>>>>>> ac475879447c339535de87afce9ea356c0c1c4be
+=======
+>>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
+>>>>>>> 6e5f5c5d62e253214a49ee09a8355cce305ec245
                       </div>
                     </div>
                   </td>
