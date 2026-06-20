@@ -30,7 +30,7 @@ def create_app():
     app = Flask(__name__, static_folder='statics', template_folder='templates')
 
     # 🔥 LOAD CONFIG (VERY IMPORTANT)
-    app.config.from_object(config)
+    app.config.from_object(config.Config)
 
     # Secret key
     app.secret_key = getattr(config, 'SECRET_KEY', None)

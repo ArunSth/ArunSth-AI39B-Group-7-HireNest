@@ -1,7 +1,10 @@
 from app.database import get_connection
 from datetime import datetime
+from app.modals.notification import NotificationModel
  
 class JobPostingModel:
+ 
+    # ── Create job — always starts as Pending (hidden from seekers) ──
     @staticmethod
     def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level"):
         conn = get_connection()
@@ -9,14 +12,16 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO `Jobs` (`Employee_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`, `Status`, `Job_type`, `Experience_level`)
+                    INSERT INTO `Jobs`
+                        (`Employee_id`, `Title`, `Description`, `Requirement`,
+                         `Salary`, `Location`, `Status`, `Job_type`, `Experience_level`)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (employee_id, title, description, requirement, salary, location, "active", job_type, experience_level),
+                    (employee_id, title, description, requirement, salary,
+                     location, "Pending", job_type, experience_level),
                 )
                 conn.commit()
-                job_id = cur.lastrowid
-                return job_id
+                return cur.lastrowid
         except Exception as e:
             print(f"Error creating job: {e}")
             conn.rollback()
@@ -24,6 +29,7 @@ class JobPostingModel:
         finally:
             conn.close()
  
+    # ── Job search for job seekers — APPROVED only ────────────────────
     @staticmethod
     def search_jobs(keyword, location, job_type):
         conn = get_connection()
@@ -32,7 +38,7 @@ class JobPostingModel:
                 SELECT j.*, e.`Company_name`, e.`Industry`, e.`Logo`
                 FROM `Jobs` j
                 JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
-                WHERE j.`Status` = 'active'
+                WHERE LOWER(j.`Status`) = 'approved'
             """
             params = []
  
@@ -58,7 +64,8 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
-
+ 
+    # ── Advanced search for seekers — APPROVED only ───────────────────
     @staticmethod
     def search_jobs_for_seekers(filters, seekers_id=None):
         conn = get_connection()
@@ -81,7 +88,7 @@ class JobPostingModel:
                     e.`Logo`
             """
             params = []
-
+ 
             if seekers_id:
                 query += """,
                     CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
@@ -89,12 +96,12 @@ class JobPostingModel:
                 """
             else:
                 query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
-
+ 
             query += """
                 FROM `Jobs` j
                 JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
             """
-
+ 
             if seekers_id:
                 query += """
                     LEFT JOIN `Saved_Jobs` sj
@@ -103,51 +110,52 @@ class JobPostingModel:
                         ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
                 """
                 params.extend([seekers_id, seekers_id])
-
-            query += " WHERE LOWER(j.`Status`) = 'active'"
-
+ 
+            # ── GATE: seekers only ever see Approved jobs ──
+            query += " WHERE LOWER(j.`Status`) = 'approved'"
+ 
             keyword = filters.get("keyword")
             if keyword:
                 query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
                 params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
-
+ 
             company = filters.get("company")
             if company:
                 query += " AND e.`Company_name` LIKE %s"
                 params.append(f"%{company}%")
-
+ 
             location = filters.get("location")
             if location:
                 query += " AND j.`Location` LIKE %s"
                 params.append(f"%{location}%")
-
+ 
             industry = filters.get("industry")
             if industry:
                 query += " AND e.`Industry` LIKE %s"
                 params.append(f"%{industry}%")
-
+ 
             job_type = filters.get("job_type")
             if job_type and job_type != "All Types":
                 query += " AND j.`Job_type` = %s"
                 params.append(job_type)
-
+ 
             experience_level = filters.get("experience_level")
             if experience_level and experience_level != "All Levels":
                 query += " AND j.`Experience_level` = %s"
                 params.append(experience_level)
-
+ 
             salary_min = filters.get("salary_min")
             if salary_min:
                 query += " AND j.`Salary` >= %s"
                 params.append(salary_min)
-
+ 
             salary_max = filters.get("salary_max")
             if salary_max:
                 query += " AND j.`Salary` <= %s"
                 params.append(salary_max)
-
+ 
             query += " ORDER BY j.`Created_at` DESC"
-
+ 
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
@@ -156,7 +164,8 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
-
+ 
+    # ── Single job detail for seekers — APPROVED only ─────────────────
     @staticmethod
     def get_job_detail_for_seeker(job_id, seekers_id=None):
         conn = get_connection()
@@ -172,7 +181,7 @@ class JobPostingModel:
                     e.`Description` AS `Company_description`
             """
             params = []
-
+ 
             if seekers_id:
                 query += """,
                     CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
@@ -180,12 +189,12 @@ class JobPostingModel:
                 """
             else:
                 query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
-
+ 
             query += """
                 FROM `Jobs` j
                 JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
             """
-
+ 
             if seekers_id:
                 query += """
                     LEFT JOIN `Saved_Jobs` sj
@@ -194,16 +203,18 @@ class JobPostingModel:
                         ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
                 """
                 params.extend([seekers_id, seekers_id])
-
-            query += " WHERE j.`Job_id`=%s"
+ 
+            # ── GATE: only return this job if it's approved ──
+            query += " WHERE j.`Job_id` = %s AND LOWER(j.`Status`) = 'approved'"
             params.append(job_id)
-
+ 
             with conn.cursor() as cur:
                 cur.execute(query, params)
-                return cur.fetchone()
+                return cur.fetchone()   # None if job is Pending or Rejected
         finally:
             conn.close()
  
+    # ── Employer: see their own jobs (all statuses, so they know what's pending) ──
     @staticmethod
     def get_jobs_by_employer(employee_id):
         conn = get_connection()
@@ -211,9 +222,11 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT `Job_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`, `Status`, `Created_at`, `Job_type`, `Experience_level`
+                    SELECT `Job_id`, `Title`, `Description`, `Requirement`,
+                           `Salary`, `Location`, `Status`, `Created_at`,
+                           `Job_type`, `Experience_level`
                     FROM `Jobs`
-                    WHERE `Employee_id`=%s
+                    WHERE `Employee_id` = %s
                     ORDER BY `Created_at` DESC
                     """,
                     (employee_id,),
@@ -229,17 +242,18 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT j.*, e.`Company_name`, e.`Industry`, e.`Website`, e.`Logo`, e.`User_id` AS employer_user_id
+                    SELECT j.*, e.`Company_name`, e.`Industry`, e.`Website`,
+                           e.`Logo`, e.`User_id` AS employer_user_id
                     FROM `Jobs` j
                     JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
-                    WHERE j.`Job_id`=%s
+                    WHERE j.`Job_id` = %s
                     """,
                     (job_id,),
                 )
                 return cur.fetchone()
         finally:
             conn.close()
-
+ 
     @staticmethod
     def get_saved_jobs(seekers_id):
         conn = get_connection()
@@ -251,7 +265,7 @@ class JobPostingModel:
                     FROM `Saved_Jobs` s
                     JOIN `Jobs` j ON s.`Job_id` = j.`Job_id`
                     JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
-                    WHERE s.`Seekers_id`=%s
+                    WHERE s.`Seekers_id` = %s
                     ORDER BY s.`Saved_id` DESC
                     """,
                     (seekers_id,),
@@ -259,17 +273,20 @@ class JobPostingModel:
                 return cur.fetchall()
         finally:
             conn.close()
-
+ 
     @staticmethod
     def get_saved_job_ids(seekers_id):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s", (seekers_id,))
+                cur.execute(
+                    "SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id` = %s",
+                    (seekers_id,)
+                )
                 return {row["Job_id"] for row in cur.fetchall()}
         finally:
             conn.close()
-
+ 
     @staticmethod
     def save_job(seekers_id, job_id):
         conn = get_connection()
@@ -293,7 +310,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
-
+ 
     @staticmethod
     def unsave_job(seekers_id, job_id):
         conn = get_connection()
@@ -320,10 +337,12 @@ class JobPostingModel:
                 cur.execute(
                     """
                     UPDATE `Jobs`
-                    SET `Title`=%s, `Description`=%s, `Requirement`=%s, `Salary`=%s, `Location`=%s, `Job_type`=%s, `Experience_level`=%s
+                    SET `Title`=%s, `Description`=%s, `Requirement`=%s,
+                        `Salary`=%s, `Location`=%s, `Job_type`=%s, `Experience_level`=%s
                     WHERE `Job_id`=%s
                     """,
-                    (title, description, requirement, salary, location, job_type, experience_level, job_id),
+                    (title, description, requirement, salary, location,
+                     job_type, experience_level, job_id),
                 )
                 conn.commit()
                 return True
@@ -339,8 +358,31 @@ class JobPostingModel:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
+                # Fetch job info BEFORE deleting so we can notify
+                cur.execute(
+                    """
+                    SELECT j.`Title`, e.`User_id`
+                    FROM `Jobs` j
+                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    WHERE j.`Job_id` = %s
+                    """,
+                    (job_id,)
+                )
+                job = cur.fetchone()
+
                 cur.execute("DELETE FROM `Jobs` WHERE `Job_id`=%s", (job_id,))
                 conn.commit()
+
+                # Notify after successful delete
+                if job:
+                    from app.controllers.notification_controller import NotificationController
+                    NotificationController.create_notification(
+                        user_id=job['User_id'],
+                        title="Job Post Deleted",
+                        message=f"Your job posting '{job['Title']}' has been removed by an administrator.",
+                        notif_type="job_deleted",
+                        reference_id=job_id
+                    )
                 return True
         except Exception as e:
             print(f"Error deleting job: {e}")
@@ -349,32 +391,62 @@ class JobPostingModel:
         finally:
             conn.close()
  
+    # ── update_job_status — called by approve/reject routes ───────────
+    # Accepted values: 'Pending' | 'Approved' | 'Rejected'
     @staticmethod
     def update_job_status(job_id, status):
+        allowed = {'Pending', 'Approved', 'Rejected'}
+        if status not in allowed:
+            print(f"update_job_status: invalid status '{status}'")
+            return False
         conn = get_connection()
         try:
             with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT j.`Title`, e.`User_id`
+                    FROM `Jobs` j
+                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    WHERE j.`Job_id` = %s
+                    """,
+                    (job_id,)
+                )
+                job = cur.fetchone()
+                print(f"DEBUG update_job_status: job={job}, status={status}")  # ← add this
+
                 cur.execute(
                     "UPDATE `Jobs` SET `Status`=%s WHERE `Job_id`=%s",
                     (status, job_id),
                 )
                 conn.commit()
-                return True
+                print(f"DEBUG rowcount={cur.rowcount}")  # ← and this
+
+                if cur.rowcount > 0 and job and status == 'Rejected':
+                    from app.modals.notification_model import NotificationModel  # adjust filename
+                    NotificationModel.create_notification(
+                        user_id=job['User_id'],
+                        title="Job Post Rejected",
+                        message=f"Your job posting '{job['Title']}' has been rejected by an administrator.",
+                        notification_type="job_rejected",
+                        reference_id=job_id
+                    )
+                return cur.rowcount > 0
         except Exception as e:
-            print(f"Error updating job status: {e}")
+            print(f"Error updating job status: {e}")  # ← this will show the real error
             conn.rollback()
             return False
         finally:
             conn.close()
  
+    # ── Active (approved) job count for the dashboard stat card ───────
     @staticmethod
     def get_active_jobs():
-        """Returns count of all active jobs."""
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                # FIX: was `Job` (wrong), correct table name is `Jobs`
-                cur.execute("SELECT COUNT(*) as total FROM `Jobs` WHERE `Status` = 'active'")
+                cur.execute(
+                    "SELECT COUNT(*) AS total FROM `Jobs` WHERE LOWER(`Status`) = 'approved'"
+                )
                 result = cur.fetchone()
                 return result['total'] if result else 0
         except Exception as e:
@@ -382,7 +454,8 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
-
+ 
+    # ── All jobs for the admin moderation panel (no status filter) ────
     @staticmethod
     def get_all_jobs_for_admin():
         conn = get_connection()
@@ -394,7 +467,7 @@ class JobPostingModel:
                            j.`Job_type`, j.`Status`, j.`Created_at`,
                            COALESCE(e.`Company_name`, 'Unknown') AS `Company_name`
                     FROM `Jobs` j
-                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    LEFT JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
                     ORDER BY j.`Created_at` DESC
                     """
                 )
@@ -411,7 +484,7 @@ class JobPostingModel:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT COUNT(*) as count FROM `Applications` WHERE `Job_id`=%s",
+                    "SELECT COUNT(*) AS count FROM `Applications` WHERE `Job_id`=%s",
                     (job_id,),
                 )
                 result = cur.fetchone()
@@ -424,11 +497,10 @@ class JobPostingModel:
  
     @staticmethod
     def get_total_jobs():
-        """Returns total count of all jobs regardless of status."""
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT COUNT(*) as total FROM `Jobs`")
+                cur.execute("SELECT COUNT(*) AS total FROM `Jobs`")
                 result = cur.fetchone()
                 return result['total'] if result else 0
         except Exception as e:
@@ -436,3 +508,4 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
+ 

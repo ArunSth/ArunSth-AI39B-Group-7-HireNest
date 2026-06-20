@@ -8,17 +8,6 @@
 
 {% block content %}
       <div class="section">
-        <div id="confirm-modal" class="applicant-confirm-modal" hidden>
-          <div class="applicant-confirm-modal__dialog">
-            <h3 id="confirm-modal-title">Confirm action</h3>
-            <p id="confirm-modal-message"></p>
-            <div class="applicant-confirm-modal__actions">
-              <button type="button" id="confirm-modal-cancel" class="btn-secondary">Cancel</button>
-              <button type="button" id="confirm-modal-confirm" class="btn-primary">Confirm</button>
-            </div>
-          </div>
-        </div>
-
         <div class="table-container">
           <div class="table-responsive">
             {% if applicants %}
@@ -68,49 +57,131 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
+      <div id="confirm-modal" class="modal-overlay" hidden>
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-message">
+          <div class="modal-icon" id="confirm-modal-icon">
+            <i id="confirm-modal-icon-svg" class="fa-solid fa-circle-check"></i>
+          </div>
+          <h3 id="confirm-modal-title">Confirm Hiring Decision</h3>
+          <p id="confirm-modal-message">Are you sure you want to hire this applicant?</p>
+          <div class="modal-warning" id="confirm-modal-warning" hidden>
+            <p>This will:</p>
+            <ul>
+              <li>mark applicant as Selected</li>
+              <li>send notification</li>
+              <li>close vacancy if positions are filled</li>
+            </ul>
+          </div>
+          <div class="modal-actions">
+            <button type="button" id="confirm-modal-cancel" class="btn-secondary modal-cancel">Cancel</button>
+            <button type="button" id="confirm-modal-confirm" class="btn-primary modal-confirm">
+              <span class="modal-confirm-text">Hire Applicant</span>
+              <span class="modal-spinner" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
 {% endblock %}
 
-{% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_applicants.css') }}">
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
   let pendingAction = null;
+  let isSubmitting = false;
+
+  const modal = document.getElementById('confirm-modal');
+  const title = document.getElementById('confirm-modal-title');
+  const message = document.getElementById('confirm-modal-message');
+  const warning = document.getElementById('confirm-modal-warning');
+  const confirmButton = document.getElementById('confirm-modal-confirm');
+  const confirmButtonText = confirmButton?.querySelector('.modal-confirm-text');
+  const icon = document.getElementById('confirm-modal-icon');
+  const iconSvg = document.getElementById('confirm-modal-icon-svg');
+
+  function setLoadingState(isLoading) {
+    if (!confirmButton || !confirmButtonText) return;
+    isSubmitting = isLoading;
+    confirmButton.disabled = isLoading;
+    confirmButton.classList.toggle('is-loading', isLoading);
+    if (isLoading) {
+      confirmButtonText.textContent = 'Processing...';
+    } else if (modal.dataset.action === 'hired') {
+      confirmButtonText.textContent = 'Hire Applicant';
+    } else {
+      confirmButtonText.textContent = 'Reject Applicant';
+    }
+  }
 
   function openConfirmModal(action, applicationId, applicantName, jobTitle) {
-    const modal = document.getElementById('confirm-modal');
-    const title = document.getElementById('confirm-modal-title');
-    const message = document.getElementById('confirm-modal-message');
-    const confirmButton = document.getElementById('confirm-modal-confirm');
+    if (!modal || !title || !message || !confirmButton || !confirmButtonText || !icon || !iconSvg) return;
 
     pendingAction = { action, applicationId };
-    title.textContent = action === 'hired' ? 'Confirm Hire' : 'Confirm Reject';
-    message.textContent = action === 'hired'
-      ? `Are you sure you want to hire ${applicantName} for ${jobTitle}? This will close the vacancy and notify the applicant.`
-      : `Are you sure you want to reject ${applicantName} for ${jobTitle}?`;
-    confirmButton.className = action === 'hired' ? 'btn-primary' : 'btn-danger';
-    confirmButton.textContent = action === 'hired' ? 'Confirm Hire' : 'Confirm Reject';
+    modal.dataset.action = action;
+
+    const isHire = action === 'hired';
+    title.textContent = isHire ? 'Confirm Hiring Decision' : 'Confirm Rejection';
+    message.textContent = isHire
+      ? `Are you sure you want to hire ${applicantName} for ${jobTitle}?`
+      : `Are you sure you want to reject ${applicantName}?`;
+
+    if (warning) {
+      warning.hidden = !isHire;
+    }
+
+    icon.className = `modal-icon modal-icon--${isHire ? 'success' : 'danger'}`;
+    iconSvg.className = isHire
+      ? 'fa-solid fa-circle-check'
+      : 'fa-solid fa-circle-exclamation';
+
+    confirmButton.className = `btn-primary modal-confirm modal-confirm--${isHire ? 'success' : 'danger'}`;
+    confirmButtonText.textContent = isHire ? 'Hire Applicant' : 'Reject Applicant';
+
+    document.body.classList.add('modal-open');
     modal.hidden = false;
+    requestAnimationFrame(() => {
+      modal.classList.add('is-open');
+    });
   }
 
   function closeConfirmModal() {
-    document.getElementById('confirm-modal').hidden = true;
-    pendingAction = null;
+    if (!modal) return;
+    modal.classList.remove('is-open');
+    document.body.classList.remove('modal-open');
+    setLoadingState(false);
+    window.setTimeout(() => {
+      modal.hidden = true;
+      pendingAction = null;
+    }, 220);
   }
 
+  document.addEventListener('DOMContentLoaded', () => {
+    closeConfirmModal();
+  });
+
   document.getElementById('confirm-modal-cancel')?.addEventListener('click', closeConfirmModal);
-  document.getElementById('confirm-modal')?.addEventListener('click', (event) => {
-    if (event.target.id === 'confirm-modal') {
+  modal?.addEventListener('click', (event) => {
+    if (event.target === modal) {
       closeConfirmModal();
     }
   });
 
-  document.getElementById('confirm-modal-confirm')?.addEventListener('click', () => {
-    if (!pendingAction) return;
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal && !modal.hidden && modal.classList.contains('is-open')) {
+      closeConfirmModal();
+    }
+  });
+
+  confirmButton?.addEventListener('click', () => {
+    if (!pendingAction || isSubmitting) return;
     const { action, applicationId } = pendingAction;
+
+    setLoadingState(true);
+
     fetch(`/employer/applicant/${applicationId}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,15 +190,17 @@
     .then(response => response.json())
     .then(data => {
       if (data.status === 'success') {
+        closeConfirmModal();
         window.location.reload();
       } else {
+        setLoadingState(false);
         alert(data.message || 'Unable to update application status.');
       }
     })
     .catch(() => {
+      setLoadingState(false);
       alert('Something went wrong while updating the application.');
-    })
-    .finally(() => closeConfirmModal());
+    });
   });
 </script>
 {% endblock %}

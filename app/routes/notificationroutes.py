@@ -71,6 +71,8 @@ class NotificationRoutes:
             if notification.get('Type') == 'new_message' and notification.get('Reference_id'):
                 message = MessageController.get_message(
                     notification['Reference_id'])
+                if notification.get('Type') in ('job_deleted', 'job_rejected'):
+                    return redirect(url_for('employer.dashboard'))
                 if message and (message['Sender_id'] == user_id or message['Receiver_id'] == user_id):
                     other_user_id = message['Receiver_id'] if message['Sender_id'] == user_id else message['Sender_id']
                     return redirect(url_for('messages.conversation', conversation_id=other_user_id))
