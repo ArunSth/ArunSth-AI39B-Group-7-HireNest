@@ -28,12 +28,27 @@ class UserModel:
             conn.close()
 
     @staticmethod
-    def get_by_email(email: str):
+    def get_all_users():
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM `User` WHERE `Email`=%s", (email,))
-                return cur.fetchone()
+                cur.execute("""
+                    SELECT `User_id`, `Email`, `First_name`, `Last_name`, `Role`, `Created_at`
+                    FROM `User`
+                    ORDER BY `Created_at` DESC
+                """)
+                return cur.fetchall()
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_total_users():
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT COUNT(*) as total FROM `User`")
+                result = cur.fetchone()
+                return result['total'] if result else 0
         finally:
             conn.close()
 

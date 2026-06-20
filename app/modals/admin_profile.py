@@ -3,16 +3,6 @@ from app.database import get_connection
 
 
 class AdminProfileModel:
-    @staticmethod
-    def get_profile_by_user_id(user_id: int) -> Optional[dict]:
-        conn = get_connection()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT * FROM `Admin_Profiles` WHERE `User_id`=%s", (user_id,))
-                return cur.fetchone()
-        finally:
-            conn.close()
 
     @staticmethod
     def get_profile_by_user_id(user_id: int) -> Optional[dict]:
