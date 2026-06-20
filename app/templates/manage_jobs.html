@@ -18,86 +18,107 @@
   {% endif %}
 {% endwith %}
 
-<div class="section">
-  <div class="table-container">
-    <div class="table-responsive">
-      {% if jobs %}
-      <table>
-        <thead>
-          <tr>
-            <th>Job Title</th>
-            <th>Location</th>
-            <th>Job Type</th>
-            <th>Salary</th>
-            <th>Status</th>
-            <th>Applications</th>
-            <th>Posted Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for job in jobs %}
-          <tr>
-            <td>
-              <div>
-                <strong>{{ job.Title }}</strong>
-                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                  {{ job.Experience_level if job.Experience_level else 'N/A' }}
-                </div>
-              </div>
-            </td>
-            <td>{{ job.Location }}</td>
-            <td>
-              <span style="display: inline-block; padding: 4px 8px; background: var(--light-purple); color: var(--primary-purple); border-radius: 4px; font-size: 12px; font-weight: 600;">
-                {{ job.Job_type if job.Job_type else 'Full-time' }}
-              </span>
-            </td>
-            <td>
-              {% if job.Salary %}
-                ₹{{ "{:,.0f}".format(job.Salary) }}
-              {% else %}
-                <span style="color: var(--text-secondary);">-</span>
-              {% endif %}
-            </td>
-            <td>
-              <span class="status-badge badge-{{ job.Status|lower }}">
-                {{ job.Status|capitalize }}
-              </span>
-            </td>
-            <td style="text-align: center;">
-              <strong style="font-size: 18px; color: var(--primary-purple);">{{ job_app_counts.get(job.Job_id, 0) }}</strong>
-            </td>
-            <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
-            <td>
-              <div class="action-buttons">
-                <a href="/employer/jobs/{{ job.Job_id }}" class="btn-small btn-view">
-                  <i class="fas fa-eye"></i> View
-                </a>
-                <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-small btn-edit">
-                  <i class="fas fa-edit"></i> Edit
-                </a>
-                <form method="POST" action="/employer/jobs/{{ job.Job_id }}/delete" style="display: inline;">
-                  <button type="submit" class="btn-small btn-delete" onclick="return confirm('Are you sure?');">
-                    <i class="fas fa-trash"></i> Delete
-                  </button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <div class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <h3>No Jobs Posted Yet</h3>
-        <p>Start hiring by posting your first job now!</p>
-        <a href="{{ url_for('job_posting.create_job') }}" class="btn-primary">
-          <i class="fas fa-plus"></i> Post Your First Job
-        </a>
-      </div>
-      {% endif %}
+<div class="jobs-page-shell">
+  <section class="jobs-hero">
+    <div>
+      <div class="eyebrow"><i class="fas fa-briefcase"></i> Hiring pipeline</div>
+      <h3>Manage Jobs</h3>
+      <p>Review your open roles, keep postings current, and make it easy for candidates to apply.</p>
     </div>
-  </div>
+    <div class="jobs-hero-actions">
+      <a href="{{ url_for('job_posting.create_job') }}" class="btn-primary">
+        <i class="fas fa-plus"></i> Post New Job
+      </a>
+    </div>
+  </section>
+
+  <section class="section jobs-table-section">
+    <div class="table-container">
+      <div class="table-responsive">
+        {% if jobs %}
+        <table>
+          <thead>
+            <tr>
+              <th>Job Title</th>
+              <th>Location</th>
+              <th>Job Type</th>
+              <th>Salary</th>
+              <th>Status</th>
+              <th>Applications</th>
+              <th>Posted Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in jobs %}
+            <tr>
+              <td>
+                <div>
+                  <strong>{{ job.Title }}</strong>
+                  <div class="job-meta-line">
+                    {{ job.Experience_level if job.Experience_level else 'N/A' }}
+                  </div>
+                </div>
+              </td>
+              <td>{{ job.Location }}</td>
+              <td>
+                <span class="job-type-pill">
+                  {{ job.Job_type if job.Job_type else 'Full-time' }}
+                </span>
+              </td>
+              <td>
+                {% if job.Salary %}
+                  ₹{{ "{:,.0f}".format(job.Salary) }}
+                {% else %}
+                  <span class="muted">-</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="status-badge badge-{{ job.Status|lower }}">
+                  {{ job.Status|capitalize }}
+                </span>
+              </td>
+              <td class="jobs-app-count">
+                <strong>{{ job_app_counts.get(job.Job_id, 0) }}</strong>
+              </td>
+              <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
+              <td>
+                <div class="action-buttons">
+                  <a href="/employer/jobs/{{ job.Job_id }}" class="btn-small btn-view">
+                    <i class="fas fa-eye"></i> View
+                  </a>
+                  <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-small btn-edit">
+                    <i class="fas fa-edit"></i> Edit
+                  </a>
+                  <form method="POST" action="/employer/jobs/{{ job.Job_id }}/delete" style="display: inline;">
+                    <button type="submit" class="btn-small btn-delete" onclick="return confirm('Are you sure?');">
+                      <i class="fas fa-trash"></i> Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state jobs-empty-state">
+          <div class="jobs-empty-state__icon">
+            <i class="fas fa-briefcase"></i>
+          </div>
+          <h3>No jobs posted yet</h3>
+          <p>Start hiring by posting your first opportunity and attracting qualified candidates.</p>
+          <a href="{{ url_for('job_posting.create_job') }}" class="btn-primary jobs-empty-state__action">
+            <i class="fas fa-plus"></i> Post New Job
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </section>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 {% endblock %}

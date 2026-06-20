@@ -114,8 +114,10 @@
         </table>
         {% else %}
         <div class="empty-state applicants-empty-state">
-          <i class="fas fa-user-clock"></i>
-          <h3>No applications received yet.</h3>
+          <div class="applicants-empty-state__icon">
+            <i class="fas fa-user-clock"></i>
+          </div>
+          <h3>No applications received yet</h3>
           <p>Candidate applications will appear here once they apply to your posted jobs.</p>
         </div>
         {% endif %}
