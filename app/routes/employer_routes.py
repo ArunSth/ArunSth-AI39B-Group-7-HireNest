@@ -5,6 +5,7 @@ from app.modals.user import UserModel
 from app.modals.job_posting_model import JobPostingModel
 from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
+from datetime import timedelta
 import os
 
 
@@ -16,6 +17,27 @@ class EmployerRoutes:
         """Register all employer routes"""
         self.employer_profile()
         return self.blueprint
+
+    @staticmethod
+    def _format_interview_date(value):
+        if value is None:
+            return 'N/A'
+        if hasattr(value, 'strftime'):
+            return value.strftime('%d %b %Y')
+        return str(value)
+
+    @staticmethod
+    def _format_interview_time(value):
+        if value is None:
+            return 'N/A'
+        if isinstance(value, timedelta):
+            total_seconds = int(value.total_seconds())
+            hours, remainder = divmod(total_seconds, 3600)
+            minutes, _ = divmod(remainder, 60)
+            return f"{hours:02d}:{minutes:02d}"
+        if hasattr(value, 'strftime'):
+            return value.strftime('%H:%M')
+        return str(value)
 
     def employer_profile(self):
         @self.blueprint.route("/employer/dashboard", methods=["GET"])
@@ -51,6 +73,13 @@ class EmployerRoutes:
                 employee_id)
             interviews = InterviewSchedulingModel.get_interviews_for_employer(
                 employee_id)
+            for interview in interviews:
+                interview['formatted_date'] = self._format_interview_date(
+                    interview.get('Interview_date')
+                )
+                interview['formatted_time'] = self._format_interview_time(
+                    interview.get('Interview_time')
+                )
 
             # Calculate stats
             total_applicants = ApplicantManagementModel.get_total_applicants(

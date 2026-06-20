@@ -70,11 +70,22 @@ class UserModel:
         return check_password_hash(user['Password'], password)
 
     @staticmethod
+    def get_by_email(email: str):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM `User` WHERE `Email`=%s", (email,))
+                return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_by_id(user_id: int):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT * FROM `User` WHERE `User_id`=%s", (user_id,))
+                cur.execute(
+                    "SELECT * FROM `User` WHERE `User_id`=%s", (user_id,))
                 return cur.fetchone()
         finally:
             conn.close()
@@ -105,7 +116,8 @@ class UserModel:
         last_active = user['Last_active_at']
         if isinstance(last_active, str):
             try:
-                last_active = datetime.strptime(last_active, '%Y-%m-%d %H:%M:%S')
+                last_active = datetime.strptime(
+                    last_active, '%Y-%m-%d %H:%M:%S')
             except ValueError:
                 return {'online': False, 'last_active': None}
 

@@ -37,9 +37,17 @@
                   <td>{{ interview.job_title }}</td>
                   <td>
                     <div>
-                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
+                      {% if interview.date_display %}
+                        <strong>{{ interview.date_display }}</strong>
+                      {% else %}
+                        <strong>-</strong>
+                      {% endif %}
                       <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
+                        {% if interview.time_display %}
+                          {{ interview.time_display }}
+                        {% else %}
+                          N/A
+                        {% endif %}
                       </div>
                     </div>
                   </td>

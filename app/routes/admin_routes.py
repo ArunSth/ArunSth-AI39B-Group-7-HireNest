@@ -84,29 +84,102 @@ class AdminRoutes:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
             finally:
                 conn.close()
-
+ 
+        # ── 4. Delete Moderation Job ──────────────────────────
         @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/delete', methods=['POST'])
         def delete_moderation_job(job_id):
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
-            from app.database import get_connection
-            conn = get_connection()
-            try:
-                with conn.cursor() as cur:
-                    cur.execute("DELETE FROM `Jobs` WHERE `Job_id`=%s", (job_id,))
-                conn.commit()
-                AdminProfileModel.record_audit_log(
-                    session['user_id'], 'job_deleted', 'job', job_id,
-                    f'Job #{job_id} deleted by admin.'
-                )
-                return jsonify({'status': 'success'})
-            except Exception as e:
-                return jsonify({'status': 'error', 'message': str(e)}), 500
-            finally:
-                conn.close()
+            success = JobPostingModel.delete_job(job_id)  # ← uses the model which sends notification
+            if not success:
+                return jsonify({'status': 'error', 'message': 'Failed to delete job.'}), 500
+
+            AdminProfileModel.record_audit_log(
+                session['user_id'], 'job_deleted', 'job', job_id,
+                f'Job #{job_id} deleted by admin.'
+            )
+            return jsonify({'status': 'success'})
+        
  
-        # ── 4. Profile API ────────────────────────────────────
+        # ── 5. Approve Job ────────────────────────────────────
+        @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/approve', methods=['POST'])
+        def approve_job(job_id):
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+ 
+            # 'Approved' is the DB value recognised by search_jobs_for_seekers
+            # (the model checks  LOWER(status) = 'approved')
+            success = JobPostingModel.update_job_status(job_id, 'Approved')
+            if not success:
+                return jsonify({'status': 'error', 'message': 'Failed to approve job.'}), 500
+ 
+            # Fetch job title for a nicer audit message
+            job = JobPostingModel.get_job_by_id(job_id)
+            title = job['Title'] if job else f'Job #{job_id}'
+ 
+            AdminProfileModel.record_audit_log(
+                session['user_id'], 'job_approved', 'job', job_id,
+                f'Job "{title}" approved — now visible to job seekers.'
+            )
+            return jsonify({
+                'status':  'success',
+                'message': f'"{title}" approved and is now live.',
+            })
+ 
+        # ── 6. Reject Job ─────────────────────────────────────
+        @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/reject', methods=['POST'])
+        def reject_job(job_id):
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+ 
+            success = JobPostingModel.update_job_status(job_id, 'Rejected')
+            if not success:
+                return jsonify({'status': 'error', 'message': 'Failed to reject job.'}), 500
+ 
+            job = JobPostingModel.get_job_by_id(job_id)
+            title = job['Title'] if job else f'Job #{job_id}'
+ 
+            AdminProfileModel.record_audit_log(
+                session['user_id'], 'job_rejected', 'job', job_id,
+                f'Job "{title}" rejected — hidden from job seekers.'
+            )
+            return jsonify({
+                'status':  'success',
+                'message': f'"{title}" rejected and hidden from job seekers.',
+            })
+ 
+        # ── 7. List Jobs for Moderation Panel ─────────────────
+        @self.blueprint.route('/admin/moderation/jobs', methods=['GET'])
+        def moderation_jobs():
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+ 
+            jobs = JobPostingModel.get_all_jobs_for_admin()
+            result = []
+            for j in jobs:
+                db_status = (j['Status'] or '').lower()
+                # Map DB values → UI labels shown in the admin panel
+                if db_status == 'approved':
+                    ui_status = 'Approved'
+                elif db_status == 'rejected':
+                    ui_status = 'Rejected'
+                else:
+                    ui_status = 'Pending'   # covers 'pending' and anything unexpected
+ 
+                result.append({
+                    'id':          j['Job_id'],
+                    'title':       j['Title'],
+                    'company':     j['Company_name'],
+                    'type':        j['Job_type'],
+                    'location':    j['Location'],
+                    'status':      ui_status,
+                    'submitted':   j['Created_at'].strftime('%#d %b %Y') if j['Created_at'] else '—',
+                    'description': j['Description'] or '',
+                })
+            return jsonify(result)
+ 
+        # ── 8. Profile API ────────────────────────────────────
         @self.blueprint.route('/admin/profile', methods=['GET', 'POST'])
         def profile():
             if 'user_id' not in session or session.get('role') != 'admin':
@@ -156,7 +229,7 @@ class AdminRoutes:
                 'recent_audit_logs':     recent_logs,
             }), 200
  
-        # ── 5. Audit Logs API ─────────────────────────────────
+        # ── 9. Audit Logs API ─────────────────────────────────
         @self.blueprint.route('/admin/audit-logs', methods=['GET'])
         def audit_logs():
             if 'user_id' not in session or session.get('role') != 'admin':
@@ -167,32 +240,8 @@ class AdminRoutes:
                 admin_user_id=session['user_id'], limit=limit
             )
             return jsonify({'status': 'success', 'audit_logs': logs}), 200
-            
-
-        @self.blueprint.route('/admin/moderation/jobs', methods=['GET'])
-        def moderation_jobs():
-            if 'user_id' not in session or session.get('role') != 'admin':
-                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
-
-            jobs = JobPostingModel.get_all_jobs_for_admin()
-            result = []
-            for j in jobs:
-                db_status = (j['Status'] or '').lower()
-                ui_status = 'Approved' if db_status == 'active' else \
-                            'Rejected' if db_status == 'rejected' else 'Pending'
-                result.append({
-                    'id':          j['Job_id'],
-                    'title':       j['Title'],
-                    'company':     j['Company_name'],
-                    'type':        j['Job_type'],
-                    'location':    j['Location'],
-                    'status':      ui_status,
-                    'submitted':   j['Created_at'].strftime('%-d %b %Y') if j['Created_at'] else '—',
-                    'description': j['Description'] or '',
-                })
-            return jsonify(result)
  
-        # ── 6. Send Announcement ──────────────────────────────
+        # ── 10. Send Announcement ─────────────────────────────
         @self.blueprint.route('/admin/announcements/send', methods=['POST'])
         def send_announcement():
             if 'user_id' not in session or session.get('role') != 'admin':
@@ -210,7 +259,6 @@ class AdminRoutes:
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
-                    # Fetch target users based on audience selection
                     if audience == 'all':
                         cur.execute(
                             "SELECT `User_id` FROM `User` WHERE `Role` IN ('Job Seeker', 'Employer')"
@@ -229,7 +277,6 @@ class AdminRoutes:
                             'recipients': 0,
                         })
  
-                    # Bulk-insert one notification row per recipient
                     cur.executemany(
                         """
                         INSERT INTO `Notification`
@@ -245,7 +292,6 @@ class AdminRoutes:
  
                 conn.commit()
  
-                # Record in audit log
                 AdminProfileModel.record_audit_log(
                     session['user_id'],
                     'sent_announcement',
