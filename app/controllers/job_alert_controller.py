@@ -17,3 +17,7 @@ class JobAlertController:
     @staticmethod
     def delete_alert(alert_id, seeker_id):
         return JobAlertModel.delete_alert(alert_id, seeker_id)
+
+    @staticmethod
+    def match_job_seekers_for_job(title, location, job_type=None, industry=None, description=None, requirement=None):
+        return JobAlertModel.find_matching_job_seekers_for_job(title, location, job_type, industry, description, requirement)

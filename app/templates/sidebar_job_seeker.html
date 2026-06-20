@@ -27,13 +27,6 @@
       <i class="fas fa-bookmark"></i>
       <span>Saved Jobs</span>
     </a>
-      <i class="fas fa-briefcase"></i>
-      <span>Search Opportunities</span>
-    </a>
-    <a href="{{ url_for('job_seeker.profile') }}" class="nav-item {% if 'profile' in request.path %}active{% endif %}">
-      <i class="fas fa-user"></i>
-      <span>Profile</span>
-    </a>
 
     <a href="{{ url_for('applicant.seeker_applications') }}"
        class="nav-item {% if request.path == '/seeker/applications' %}active{% endif %}">
@@ -55,7 +48,6 @@
 
     <a href="{{ url_for('interview.seeker_interviews') }}"
        class="nav-item {% if 'interview' in request.path %}active{% endif %}">
-    <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item {% if 'interview' in request.path %}active{% endif %}">
       <i class="fas fa-video"></i>
       <span>Interviews</span>
     </a>
@@ -84,18 +76,6 @@
       <span>Profile</span>
     </a>
 
-    <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
-      <i class="fas fa-bookmark"></i>
-      <span>Saved Jobs</span>
-    </a>
-    <a href="{{ url_for('job_alerts.index') }}" class="nav-item {% if request.path.startswith('/job-alerts') %}active{% endif %}">
-      <i class="fas fa-paper-plane"></i>
-      <span>Job Alerts</span>
-    </a>
-    <a href="{{ url_for('messages.index') }}" class="nav-item {% if request.path.startswith('/messages') %}active{% endif %}">
-      <i class="fas fa-comments"></i>
-      <span>Messages</span>
-    </a>
     <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
       <i class="fas fa-sign-out-alt"></i>
       <span>Logout</span>

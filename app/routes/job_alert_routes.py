@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, redirect, render_template, request, session, url_for, flash
 
 from app.controllers.job_alert_controller import JobAlertController
+from app.modals.job_posting_model import JobPostingModel
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 
 
@@ -21,7 +24,32 @@ class JobAlertRoutes:
             alerts = JobAlertController.list_alerts(
                 seeker_profile['Seekers_id']) if seeker_profile else []
 
-            return render_template('job_alerts.html', alerts=alerts, seeker_profile=seeker_profile)
+            matched_alerts = []
+            if seeker_profile and alerts:
+                for alert in alerts:
+                    if alert.get('Is_active'):
+                        filters = {
+                            'keyword': alert.get('Keyword'),
+                            'location': alert.get('Location'),
+                            'job_type': alert.get('Job_type') or 'All Types',
+                            'industry': alert.get('Industry'),
+                        }
+                        matches = JobPostingModel.search_jobs_for_seekers(
+                            filters, seeker_profile['Seekers_id'])[:3]
+                    else:
+                        matches = []
+                    matched_alerts.append({
+                        'alert': alert,
+                        'matches': matches,
+                        'count': len(matches),
+                    })
+
+            return render_template(
+                'job_alerts.html',
+                alerts=alerts,
+                matched_alerts=matched_alerts,
+                seeker_profile=seeker_profile,
+            )
 
         @self.blueprint.route('/job-alerts/create', methods=['POST'])
         def create_alert():
