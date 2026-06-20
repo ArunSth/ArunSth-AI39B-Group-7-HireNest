@@ -1,77 +1,223 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subscription Plans — HireNest</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-</head>
-<body>
-  <div class="dashboard-container">
-    {% include 'sidebar_employer.html' %}
-    <main class="main-content">
-      <div class="topbar">
-        <div>
-          <h2>Subscription Plans</h2>
-          <p>Choose a plan that fits your hiring needs.</p>
-        </div>
-      </div>
+{% extends 'employer_base.html' %}
 
-      <section class="section">
-        <div class="card-grid">
-          {% for plan in plans %}
-            <article class="company-card">
-              <div class="card-header">
-                <div>
-                  <h3>{{ plan.Plan_name }}</h3>
-                  <p>{{ plan.Description }}</p>
-                </div>
-              </div>
-              <div class="company-info">
-                <p><strong>Price:</strong> ${{ plan.Price }}</p>
-                <p><strong>Billing cycle:</strong> {{ plan.Billing_cycle }}</p>
-                <p><strong>Max job posts:</strong> {{ plan.Max_job_posts if plan.Max_job_posts else 'Unlimited' }}</p>
-                <p><strong>Features:</strong></p>
-                <ul>
-                  {% for feature in plan.Features %}
-                    <li>{{ feature[0] if feature is iterable and feature|length > 0 else feature }}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-              <form method="POST" class="action-row">
-                <input type="hidden" name="plan_id" value="{{ plan.Plan_id }}">
-                <button type="submit" class="btn-primary">Subscribe</button>
-              </form>
-            </article>
-          {% endfor %}
-        </div>
-      </section>
+{% block page_title %}Subscription Plans{% endblock %}
+{% block page_subtitle %}Choose a plan that fits your hiring needs.{% endblock %}
 
-      <section class="section">
-        <div class="company-card">
-          <div class="card-header">
-            <div>
-              <h3>Active Subscription</h3>
-            </div>
+{% block content %}
+<section class="subscription-shell">
+  <div class="subscription-hero">
+    <div>
+      <div class="eyebrow"><i class="fas fa-crown"></i> Growth options</div>
+      <h3>Subscription Plans</h3>
+      <p>Choose the plan that fits your hiring goals and keeps your employer workspace running smoothly.</p>
+    </div>
+  </div>
+
+  <div class="subscription-plans-grid">
+    {% for plan in plans %}
+      {% set plan_price_display =
+        'NPR 0/month' if plan.Plan_name == 'Free'
+        else 'NPR 4,000/month' if plan.Plan_name == 'Basic'
+        else 'NPR 8,000/month' if plan.Plan_name == 'Growth'
+        else 'NPR 13,500/month'
+      %}
+      <article class="subscription-plan-card {% if plan.Plan_name == 'Growth' %}subscription-plan-card--featured{% endif %}">
+        {% if plan.Plan_name == 'Growth' %}
+          <span class="subscription-plan-badge">Most Popular</span>
+        {% endif %}
+        <div class="subscription-plan-card__header">
+          <div>
+            <p class="subscription-plan-card__eyebrow">{{ plan.Billing_cycle|title }} plan</p>
+            <h3>{{ plan.Plan_name }}</h3>
           </div>
-          {% if active_subscription %}
-            <div class="company-info">
-              <p><strong>Plan:</strong> {{ active_subscription.Plan_name }}</p>
-              <p><strong>Price:</strong> ${{ active_subscription.Price }}</p>
-              <p><strong>Until:</strong> {{ active_subscription.End_date }}</p>
-              <p><strong>Status:</strong> {{ active_subscription.Status }}</p>
-              <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}">
-                <button type="submit" class="btn-secondary">Cancel Subscription</button>
-              </form>
-            </div>
-          {% else %}
-            <div class="company-info">
-              <p>You do not have an active subscription currently.</p>
-            </div>
+          <span class="subscription-plan-card__chip">{{ plan.Max_job_posts if plan.Max_job_posts else 'Unlimited' }} posts</span>
+        </div>
+        <p class="subscription-plan-card__description">{{ plan.Description }}</p>
+        <div class="subscription-plan-price-block">
+          <div class="subscription-plan-price">
+            {{ plan_price_display }}
+          </div>
+          {% if plan.Plan_name == 'Free' %}
+            <p class="subscription-plan-price-note">Forever Free</p>
           {% endif %}
         </div>
-      </section>
-    </main>
+        <ul class="subscription-plan-features">
+          {% for feature in plan.Features %}
+            <li>
+              <span><i class="fas fa-check"></i></span>
+              <span>{{ feature }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        <form method="POST" class="subscription-plan-form" id="subscription-form-{{ plan.Plan_id }}">
+          <input type="hidden" name="plan_id" value="{{ plan.Plan_id }}">
+          <button type="button" class="btn-primary subscription-plan-button subscription-open-modal"
+                  data-plan-id="{{ plan.Plan_id }}"
+                  data-plan-name="{{ plan.Plan_name }}"
+                  data-plan-price="{{ plan_price_display }}"
+                  data-plan-form="subscription-form-{{ plan.Plan_id }}">Subscribe</button>
+        </form>
+      </article>
+    {% endfor %}
   </div>
-</body>
-</html>
+</section>
+
+<div class="modal fade subscription-payment-modal" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <p class="subscription-modal-kicker">Secure Checkout</p>
+          <h5 class="modal-title" id="subscriptionModalLabel">Complete Subscription</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="subscription-modal-summary">
+          <div>
+            <span>Plan</span>
+            <strong id="modalPlanName">-</strong>
+          </div>
+          <div>
+            <span>Price</span>
+            <strong id="modalPlanPrice">-</strong>
+          </div>
+        </div>
+
+        <div class="subscription-modal-email">
+          <span>Email</span>
+          <strong id="modalEmployerEmail">{{ user.Email }}</strong>
+        </div>
+
+        <div class="subscription-method-group">
+          <label>Payment Method</label>
+          <div class="subscription-method-options">
+            <label class="subscription-method-option active">
+              <input type="radio" name="payment_method" value="eSewa" checked>
+              <span>eSewa</span>
+            </label>
+            <label class="subscription-method-option">
+              <input type="radio" name="payment_method" value="Khalti">
+              <span>Khalti</span>
+            </label>
+            <label class="subscription-method-option">
+              <input type="radio" name="payment_method" value="Card">
+              <span>Card</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="subscription-modal-status" id="subscriptionModalStatus" aria-live="polite"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="payNowButton">Pay Now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('subscriptionModal');
+    const modalPlanName = document.getElementById('modalPlanName');
+    const modalPlanPrice = document.getElementById('modalPlanPrice');
+    const modalEmployerEmail = document.getElementById('modalEmployerEmail');
+    const statusBox = document.getElementById('subscriptionModalStatus');
+    const payNowButton = document.getElementById('payNowButton');
+    const methodOptions = document.querySelectorAll('.subscription-method-option');
+    let pendingForm = null;
+
+    methodOptions.forEach((option) => {
+      option.addEventListener('click', function () {
+        methodOptions.forEach((item) => item.classList.remove('active'));
+        this.classList.add('active');
+        this.querySelector('input').checked = true;
+      });
+    });
+
+    document.querySelectorAll('.subscription-open-modal').forEach((button) => {
+      button.addEventListener('click', function () {
+        const bsModal = new bootstrap.Modal(modal);
+        modalPlanName.textContent = this.dataset.planName || '';
+        modalPlanPrice.textContent = this.dataset.planPrice || '';
+        modalEmployerEmail.textContent = '{{ user.Email }}';
+        statusBox.innerHTML = '';
+        payNowButton.disabled = false;
+        payNowButton.innerHTML = 'Pay Now';
+        pendingForm = document.getElementById(this.dataset.planForm);
+        bsModal.show();
+      });
+    });
+
+    payNowButton.addEventListener('click', function () {
+      if (!pendingForm) return;
+
+      payNowButton.disabled = true;
+      payNowButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing Payment...';
+      statusBox.innerHTML = '<div class="payment-processing"><span class="payment-spinner"></span><span>Processing Payment...</span></div>';
+
+      setTimeout(function () {
+        statusBox.innerHTML = '<div class="payment-success"><div class="payment-checkmark">✓</div><div><h6>Payment Successful</h6><p>Subscription Activated</p><small>Receipt sent to {{ user.Email }}</small></div></div>';
+        payNowButton.innerHTML = 'Pay Now';
+        payNowButton.disabled = false;
+
+        setTimeout(function () {
+          pendingForm.submit();
+        }, 700);
+      }, 2000);
+    });
+  });
+</script>
+
+<section class="section subscription-summary-section">
+  <div class="company-card subscription-summary-card">
+    <div class="card-header">
+      <div>
+        <h3>Active Subscription</h3>
+      </div>
+    </div>
+    {% if active_subscription %}
+      {% set active_price_display =
+        'NPR 0/month' if active_subscription.Plan_name == 'Free'
+        else 'NPR 4,000/month' if active_subscription.Plan_name == 'Basic'
+        else 'NPR 8,000/month' if active_subscription.Plan_name == 'Growth'
+        else 'NPR 13,500/month'
+      %}
+      <div class="company-info subscription-summary-body">
+        <div class="subscription-summary-row">
+          <span>Plan</span>
+          <strong>{{ active_subscription.Plan_name }}</strong>
+        </div>
+        <div class="subscription-summary-row">
+          <span>Price</span>
+          <strong>{{ active_price_display }}</strong>
+        </div>
+        <div class="subscription-summary-row">
+          <span>Until</span>
+          <strong>{{ active_subscription.End_date }}</strong>
+        </div>
+        <div class="subscription-summary-row">
+          <span>Status</span>
+          <strong>{{ active_subscription.Status }}</strong>
+        </div>
+        <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}" class="action-row">
+          <button type="submit" class="btn-secondary">Cancel Subscription</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="company-info subscription-empty-state">
+        <p>You do not have an active subscription currently.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_subscription.css') }}">
+{% endblock %}

@@ -1,17 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Post a New Job{% endblock %}
+{% block page_subtitle %}Create a new job posting for your team.{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Post a New Job</h2>
-      </div>
-    </div>
-
-    <div class="content">
       <div class="section" style="max-width: 900px;">
         <div class="table-container">
           <form method="POST" data-validate>

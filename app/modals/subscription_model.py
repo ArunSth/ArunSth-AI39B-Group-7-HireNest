@@ -17,10 +17,14 @@ class SubscriptionModel:
         ]
 
         default_data = [
-            ("Free", "Limited access for small teams.", 0.00, "monthly", 1, json.dumps(["1 job post", "Community support"])),
-            ("Basic", "Starter plan for small teams.", 29.99, "monthly", 5, json.dumps(default_features[0])),
-            ("Growth", "Expanded visibility and more job posts.", 59.99, "monthly", 15, json.dumps(default_features[1])),
-            ("Premium", "Unlimited posting plus premium support.", 99.99, "monthly", 0, json.dumps(default_features[2])),
+            ("Free", "Limited access for small teams.", 0.00, "monthly",
+             1, json.dumps(["1 job post", "Community support"])),
+            ("Basic", "Starter plan for small teams.", 29.99,
+             "monthly", 5, json.dumps(default_features[0])),
+            ("Growth", "Expanded visibility and more job posts.",
+             59.99, "monthly", 15, json.dumps(default_features[1])),
+            ("Premium", "Unlimited posting plus premium support.",
+             99.99, "monthly", 0, json.dumps(default_features[2])),
         ]
 
         conn = get_connection()
@@ -32,7 +36,8 @@ class SubscriptionModel:
                         INSERT INTO `Subscription_Plans` (`Plan_name`, `Description`, `Price`, `Billing_cycle`, `Max_job_posts`, `Features_json`)
                         VALUES (%s, %s, %s, %s, %s, %s)
                         """,
-                        (plan_name, description, price, billing_cycle, max_posts, features),
+                        (plan_name, description, price,
+                         billing_cycle, max_posts, features),
                     )
                 conn.commit()
         finally:
@@ -54,7 +59,8 @@ class SubscriptionModel:
                 for plan in plans:
                     if plan.get("Features_json"):
                         try:
-                            plan["Features"] = json.loads(plan["Features_json"])
+                            plan["Features"] = json.loads(
+                                plan["Features_json"])
                         except Exception:
                             plan["Features"] = []
                     else:
@@ -69,7 +75,8 @@ class SubscriptionModel:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT * FROM `Subscription_Plans` WHERE Plan_id = %s", (plan_id,)
+                    "SELECT * FROM `Subscription_Plans` WHERE Plan_id = %s", (
+                        plan_id,)
                 )
                 plan = cur.fetchone()
                 if plan and plan.get("Features_json"):
@@ -89,7 +96,8 @@ class SubscriptionModel:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT * FROM `Employer_Subscriptions` WHERE Subscription_id = %s", (subscription_id,)
+                    "SELECT * FROM `Employer_Subscriptions` WHERE Subscription_id = %s", (
+                        subscription_id,)
                 )
                 return cur.fetchone()
         finally:
@@ -186,7 +194,8 @@ class SubscriptionModel:
                     INSERT INTO `Employer_Subscriptions` (`Employee_id`, `Plan_id`, `Start_date`, `End_date`, `Status`, `Auto_renew`)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (employee_id, plan_id, start_date, end_date, 'active', auto_renew),
+                    (employee_id, plan_id, start_date,
+                     end_date, 'active', auto_renew),
                 )
                 conn.commit()
                 return cur.lastrowid
@@ -195,10 +204,12 @@ class SubscriptionModel:
 
     @staticmethod
     def record_payment(subscription_id, employee_id, amount, currency='USD', payment_method='card', transaction_reference=None, status='paid'):
-        if transaction_reference is None:
-            transaction_reference = f"txn_{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
+        payment_time = datetime.now()
 
-        paid_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        if transaction_reference is None:
+            transaction_reference = f"txn_{payment_time.strftime('%Y%m%d%H%M%S%f')}"
+
+        paid_at = payment_time.strftime('%Y-%m-%d %H:%M:%S')
         conn = get_connection()
         try:
             with conn.cursor() as cur:
@@ -207,7 +218,8 @@ class SubscriptionModel:
                     INSERT INTO `Payment_History` (`Subscription_id`, `Employee_id`, `Amount`, `Currency`, `Payment_method`, `Transaction_reference`, `Status`, `Paid_at`)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     """,
-                    (subscription_id, employee_id, amount, currency, payment_method, transaction_reference, status, paid_at),
+                    (subscription_id, employee_id, amount, currency,
+                     payment_method, transaction_reference, status, paid_at),
                 )
                 conn.commit()
                 return True

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>{{ assessment.Title }}</h2>
+        <p class="topbar-subtitle">{{ assessment.Description }}</p>
+      </div>
+    </div>
+
+    <div class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-banner flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="section">
+        <div class="info-grid">
+          <div class="info-tile">
+            <i class="fas fa-clock"></i>
+            <div>
+              <small>Duration</small>
+              <strong>{{ assessment.Duration_minutes }} minutes</strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-list-ol"></i>
+            <div>
+              <small>Questions</small>
+              <strong>{{ question_count }}</strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-star"></i>
+            <div>
+              <small>Total Marks</small>
+              <strong>{{ assessment.Total_marks }}</strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-trophy"></i>
+            <div>
+              <small>Passing Score</small>
+              <strong>{{ pass_percentage }}%</strong>
+            </div>
+          </div>
+        </div>
+
+        {% if last_attempt %}
+          <div class="callout callout-info" style="margin-top:18px;">
+            <strong>Your last attempt:</strong>
+            Score
+            {% if last_attempt.Score is not none %}
+              {{ "%.2f"|format(last_attempt.Score) }}%
+            {% else %}-{% endif %}
+            &nbsp;-&nbsp;
+            <span class="status-badge badge-{{ last_attempt.Status|lower }}">
+              {{ last_attempt.Status|replace('_',' ')|title }}
+            </span>
+            {% if last_attempt.Submitted_at %}
+              &nbsp;on {{ last_attempt.Submitted_at.strftime('%d %b %Y, %H:%M') }}
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="action-row" style="margin-top:24px;">
+          {% if allowed %}
+            <form action="{{ url_for('skill_assessment.start', assessment_id=assessment.Assessment_id) }}"
+                  method="post"
+                  onsubmit="return confirm('Ready to start? The timer will begin once you click Start.');">
+              <button type="submit" class="btn-primary">
+                <i class="fas fa-play"></i> Start Assessment
+              </button>
+            </form>
+          {% else %}
+            <button class="btn-primary" disabled>
+              <i class="fas fa-lock"></i>
+              Available after {{ next_available.strftime('%d %b %Y, %H:%M') }}
+            </button>
+          {% endif %}
+
+          <a href="{{ url_for('skill_assessment.index') }}" class="btn-small btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to list
+          </a>
+        </div>
+
+        <p class="footnote" style="margin-top:24px;">
+          <i class="fas fa-info-circle"></i>
+          Each attempt is timed. Once submitted, you must wait
+          <strong>{{ cooldown_days }} days</strong> before retaking
+          this assessment.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

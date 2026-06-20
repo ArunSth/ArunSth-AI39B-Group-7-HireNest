@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2><i class="fas fa-clipboard-check"></i> Assessment Result</h2>
+        <p class="topbar-subtitle">{{ attempt.Title }}</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+
+        <div class="result-hero">
+          {% if attempt.Status == 'passed' %}
+            <div class="result-circle pass">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <h3 class="result-title">Congratulations!</h3>
+            <p class="result-sub">You earned a verified badge for {{ attempt.Title }}.</p>
+          {% elif attempt.Status == 'failed' %}
+            <div class="result-circle fail">
+              <i class="fas fa-times"></i>
+            </div>
+            <h3 class="result-title">Not Passed</h3>
+            <p class="result-sub">You can retake this after the cooldown period.</p>
+          {% else %}
+            <div class="result-circle pending">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <h3 class="result-title">{{ attempt.Status|replace('_',' ')|title }}</h3>
+          {% endif %}
+
+          <div class="result-score">
+            {% if attempt.Score is not none %}
+              {{ "%.2f"|format(attempt.Score) }}%
+            {% else %}-{% endif %}
+          </div>
+          <p class="result-sub">
+            Passing score required: <strong>{{ pass_percentage }}%</strong>
+          </p>
+        </div>
+
+        <div class="info-grid" style="margin-top:24px;">
+          <div class="info-tile">
+            <i class="fas fa-calendar-alt"></i>
+            <div>
+              <small>Started</small>
+              <strong>
+                {% if attempt.Started_at %}
+                  {{ attempt.Started_at.strftime('%d %b %Y, %H:%M') }}
+                {% else %}-{% endif %}
+              </strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-flag-checkered"></i>
+            <div>
+              <small>Submitted</small>
+              <strong>
+                {% if attempt.Submitted_at %}
+                  {{ attempt.Submitted_at.strftime('%d %b %Y, %H:%M') }}
+                {% else %}-{% endif %}
+              </strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-clock"></i>
+            <div>
+              <small>Duration</small>
+              <strong>{{ attempt.Duration_minutes }} minutes</strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-redo"></i>
+            <div>
+              <small>Retake available</small>
+              <strong>
+                {% if allowed %}
+                  Now
+                {% else %}
+                  {{ next_available.strftime('%d %b %Y, %H:%M') }}
+                {% endif %}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row" style="margin-top:24px;">
+          <a href="{{ url_for('skill_assessment.index') }}" class="btn-small btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to assessments
+          </a>
+          {% if allowed %}
+            <a href="{{ url_for('skill_assessment.detail', assessment_id=attempt.Assessment_id) }}"
+               class="btn-primary">
+              <i class="fas fa-redo"></i> Retake
+            </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
