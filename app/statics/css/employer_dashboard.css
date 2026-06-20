@@ -1682,7 +1682,13 @@ table tbody tr:hover {
   color: #F97316;
 }
 
-.badge-accepted {
+.badge-shortlisted {
+  background: var(--surface-info-soft);
+  color: #3B82F6;
+}
+
+.badge-accepted,
+.badge-hired {
   background: var(--surface-success-soft);
   color: #22C55E;
 }
