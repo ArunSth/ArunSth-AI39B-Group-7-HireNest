@@ -8,6 +8,17 @@
 
 {% block content %}
       <div class="section">
+        <div id="confirm-modal" class="applicant-confirm-modal" hidden>
+          <div class="applicant-confirm-modal__dialog">
+            <h3 id="confirm-modal-title">Confirm action</h3>
+            <p id="confirm-modal-message"></p>
+            <div class="applicant-confirm-modal__actions">
+              <button type="button" id="confirm-modal-cancel" class="btn-secondary">Cancel</button>
+              <button type="button" id="confirm-modal-confirm" class="btn-primary">Confirm</button>
+            </div>
+          </div>
+        </div>
+
         <div class="table-container">
           <div class="table-responsive">
             {% if applicants %}
@@ -37,6 +48,10 @@
                   <td>
                     <div class="action-buttons">
                       <a href="/employer/applicant/{{ applicant.Application_id }}" class="btn-small btn-view">View</a>
+                      {% if (applicant.Status or '')|lower not in ['hired', 'rejected'] %}
+                      <button type="button" class="btn-small btn-success" onclick="openConfirmModal('hired', '{{ applicant.Application_id }}', '{{ applicant.First_name }} {{ applicant.Last_name }}', '{{ applicant.job_title if applicant.job_title else 'this position' }}')">Hire</button>
+                      <button type="button" class="btn-small btn-danger" onclick="openConfirmModal('rejected', '{{ applicant.Application_id }}', '{{ applicant.First_name }} {{ applicant.Last_name }}', '{{ applicant.job_title if applicant.job_title else 'this position' }}')">Reject</button>
+                      {% endif %}
                     </div>
                   </td>
                 </tr>
@@ -62,4 +77,57 @@
 {% block scripts %}
 <link rel="stylesheet" href="/static/css/employer_dashboard.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+  let pendingAction = null;
+
+  function openConfirmModal(action, applicationId, applicantName, jobTitle) {
+    const modal = document.getElementById('confirm-modal');
+    const title = document.getElementById('confirm-modal-title');
+    const message = document.getElementById('confirm-modal-message');
+    const confirmButton = document.getElementById('confirm-modal-confirm');
+
+    pendingAction = { action, applicationId };
+    title.textContent = action === 'hired' ? 'Confirm Hire' : 'Confirm Reject';
+    message.textContent = action === 'hired'
+      ? `Are you sure you want to hire ${applicantName} for ${jobTitle}? This will close the vacancy and notify the applicant.`
+      : `Are you sure you want to reject ${applicantName} for ${jobTitle}?`;
+    confirmButton.className = action === 'hired' ? 'btn-primary' : 'btn-danger';
+    confirmButton.textContent = action === 'hired' ? 'Confirm Hire' : 'Confirm Reject';
+    modal.hidden = false;
+  }
+
+  function closeConfirmModal() {
+    document.getElementById('confirm-modal').hidden = true;
+    pendingAction = null;
+  }
+
+  document.getElementById('confirm-modal-cancel')?.addEventListener('click', closeConfirmModal);
+  document.getElementById('confirm-modal')?.addEventListener('click', (event) => {
+    if (event.target.id === 'confirm-modal') {
+      closeConfirmModal();
+    }
+  });
+
+  document.getElementById('confirm-modal-confirm')?.addEventListener('click', () => {
+    if (!pendingAction) return;
+    const { action, applicationId } = pendingAction;
+    fetch(`/employer/applicant/${applicationId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: action })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        window.location.reload();
+      } else {
+        alert(data.message || 'Unable to update application status.');
+      }
+    })
+    .catch(() => {
+      alert('Something went wrong while updating the application.');
+    })
+    .finally(() => closeConfirmModal());
+  });
+</script>
 {% endblock %}
