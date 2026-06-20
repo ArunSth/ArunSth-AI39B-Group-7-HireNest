@@ -271,6 +271,22 @@ def create_all():
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 		""",
         """
+		CREATE TABLE IF NOT EXISTS `Admin_Profiles` (
+			`Admin_id` INT PRIMARY KEY AUTO_INCREMENT,
+			`User_id` INT NOT NULL UNIQUE,
+			`Display_name` VARCHAR(150),
+			`Department` VARCHAR(100),
+			`Access_level` VARCHAR(50) NOT NULL DEFAULT 'full',
+			`Bio` TEXT,
+			`Last_login_at` DATETIME,
+			`Is_active` BOOLEAN DEFAULT TRUE,
+			`Profile_completion_percentage` DECIMAL(5,2) DEFAULT 0.0,
+			`Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			`Updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			FOREIGN KEY (`User_id`) REFERENCES `User`(`User_id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+		""",
+        """
 		CREATE TABLE IF NOT EXISTS `Admin_Audit_Log` (
 			`Audit_id` INT PRIMARY KEY AUTO_INCREMENT,
 			`Admin_user_id` INT NOT NULL,
@@ -344,6 +360,41 @@ def _column_exists(cur, table_name, column_name):
     )
     row = cur.fetchone()
     return bool(row and row['cnt'] > 0)
+
+
+def seed_admin():
+    """Ensure a working admin@hirenest account always exists with the correct password."""
+    from werkzeug.security import generate_password_hash
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT User_id FROM `User` WHERE Email = %s", ('admin@hirenest',))
+            existing = cur.fetchone()
+            password_hash = generate_password_hash('HireNest123')
+
+            if existing:
+                # Force-fix the password every startup so it can never drift
+                cur.execute(
+                    "UPDATE `User` SET Password = %s, Role = 'admin' WHERE User_id = %s",
+                    (password_hash, existing['User_id'])
+                )
+                user_id = existing['User_id']
+            else:
+                cur.execute(
+                    "INSERT INTO `User` (First_name, Last_name, Email, Password, Role) VALUES (%s,%s,%s,%s,%s)",
+                    ('Admin', '', 'admin@hirenest', password_hash, 'admin')
+                )
+                user_id = cur.lastrowid
+
+            cur.execute("SELECT Admin_id FROM `Admin_Profiles` WHERE User_id = %s", (user_id,))
+            if not cur.fetchone():
+                cur.execute(
+                    "INSERT INTO `Admin_Profiles` (User_id, Display_name, Department, Access_level, Is_active) VALUES (%s,%s,%s,%s,%s)",
+                    (user_id, 'Admin', 'Management', 'full', True)
+                )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def run_migrations():
