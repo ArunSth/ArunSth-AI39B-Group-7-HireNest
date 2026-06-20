@@ -1,0 +1,432 @@
+/* ===================================================================
+   features.css
+   Shared styles for the new Application Tracking + Skill Assessment
+   pages.  Loaded on demand via {% block scripts %} in those templates.
+   =================================================================== */
+
+/* --- Generic helpers ------------------------------------------------- */
+.section-title{
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 14px;
+  color: var(--text-primary, #1f2937);
+}
+
+.empty-state{
+  background: var(--card-bg, #fff);
+  border: 1px dashed #cbd5e1;
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.footnote{
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.flash-banner{
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 0.92rem;
+}
+.flash-success { background:#dcfce7; color:#166534; }
+.flash-error,
+.flash-danger  { background:#fee2e2; color:#991b1b; }
+.flash-info    { background:#dbeafe; color:#1e40af; }
+
+/* --- Card grid (assessments listing) -------------------------------- */
+.card-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.assessment-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+.assessment-card .card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.assessment-card h4{
+  margin:0;
+  font-size: 1.05rem;
+  color:#111827;
+}
+.assessment-card .card-desc{
+  font-size:0.88rem;
+  color:#4b5563;
+  min-height: 40px;
+}
+.assessment-card .card-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 12px;
+  font-size:0.8rem;
+  color:#6b7280;
+}
+.assessment-card .card-meta i{ margin-right:4px; }
+.assessment-card .card-actions{ margin-top: auto; }
+
+/* --- Info tiles ----------------------------------------------------- */
+.info-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+.info-tile{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display:flex;
+  align-items:center;
+  gap: 12px;
+}
+.info-tile i{
+  font-size: 1.4rem;
+  color:#2563eb;
+  background:#dbeafe;
+  width: 40px; height:40px;
+  border-radius: 10px;
+  display:flex; align-items:center; justify-content:center;
+}
+.info-tile small{
+  display:block;
+  font-size:0.75rem;
+  color:#6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.info-tile strong{ font-size:0.98rem; color:#111827; }
+
+/* --- Status badges -------------------------------------------------- */
+.status-badge{
+  display:inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.badge-pending,
+.badge-applied        { background:#fef3c7; color:#92400e; }
+.badge-under_review   { background:#dbeafe; color:#1e40af; }
+.badge-shortlisted    { background:#e0e7ff; color:#3730a3; }
+.badge-accepted,
+.badge-hired,
+.badge-passed         { background:#dcfce7; color:#166534; }
+.badge-rejected,
+.badge-failed         { background:#fee2e2; color:#991b1b; }
+.badge-withdrawn      { background:#f3f4f6; color:#374151; }
+.badge-in_progress    { background:#fef3c7; color:#92400e; }
+.badge-submitted      { background:#dbeafe; color:#1e40af; }
+
+/* --- Buttons -------------------------------------------------------- */
+.btn-primary{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration:none;
+}
+.btn-primary:hover{ background:#1d4ed8; }
+.btn-primary[disabled]{ background:#9ca3af; cursor: not-allowed; }
+.btn-danger{
+  display: inline-flex;
+  align-items:center;
+  gap:6px;
+  background:#dc2626;
+  color:#fff;
+  border:none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.btn-danger:hover{ background:#b91c1c; }
+
+.action-row{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+/* --- Take-test page -------------------------------------------------- */
+.timer-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#fef2f2;
+  color:#b91c1c;
+  border:1px solid #fecaca;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.question-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+.question-card .question-head{
+  display:flex;
+  justify-content:space-between;
+  font-size: 0.8rem;
+  color:#6b7280;
+  margin-bottom: 6px;
+}
+.question-card .q-no{ font-weight: 700; color:#2563eb; }
+.question-card .q-text{
+  font-size: 1rem;
+  color:#111827;
+  margin: 4px 0 12px;
+}
+.q-options{
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+}
+.q-option{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.q-option:hover{ background:#f9fafb; }
+.q-option input{ accent-color: #2563eb; }
+
+/* --- Result hero ---------------------------------------------------- */
+.result-hero{
+  text-align: center;
+  padding: 24px 0 8px;
+}
+.result-circle{
+  width:96px; height:96px;
+  border-radius:50%;
+  margin: 0 auto 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 2.4rem;
+  color:#fff;
+}
+.result-circle.pass    { background: linear-gradient(135deg,#22c55e,#16a34a); }
+.result-circle.fail    { background: linear-gradient(135deg,#ef4444,#b91c1c); }
+.result-circle.pending { background: linear-gradient(135deg,#f59e0b,#d97706); }
+.result-title{ margin: 0; font-size: 1.4rem; color:#111827; }
+.result-sub{ color:#6b7280; margin-top: 4px; }
+.result-score{
+  font-size: 3rem;
+  font-weight: 800;
+  color:#2563eb;
+  margin-top: 12px;
+}
+
+/* --- Tracking dashboard --------------------------------------------- */
+.live-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  background:#ecfdf5;
+  color:#047857;
+  border: 1px solid #a7f3d0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.live-pill .dot{
+  width: 8px; height:8px;
+  background:#10b981;
+  border-radius: 50%;
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse{
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+.stats-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.stat-tile{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-tile small{
+  color:#6b7280;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+}
+.stat-tile strong{
+  display:block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-top: 4px;
+  color:#111827;
+}
+.stat-tile.total    strong { color:#2563eb; }
+.stat-tile.pending  strong { color:#d97706; }
+.stat-tile.under_review strong { color:#1d4ed8; }
+.stat-tile.shortlisted strong { color:#4f46e5; }
+.stat-tile.hired    strong { color:#16a34a; }
+.stat-tile.rejected strong { color:#b91c1c; }
+.stat-tile.withdrawn strong { color:#374151; }
+
+/* --- Timeline ------------------------------------------------------- */
+.timeline{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  position: relative;
+  padding: 14px 0;
+}
+.timeline::before{
+  content:"";
+  position:absolute;
+  top: 32px;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  background:#e5e7eb;
+  z-index: 0;
+}
+.timeline-step{
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+}
+.step-dot{
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background:#e5e7eb;
+  color:#6b7280;
+  margin: 0 auto 8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 1.1rem;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+.step-label{
+  font-size: 0.82rem;
+  color:#6b7280;
+  font-weight: 600;
+}
+.timeline-step.done .step-dot{
+  background:#16a34a; color:#fff;
+  box-shadow: 0 0 0 1px #16a34a;
+}
+.timeline-step.done .step-label{ color:#16a34a; }
+.timeline-step.current .step-dot{
+  background:#2563eb; color:#fff;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+.timeline-step.current .step-label{ color:#2563eb; }
+.timeline-step.rejected .step-dot{
+  background:#dc2626; color:#fff;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+.timeline-step.rejected .step-label{ color:#dc2626; }
+.timeline-step.withdrawn .step-dot{
+  background:#6b7280; color:#fff;
+  box-shadow: 0 0 0 1px #6b7280;
+}
+.timeline-step.withdrawn .step-label{ color:#6b7280; }
+
+/* --- Callouts ------------------------------------------------------- */
+.callout{
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+.callout-info{ background:#eff6ff; color:#1e40af; border-left: 4px solid #2563eb; }
+.callout-warn{ background:#fffbeb; color:#92400e; border-left: 4px solid #f59e0b; }
+
+/* --- Cover letter --------------------------------------------------- */
+.cover-letter-block{
+  margin-top: 18px;
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.cover-letter-block h4{ margin: 0 0 6px; font-size:0.95rem; color:#374151; }
+.cover-letter-block p{
+  margin: 0;
+  color: #4b5563;
+  white-space: pre-wrap;
+  font-size: 0.92rem;
+}
+
+/* --- Misc ----------------------------------------------------------- */
+.muted{ color:#9ca3af; }
+.badge.badge-passed{
+  background:#dcfce7; color:#166534;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.badge.badge-failed{ background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:999px; font-size:0.72rem; font-weight:600; }
+.badge.badge-pending{ background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:999px; font-size:0.72rem; font-weight:600; }
+
+.btn-small{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn-small.btn-view      { background:#eff6ff; color:#1e40af; border-color:#bfdbfe; }
+.btn-small.btn-view:hover{ background:#dbeafe; }
+.btn-small.btn-primary   { background:#2563eb; color:#fff; }
+.btn-small.btn-primary:hover{ background:#1d4ed8; }
+.btn-small.btn-secondary { background:#f3f4f6; color:#374151; border-color:#e5e7eb; }
+.btn-small.btn-secondary:hover{ background:#e5e7eb; }
+.btn-small.btn-danger    { background:#fee2e2; color:#991b1b; border-color:#fecaca; }
+.btn-small.btn-danger:hover{ background:#fecaca; }

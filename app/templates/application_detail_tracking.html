@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+{% set status_lower = (application.Status or 'pending')|lower %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>{{ application.job_title }}</h2>
+        <p class="topbar-subtitle">
+          {{ application.Company_name }}
+          {% if application.Location %} &middot; {{ application.Location }}{% endif %}
+        </p>
+      </div>
+      <div class="topbar-right">
+        <span class="status-badge badge-{{ status_lower }}">
+          {{ application.Status|replace('_',' ')|title }}
+        </span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-banner flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Timeline ------------------------------------------------------ -->
+      <div class="section">
+        <h3 class="section-title">Application Timeline</h3>
+
+        {% set steps = [
+            ('pending',       'Applied',        'fa-paper-plane'),
+            ('under_review',  'Under Review',   'fa-search'),
+            ('shortlisted',   'Shortlisted',    'fa-star'),
+            ('accepted',      'Offer / Hired',  'fa-handshake'),
+        ] %}
+        {% set order = {'pending':1,'under_review':2,'shortlisted':3,'accepted':4,'hired':4,'rejected':4,'withdrawn':4} %}
+        {% set current = order.get(status_lower, 1) %}
+
+        <div class="timeline">
+          {% for code, label, icon in steps %}
+            {% set step_order = loop.index %}
+            <div class="timeline-step
+                       {% if step_order < current %}done
+                       {% elif step_order == current %}current
+                       {% endif %}
+                       {% if status_lower == 'rejected' and step_order == current %}rejected{% endif %}
+                       {% if status_lower == 'withdrawn' and step_order == current %}withdrawn{% endif %}">
+              <div class="step-dot"><i class="fas {{ icon }}"></i></div>
+              <div class="step-label">{{ label }}</div>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if status_lower in ['rejected','withdrawn'] %}
+          <p class="callout callout-warn" style="margin-top:18px;">
+            This application is closed
+            ({{ application.Status|replace('_',' ')|title }}).
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- Application info -------------------------------------------- -->
+      <div class="section">
+        <h3 class="section-title">Application Info</h3>
+        <div class="info-grid">
+          <div class="info-tile">
+            <i class="fas fa-calendar-alt"></i>
+            <div>
+              <small>Applied On</small>
+              <strong>
+                {% if application.Applied_at %}
+                  {{ application.Applied_at.strftime('%d %b %Y, %H:%M') }}
+                {% else %}-{% endif %}
+              </strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-dollar-sign"></i>
+            <div>
+              <small>Salary</small>
+              <strong>
+                {% if application.Salary %}
+                  ₹{{ "{:,.0f}".format(application.Salary) }}
+                {% else %}Not specified{% endif %}
+              </strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-briefcase"></i>
+            <div>
+              <small>Job Status</small>
+              <strong>{{ application.job_status or '-' }}</strong>
+            </div>
+          </div>
+          <div class="info-tile">
+            <i class="fas fa-file-alt"></i>
+            <div>
+              <small>Resume Submitted</small>
+              <strong>
+                {% if application.Resume %}
+                  <a href="{{ url_for('download_file', filename=application.Resume) }}"
+                     target="_blank">View</a>
+                {% else %}-{% endif %}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        {% if application.Cover_letter %}
+        <div class="cover-letter-block">
+          <h4>Cover Letter</h4>
+          <p>{{ application.Cover_letter }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Interviews -------------------------------------------------- -->
+      {% if interviews %}
+      <div class="section">
+        <h3 class="section-title">Interviews</h3>
+        <div class="table-container">
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Time</th><th>Mode</th><th>Link</th><th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for iv in interviews %}
+                <tr>
+                  <td>{{ iv.Interview_date.strftime('%d %b %Y') if iv.Interview_date else '-' }}</td>
+                  <td>{{ iv.Interview_time or '-' }}</td>
+                  <td>{{ iv.Mode or '-' }}</td>
+                  <td>
+                    {% if iv.Meeting_link %}
+                      <a href="{{ iv.Meeting_link }}" target="_blank">Join</a>
+                    {% else %}-{% endif %}
+                  </td>
+                  <td><span class="status-badge badge-{{ (iv.Status or 'pending')|lower }}">
+                    {{ iv.Status or 'Pending' }}
+                  </span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Actions ----------------------------------------------------- -->
+      <div class="section action-row">
+        <a href="{{ url_for('application_tracking.track') }}" class="btn-small btn-secondary">
+          <i class="fas fa-arrow-left"></i> Back
+        </a>
+        {% if status_lower not in ['rejected','hired','withdrawn'] %}
+          <form method="post"
+                action="{{ url_for('application_tracking.withdraw', application_id=application.Application_id) }}"
+                onsubmit="return confirm('Are you sure you want to withdraw this application? This cannot be undone.');">
+            <button type="submit" class="btn-danger">
+              <i class="fas fa-times"></i> Withdraw Application
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

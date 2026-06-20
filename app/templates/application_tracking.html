@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2><i class="fas fa-tasks"></i> Application Tracking</h2>
+        <p class="topbar-subtitle">
+          Live view of every application you've submitted.
+        </p>
+      </div>
+      <div class="topbar-right">
+        <span class="live-pill">
+          <span class="dot"></span> Live
+        </span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="flash-banner flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Status overview tiles -->
+      <div class="stats-grid">
+        <div class="stat-tile total">
+          <small>Total</small>
+          <strong>{{ counts.total }}</strong>
+        </div>
+        <div class="stat-tile pending">
+          <small>Applied</small>
+          <strong>{{ counts.pending }}</strong>
+        </div>
+        <div class="stat-tile under_review">
+          <small>Under Review</small>
+          <strong>{{ counts.under_review }}</strong>
+        </div>
+        <div class="stat-tile shortlisted">
+          <small>Shortlisted</small>
+          <strong>{{ counts.shortlisted }}</strong>
+        </div>
+        <div class="stat-tile hired">
+          <small>Hired</small>
+          <strong>{{ counts.hired + counts.accepted }}</strong>
+        </div>
+        <div class="stat-tile rejected">
+          <small>Rejected</small>
+          <strong>{{ counts.rejected }}</strong>
+        </div>
+        <div class="stat-tile withdrawn">
+          <small>Withdrawn</small>
+          <strong>{{ counts.withdrawn }}</strong>
+        </div>
+      </div>
+
+      <!-- Applications table -->
+      <div class="section">
+        <h3 class="section-title">My Applications</h3>
+
+        {% if applications %}
+        <div class="table-container">
+          <div class="table-responsive">
+            <table id="apps-table">
+              <thead>
+                <tr>
+                  <th>Company</th>
+                  <th>Position</th>
+                  <th>Location</th>
+                  <th>Applied</th>
+                  <th>Next Interview</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for app in applications %}
+                <tr data-application-id="{{ app.Application_id }}">
+                  <td><strong>{{ app.Company_name }}</strong></td>
+                  <td>{{ app.job_title }}</td>
+                  <td>{{ app.Location or '-' }}</td>
+                  <td>
+                    {% if app.Applied_at %}
+                      {{ app.Applied_at.strftime('%d %b %Y') }}
+                    {% else %}-{% endif %}
+                  </td>
+                  <td>
+                    {% if app.next_interview_date %}
+                      {{ app.next_interview_date.strftime('%d %b %Y') }}
+                      {% if app.next_interview_time %}
+                        @ {{ app.next_interview_time }}
+                      {% endif %}
+                    {% else %}
+                      <span class="muted">Not scheduled</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="status-badge badge-{{ app.Status|lower }} app-status-cell">
+                      {{ app.Status|replace('_',' ')|title }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <a href="{{ url_for('application_tracking.detail', application_id=app.Application_id) }}"
+                         class="btn-small btn-view">
+                        <i class="fas fa-eye"></i> Details
+                      </a>
+                      {% if app.Status|lower not in ['rejected','hired','withdrawn'] %}
+                        <form method="post"
+                              action="{{ url_for('application_tracking.withdraw', application_id=app.Application_id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Withdraw this application?');">
+                          <button type="submit" class="btn-small btn-danger">
+                            <i class="fas fa-times"></i> Withdraw
+                          </button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% else %}
+          <p class="empty-state">
+            You haven't applied to any jobs yet.
+            <a href="{{ url_for('seeker_jobs.index') }}">Browse jobs &rarr;</a>
+          </p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Live status polling -------------------------------------------
+  // Polls /seeker/applications/status-feed every 30 seconds, flashes a
+  // banner whenever any application's status has changed since last poll.
+  (function () {
+    var FEED_URL = "{{ url_for('application_tracking.status_feed') }}";
+    var lastSnapshot = {};
+
+    function makeBanner(text) {
+      var b = document.createElement('div');
+      b.className = 'flash-banner flash-info';
+      b.textContent = text;
+      var content = document.querySelector('.content');
+      if (content) content.insertBefore(b, content.firstChild);
+      setTimeout(function () {
+        if (b.parentNode) b.parentNode.removeChild(b);
+      }, 6000);
+    }
+
+    function poll() {
+      fetch(FEED_URL, { credentials: 'same-origin' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (json) {
+          if (!json || json.status !== 'success') return;
+          var first = Object.keys(lastSnapshot).length === 0;
+          json.data.forEach(function (item) {
+            var prev = lastSnapshot[item.application_id];
+            if (prev && prev !== item.status && !first) {
+              makeBanner(
+                'Status updated: "' + item.job_title +
+                '" at ' + item.company_name +
+                ' \u2192 ' + item.status.replace('_',' ').toUpperCase()
+              );
+              // Update the cell visually
+              var row = document.querySelector(
+                'tr[data-application-id="' + item.application_id + '"]'
+              );
+              if (row) {
+                var cell = row.querySelector('.app-status-cell');
+                if (cell) {
+                  cell.className =
+                    'status-badge badge-' + item.status.toLowerCase() +
+                    ' app-status-cell';
+                  cell.textContent =
+                    item.status.replace('_',' ').replace(/\b\w/g,
+                      function (l){ return l.toUpperCase(); });
+                }
+              }
+            }
+            lastSnapshot[item.application_id] = item.status;
+          });
+        })
+        .catch(function () { /* swallow polling errors */ });
+    }
+    poll();
+    setInterval(poll, 30000);
+  })();
+</script>
+{% endblock %}

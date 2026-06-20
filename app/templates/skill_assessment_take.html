@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/features.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2><i class="fas fa-pencil-alt"></i> {{ assessment.Title }}</h2>
+        <p class="topbar-subtitle">Answer all questions and click Submit when finished.</p>
+      </div>
+      <div class="topbar-right">
+        <div id="timer" class="timer-badge">
+          <i class="fas fa-clock"></i>
+          <span id="timer-text">--:--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+
+        <form id="assessment-form"
+              method="post"
+              action="{{ url_for('skill_assessment.take', attempt_id=attempt.Attempt_id) }}">
+
+          {% for q in questions %}
+          <div class="question-card">
+            <div class="question-head">
+              <span class="q-no">Q{{ loop.index }}.</span>
+              <span class="q-marks">{{ q.Marks }} mark{{ 's' if q.Marks != 1 else '' }}</span>
+            </div>
+            <p class="q-text">{{ q.Question_text }}</p>
+            <div class="q-options">
+              {% for opt in q.options %}
+                <label class="q-option">
+                  <input type="radio"
+                         name="q_{{ q.Question_id }}"
+                         value="{{ opt }}"
+                         required />
+                  <span>{{ opt }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+
+          <div class="action-row" style="margin-top:24px;">
+            <button type="submit" class="btn-primary" id="submit-btn">
+              <i class="fas fa-check"></i> Submit Assessment
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Countdown timer ------------------------------------------------
+  (function () {
+    var minutes = {{ assessment.Duration_minutes or 15 }};
+    var total = minutes * 60;
+    var el = document.getElementById('timer-text');
+    var form = document.getElementById('assessment-form');
+    var submitted = false;
+
+    function tick() {
+      if (submitted) return;
+      var m = Math.floor(total / 60);
+      var s = total % 60;
+      el.textContent =
+        (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+      if (total <= 0) {
+        submitted = true;
+        alert("Time's up! Your answers will be submitted automatically.");
+        // Bypass the 'required' attribute on auto-submit so blank answers
+        // are accepted (they'll be marked wrong, but the attempt is saved)
+        form.noValidate = true;
+        form.submit();
+        return;
+      }
+      total -= 1;
+      setTimeout(tick, 1000);
+    }
+    tick();
+
+    form.addEventListener('submit', function () {
+      submitted = true;
+      var btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    });
+  })();
+</script>
+{% endblock %}

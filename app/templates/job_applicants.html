@@ -1,20 +1,12 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Applicants for Job ID: {{ job_id }}{% endblock %}
+{% block page_subtitle %}Review all applicants for this job posting.{% endblock %}
+{% block topbar_right %}
+  <a href="/employer/jobs" class="btn-secondary">Back to Jobs</a>
+{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Applicants for Job ID: {{ job_id }}</h2>
-      </div>
-      <div class="topbar-right">
-        <a href="/employer/jobs" class="btn-secondary">Back to Jobs</a>
-      </div>
-    </div>
-
-    <div class="content">
       <div class="section">
         <div class="table-container">
           <div class="table-responsive">
