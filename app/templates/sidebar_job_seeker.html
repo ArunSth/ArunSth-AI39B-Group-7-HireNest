@@ -16,17 +16,17 @@
       <span>Dashboard</span>
     </a>
 
-    <a href="{{ url_for('job_posting.browse_jobs') }}"
+    <a href="{{ url_for('seeker_jobs.index') }}"
        class="nav-item {% if request.path == '/jobs' or request.path.startswith('/seeker/jobs') %}active{% endif %}">
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>
 
-    <a href="{{ url_for('job_posting.saved_jobs') }}"
+    <a href="{{ url_for('seeker_jobs.saved_jobs') }}"
        class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
       <i class="fas fa-bookmark"></i>
       <span>Saved Jobs</span>
-    <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item {% if request.path.startswith('/seeker/jobs') %}active{% endif %}">
+    </a>
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>

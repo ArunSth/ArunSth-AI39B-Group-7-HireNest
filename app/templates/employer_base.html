@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block page_title %}Employer Workspace - HireNest{% endblock %}</title>
+  <script>
+    try {
+      localStorage.setItem('theme', 'light');
+      document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  </script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
   {% block extra_css %}{% endblock %}
@@ -30,7 +38,7 @@
     </div>
 
     <div class="employer-navbar__theme">
-      <button type="button" id="theme-toggle" class="employer-theme-toggle" aria-label="Toggle theme">
+      <button type="button" id="theme-toggle" class="employer-theme-toggle" aria-label="Toggle theme" style="display:none;">
         <i class="fa-solid fa-sun"></i>
       </button>
     </div>
