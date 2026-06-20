@@ -19,7 +19,6 @@
         <span>Dashboard</span>
       </a>
       <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item">
-      <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item">
         <i class="fas fa-briefcase"></i>
         <span>Search Opportunities</span>
       </a>
@@ -40,7 +39,6 @@
         <span>Company Reviews</span>
       </a>
       <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
-      <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item">
         <i class="fas fa-bookmark"></i>
         <span>Saved Jobs</span>
       </a>
@@ -51,10 +49,6 @@
       <a href="{{ url_for('messages.index') }}" class="nav-item">
         <i class="fas fa-headset"></i>
         <span>Messages</span>
-      </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
       </a>
       <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
         <i class="fas fa-sign-out-alt"></i>
@@ -87,13 +81,8 @@
           </div>
           <div class="seeker-quick-actions">
             <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
-            <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--primary">
               <i class="fas fa-search"></i>
               <span>Search Opportunities</span>
-            </a>
-            <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="seeker-action seeker-action--secondary">
-              <i class="fas fa-bookmark"></i>
-              <span>Saved Jobs</span>
             </a>
             <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--secondary">
               <i class="fas fa-user-edit"></i>
@@ -224,13 +213,8 @@
               <div class="seeker-empty-block">
                 <h3>No recent applications yet</h3>
                 <p>Search opportunities and apply when you find the right fit.</p>
-                <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
-                <a href="{{ url_for('job_posting.browse_jobs') }}" class="seeker-action seeker-action--secondary">Search Opportunities</a>
               </div>
-              {% endif %}
-            </div>
 
-            <div class="seeker-panel">
               <div class="seeker-panel-heading">
                 <div>
                   <span class="seeker-kicker">Recommended jobs</span>
@@ -255,6 +239,7 @@
                 <p>Recommendations will appear here as your activity grows.</p>
               </div>
               {% endif %}
+            {% endif %}
             </div>
           </div>
 
@@ -297,7 +282,7 @@
               <div class="seeker-panel-heading seeker-panel-heading--compact">
                 <div>
                   <span class="seeker-kicker">Recent activity</span>
-                  <h2>Activity</h2>
+                
                 </div>
               </div>
               {% if recent_activities %}

@@ -30,6 +30,11 @@
       <i class="fas fa-video"></i>
       <span>Interviews</span>
     </a>
+    <a href="{{ url_for('messages.index') }}" class="nav-item {% if request.path.startswith('/messages') %}active{% endif %}">
+      <i class="fas fa-comments"></i>
+      <span>Messages</span>
+    </a>
+    <a href="/employer/subscription-plans" class="nav-item {% if 'subscription-plans' in request.path %}active{% endif %}">
     <a href="{{ url_for('subscriptions.plans') }}" class="nav-item {% if '/employer/subscription-plans' in request.path %}active{% endif %}">
       <i class="fas fa-credit-card"></i>
       <span>Subscription Plans</span>

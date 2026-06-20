@@ -2,39 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">
-        <i class="fas fa-user"></i>
-      </div>
-      <div class="sidebar-logo-text">
-        <h3>HireNest</h3>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span>Applications</span>
-      </a>
-      <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item active">
-        <i class="fas fa-video"></i>
-        <span>Interviews</span>
-      </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
-        <i class="fas fa-user"></i>
-        <span>My Profile</span>
-      </a>
-      <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
+  {% include 'sidebar_job_seeker.html' %}
 
   <div class="main-content">
     <div class="topbar">
@@ -44,7 +12,8 @@
     </div>
 
     <div class="content">
-      <div class="section">
+      <div class="seeker-dashboard-shell">
+        <div class="section">
         <div class="table-container">
           <div class="table-responsive">
             {% if interviews %}

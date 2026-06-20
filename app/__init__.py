@@ -3,8 +3,10 @@ import os
 import config
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 
 db = SQLAlchemy()
+mail = Mail()
 
 from app.routes.forgetpasswordroutes import ForgetPasswordRoutes
 from app.routes.logoutroutes import LogoutRoutes
@@ -39,6 +41,7 @@ def create_app():
 
     # 🔥 INIT DATABASE (THIS WAS MISSING)
     db.init_app(app)
+    mail.init_app(app)
 
     # Register Blueprints
     app.register_blueprint(LoginRoutes().login())
