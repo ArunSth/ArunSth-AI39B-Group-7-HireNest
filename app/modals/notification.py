@@ -42,6 +42,24 @@ class NotificationModel:
             conn.close()
 
     @staticmethod
+    def get_notification(notification_id, user_id):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT *
+                    FROM `Notification`
+                    WHERE `Notification_id` = %s
+                      AND `User_id` = %s
+                    """,
+                    (notification_id, user_id),
+                )
+                return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
     def send_announcement(subject, message, audience, db):
         """
         audience: 'all' | 'Job Seeker' | 'Employer'

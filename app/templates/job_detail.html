@@ -1,22 +1,14 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}{{ job.Title }}{% endblock %}
+{% block page_subtitle %}View job details and manage updates.{% endblock %}
+{% block topbar_right %}
+  <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-primary">
+    <i class="fas fa-edit"></i> Edit Job
+  </a>
+{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>{{ job.Title }}</h2>
-      </div>
-      <div class="topbar-right">
-        <a href="/employer/jobs/{{ job.Job_id }}/edit" class="btn-primary">
-          <i class="fas fa-edit"></i> Edit Job
-        </a>
-      </div>
-    </div>
-
-    <div class="content">
       <div style="max-width: 900px;">
         <!-- Job Header -->
         <div class="table-container" style="margin-bottom: 30px;">

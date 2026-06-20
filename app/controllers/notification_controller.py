@@ -11,6 +11,15 @@ class NotificationController:
         return NotificationModel.get_notifications(user_id)
 
     @staticmethod
+    def fetch_recent_notifications(user_id, limit=5):
+        notifications = NotificationModel.get_notifications(user_id)
+        return notifications[:limit] if notifications else []
+
+    @staticmethod
+    def get_notification(notification_id, user_id):
+        return NotificationModel.get_notification(notification_id, user_id)
+
+    @staticmethod
     def unread_count(user_id):
         return NotificationModel.unread_count(user_id)
 

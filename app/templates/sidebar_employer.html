@@ -1,43 +1,49 @@
 <aside class="sidebar">
-  <div class="sidebar-logo">
+  <a href="{{ url_for('employer.dashboard') }}" class="sidebar-logo sidebar-logo--employer">
     <div class="sidebar-logo-icon">
       <i class="fas fa-building"></i>
     </div>
     <div class="sidebar-logo-text">
       <h3>HireNest</h3>
+      <p>Employer hub</p>
     </div>
-  </div>
+  </a>
 
   <nav class="sidebar-nav">
-    <a href="/employer/dashboard" class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
+    <a href="{{ url_for('employer.dashboard') }}" class="nav-item {% if request.path == url_for('employer.dashboard') %}active{% endif %}">
       <i class="fas fa-home"></i>
       <span>Dashboard</span>
     </a>
-    <a href="/employer/profile" class="nav-item {% if 'profile' in request.path%}active{% endif %}">
+    <a href="{{ url_for('employer.profile') }}" class="nav-item {% if request.path == url_for('employer.profile') %}active{% endif %}">
       <i class="fas fa-building"></i>
       <span>Company Profile</span>
     </a>
-    <a href="/employer/jobs" class="nav-item {% if 'jobs' in request.path and 'interview'not in request.path%}active{% endif %}">
+    <a href="{{ url_for('job_posting.list_jobs') }}" class="nav-item {% if '/employer/jobs' in request.path %}active{% endif %}">
       <i class="fas fa-briefcase"></i>
-      <span>Manage jobs</span>
+      <span>Manage Jobs</span>
     </a>
-    <a href="/employer/applicants" class="nav-item {% if 'applicants' in request.path %}active{% endif %}">
+    <a href="{{ url_for('applicant.list_applicants') }}" class="nav-item {% if '/employer/applicants' in request.path %}active{% endif %}">
       <i class="fas fa-users"></i>
       <span>Applicants</span>
     </a>
-    <a href="/employer/interviews" class="nav-item {% if 'interview' in request.path %}active{% endif %}">
+    <a href="{{ url_for('interview.list_interviews') }}" class="nav-item {% if '/employer/interviews' in request.path %}active{% endif %}">
       <i class="fas fa-video"></i>
       <span>Interviews</span>
     </a>
+    <a href="{{ url_for('messages.index') }}" class="nav-item {% if request.path.startswith('/messages') %}active{% endif %}">
+      <i class="fas fa-comments"></i>
+      <span>Messages</span>
+    </a>
     <a href="/employer/subscription-plans" class="nav-item {% if 'subscription-plans' in request.path %}active{% endif %}">
+    <a href="{{ url_for('subscriptions.plans') }}" class="nav-item {% if '/employer/subscription-plans' in request.path %}active{% endif %}">
       <i class="fas fa-credit-card"></i>
       <span>Subscription Plans</span>
     </a>
-    <a href="/employer/payment-history" class="nav-item {% if 'payment-history' in request.path %}active{% endif %}">
+    <a href="{{ url_for('subscriptions.payment_history') }}" class="nav-item {% if '/employer/payment-history' in request.path %}active{% endif %}">
       <i class="fas fa-receipt"></i>
       <span>Payment History</span>
     </a>
-    <a href="/logout" class="nav-item">
+    <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
       <i class="fas fa-sign-out-alt"></i>
       <span>Logout</span>
     </a>

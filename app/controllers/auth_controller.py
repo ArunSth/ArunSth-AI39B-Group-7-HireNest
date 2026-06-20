@@ -28,7 +28,7 @@ class AuthController(BaseController):
     # ── Home: Redirect to login ─────────────────────────────
 
     def home(self):
-        return render_template('home.html')
+        return render_template('base.html')
 
     # ── Login ───────────────────────────────────────────────
 
@@ -72,15 +72,15 @@ class AuthController(BaseController):
             # Validation
             if not name or not email or not password:
                 flash("All fields are required.", "danger")
-                return render_template("register.html")
+                return render_template("registration.html")
 
             if len(name) > 100:
                 flash("Name must be under 100 characters.", "danger")
-                return render_template("register.html")
+                return render_template("registration.html")
 
             if len(password) < 6:
                 flash("Password must be at least 6 characters.", "danger")
-                return render_template("register.html")
+                return render_template("registration.html")
 
             # Create a new User object and check email
             new_user = User(name=name, email=email, password=password, role="user")
@@ -95,7 +95,7 @@ class AuthController(BaseController):
                 "Registration successful! Please login.", "success", "auth.login"
             )
 
-        return render_template("register.html")
+        return render_template("registration.html")
 
     # ── Logout ──────────────────────────────────────────────
 
@@ -110,7 +110,7 @@ class AuthController(BaseController):
     def dashboard(self):
         users=self.user_model.find_all()
         print(users)
-        return render_template("dashboard.html",users=users)
+        return render_template("admin_dashboard.html", users=users)
 
     # ── Profile ─────────────────────────────────────────────
     def profile(self):
@@ -124,14 +124,14 @@ class AuthController(BaseController):
             if not name or not email:
                 flash("Name and email are required.", "danger")
                 user_data = self.user_model.find_by_id(user_id)
-                return render_template("profile.html", user=user_data)
+                return render_template("job_seeker_profile.html", user=user_data)
 
             # Check if email is taken by another user
             user_obj = User(name=name, email=email)
             if user_obj.email_exists(exclude_id=user_id):
                 flash("Email already taken by another user.", "danger")
                 user_data = self.user_model.find_by_id(user_id)
-                return render_template("profile.html", user=user_data)
+                return render_template("job_seeker_profile.html", user=user_data)
 
             # Handle password change
             update_password = False
@@ -139,7 +139,7 @@ class AuthController(BaseController):
                 if len(new_password) < 6:
                     flash("New password must be at least 6 characters.", "danger")
                     user_data = self.user_model.find_by_id(user_id)
-                    return render_template("profile.html", user=user_data)
+                    return render_template("job_seeker_profile.html", user=user_data)
 
                 # Verify current password
                 stored_data = self.user_model.find_by_id(user_id)
@@ -147,7 +147,7 @@ class AuthController(BaseController):
                 if not stored_user.check_password(current_password):
                     flash("Current password is incorrect.", "danger")
                     user_data = self.user_model.find_by_id(user_id)
-                    return render_template("profile.html", user=user_data)
+                    return render_template("job_seeker_profile.html", user=user_data)
 
                 user_obj.set_password(new_password)
                 update_password = True
@@ -159,7 +159,7 @@ class AuthController(BaseController):
             )
 
         user_data = self.user_model.find_by_id(user_id)
-        return render_template("profile.html", user=user_data)
+        return render_template("job_seeker_profile.html", user=user_data)
 
     def editUsers(self, id):
         user_data = self.user_model.find_by_id(id)
@@ -175,7 +175,7 @@ class AuthController(BaseController):
                 update_password = True
             user_obj.update(user_id=id, update_password=update_password)
             return redirect(url_for("auth.dashboard"))
-        return render_template("editUser.html", user=user_data)
+        return render_template("admin_dashboard.html", user=user_data)
     
 
     def deleteUser(self, id):

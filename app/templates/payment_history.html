@@ -15,47 +15,74 @@
           <h2>Payment History</h2>
           <p>View payments made for employer subscriptions.</p>
         </div>
-      </div>
-
-      <section class="section">
-        <div class="table-container">
-          {% if payments %}
-          <table>
-            <thead>
-              <tr>
-                <th>Transaction</th>
-                <th>Plan</th>
-                <th>Amount</th>
-                <th>Method</th>
-                <th>Status</th>
-                <th>Paid At</th>
-                <th>Invoice</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for payment in payments %}
-              <tr>
-                <td>{{ payment.Transaction_reference }}</td>
-                <td>{{ payment.Plan_name or 'N/A' }}</td>
-                <td>${{ payment.Amount }}</td>
-                <td>{{ payment.Payment_method }}</td>
-                <td>{{ payment.Status }}</td>
-                <td>{{ payment.Paid_at.strftime('%d %b %Y %H:%M') if payment.Paid_at else 'N/A' }}</td>
-                <td>
-                  <a href="{{ url_for('subscriptions.invoice', payment_id=payment.Payment_id) }}" class="btn-small btn-secondary">View Invoice</a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          {% else %}
-            <div class="empty-state">
-              <p>No payments have been recorded yet.</p>
+        <div class="topbar-right">
+          <i class="fa-solid fa-sun" id="theme-toggle" style="cursor:pointer;"></i>
+          <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-badge" id="notifBadge"></span>
+          </button>
+          <div class="user-profile">
+            <div class="user-avatar">{{ user.First_name[0] if user.First_name else 'U' }}{{ user.Last_name[0] if user.Last_name else '' }}</div>
+            <div>
+              <div class="user-name">{{ user.First_name }} {{ user.Last_name }}</div>
+              <div class="user-role">Employer</div>
             </div>
-          {% endif %}
+          </div>
         </div>
-      </section>
-    </main>
+        {% include 'partials/notification_dropdown.html' %}
+      </div>
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Payment History{% endblock %}
+{% block page_subtitle %}View payments made for employer subscriptions.{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="table-container">
+    {% if payments %}
+    <table>
+      <thead>
+        <tr>
+          <th>Transaction</th>
+          <th>Plan</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Status</th>
+          <th>Paid At</th>
+          <th>Invoice</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in payments %}
+        {% set payment_amount_display =
+          'NPR 0/month' if payment.Plan_name == 'Free'
+          else 'NPR 4,000/month' if payment.Plan_name == 'Basic'
+          else 'NPR 8,000/month' if payment.Plan_name == 'Growth'
+          else 'NPR 13,500/month' if payment.Plan_name == 'Premium'
+          else 'NPR ' ~ payment.Amount
+        %}
+        <tr>
+          <td>{{ payment.Transaction_reference }}</td>
+          <td>{{ payment.Plan_name or 'N/A' }}</td>
+          <td>{{ payment_amount_display }}</td>
+          <td>{{ payment.Payment_method }}</td>
+          <td>{{ payment.Status }}</td>
+          <td>{{ payment.Paid_at.strftime('%d %b %Y %H:%M') if payment.Paid_at else 'N/A' }}</td>
+          <td>
+            <a href="{{ url_for('subscriptions.invoice', payment_id=payment.Payment_id) }}" class="btn-small btn-secondary">View Invoice</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="empty-state">
+        <p>No payments have been recorded yet.</p>
+      </div>
+    {% endif %}
   </div>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
+</section>
+{% endblock %}

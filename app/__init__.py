@@ -5,8 +5,10 @@ import os
 import config
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 
 db = SQLAlchemy()
+mail = Mail()
 
 from app.routes.forgetpasswordroutes import ForgetPasswordRoutes
 from app.routes.logoutroutes import LogoutRoutes
@@ -41,6 +43,7 @@ def create_app():
 
     # 🔥 INIT DATABASE (THIS WAS MISSING)
     db.init_app(app)
+    mail.init_app(app)
 
     # Register Blueprints
     app.register_blueprint(LoginRoutes().login())
@@ -78,11 +81,12 @@ def create_app():
     if getattr(config, 'AUTO_INIT_DB', False):
         with app.app_context():
             try:
-                from app.modals.base_model import create_all, run_migrations
+                from app.modals.base_model import create_all, run_migrations, seed_admin
                 create_all()
                 run_migrations()
                 from app.modals.skill_assessment_model import SkillAssessmentModel
                 SkillAssessmentModel.seed_default_assessments()
+                seed_admin()
             except Exception as e:
                 print("DB INIT ERROR:", e)
 

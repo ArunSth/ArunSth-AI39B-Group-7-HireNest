@@ -1,17 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'employer_base.html' %}
+
+{% block page_title %}{{ applicant.First_name }} {{ applicant.Last_name }} - Application Details{% endblock %}
+{% block page_subtitle %}Review applicant information and next steps.{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>{{ applicant.First_name }} {{ applicant.Last_name }} - Application Details</h2>
-      </div>
-    </div>
-
-    <div class="content">
       <div style="max-width: 1000px;">
         <!-- Applicant Info Card -->
         <div class="table-container" style="margin-bottom: 30px;">
@@ -110,7 +102,10 @@
             </div>
 
             <!-- Actions -->
-            <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <div style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+              <a href="{{ url_for('messages.conversation', conversation_id=applicant.job_seeker_user_id) }}" class="btn-secondary">
+                <i class="fas fa-envelope"></i> Message Candidate
+              </a>
               <a href="/employer/interview/schedule/{{ applicant.Application_id }}" class="btn-primary">
                 <i class="fas fa-calendar"></i> Schedule Interview
               </a>

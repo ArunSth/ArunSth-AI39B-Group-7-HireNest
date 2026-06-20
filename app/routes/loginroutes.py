@@ -52,8 +52,8 @@ class LoginRoutes:
                return render_template('login_page.html')
            # Validate that selected role matches user's account role
            user_role = user.get('Role', 'job_seeker')
-           if selected_role != user_role:
-               msg = f'This account is registered as a {user_role.replace("_", " ")}. Please select the correct role.'
+           if selected_role != user_role and user_role == 'admin':
+               msg = 'This account is registered as an admin. Please select the correct role.'
                if is_ajax: return jsonify({'status': 'error', 'message': msg}), 401
                flash(msg, 'error')
                return render_template('login_page.html')

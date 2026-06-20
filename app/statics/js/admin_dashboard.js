@@ -54,7 +54,7 @@ function updateStats() {
 // ─────────────────────────────────────────────
 // ACTIVITY LOG — powers both audit rows + Platform Health tab
 // ─────────────────────────────────────────────
-const activityLog = [];
+const activityLog = JSON.parse(localStorage.getItem('hn_activity_log') || '[]');
  
 function logActivity(action, target, status) {
   activityLog.unshift({
@@ -63,6 +63,7 @@ function logActivity(action, target, status) {
     time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   });
   if (activityLog.length > 100) activityLog.pop();
+  localStorage.setItem('hn_activity_log', JSON.stringify(activityLog)); 
  
   // Overview audit table (if present)
   const auditBody = document.getElementById('audit-body');
@@ -138,6 +139,7 @@ function clearActionHistory() {
     'Clear', 'danger',
     () => {
       activityLog.length = 0;
+      localStorage.removeItem('hn_activity_log'); 
       renderActionHistory([]);
       showToast('Action history cleared', 'danger');
     }
@@ -432,7 +434,7 @@ document.getElementById('sendAnnouncementForm')?.addEventListener('submit', e =>
 // ADMIN NOTIFICATION DROPDOWN
 // ════════════════════════════════════════════
  
-const adminNotifs = [];
+const adminNotifs = JSON.parse(localStorage.getItem('hn_admin_notifs') || '[]');
 let notifFilter = 'all';
  
 // Called by logActivity — auto-creates a notification for every admin action
@@ -457,6 +459,7 @@ function pushAdminNotif(action, target, status) {
     unread: true,
   });
   if (adminNotifs.length > 50) adminNotifs.pop();
+  localStorage.setItem('hn_admin_notifs', JSON.stringify(adminNotifs));
   renderAdminNotifs();
 }
  
@@ -1467,6 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRoleBreakdown();
   updatePlatformHealth();
   updateAnalytics();
+  renderActionHistory(activityLog);
   loadModerationJobsFromDB();
 
   // Auto-refresh moderation jobs every 30 seconds
