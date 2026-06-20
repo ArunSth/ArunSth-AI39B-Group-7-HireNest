@@ -127,6 +127,24 @@ function clearActionHistory() {
     }
   );
 }
+
+// ─────────────────────────────────────────────
+// LOGOUT CONFIRMATION
+// ─────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const logoutBtn = document.querySelector('.logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', e => {
+      e.preventDefault();
+      showConfirm(
+        'Logout',
+        'Are you sure you want to log out?',
+        'Yes, Logout', 'danger',
+        () => { window.location.href = '/logout'; }
+      );
+    });
+  }
+});
  
 // ─────────────────────────────────────────────
 // TAB SWITCHING

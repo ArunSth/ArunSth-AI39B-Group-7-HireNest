@@ -91,7 +91,7 @@ class AdminRoutes:
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
-            success = JobPostingModel.delete_job(job_id)  # ← uses the model which sends notification
+            success = JobPostingModel.delete_job(job_id)
             if not success:
                 return jsonify({'status': 'error', 'message': 'Failed to delete job.'}), 500
 
@@ -260,14 +260,13 @@ class AdminRoutes:
             try:
                 with conn.cursor() as cur:
                     if audience == 'all':
-                        cur.execute(
-                            "SELECT `User_id` FROM `User` WHERE `Role` IN ('Job Seeker', 'Employer')"
-                        )
+                        cur.execute("SELECT `User_id` FROM `User`")
+                    elif audience == 'Job Seeker':
+                        cur.execute("SELECT `User_id` FROM `User` WHERE `Role` = 'job_seeker'")
+                    elif audience == 'Employer':
+                        cur.execute("SELECT `User_id` FROM `User` WHERE `Role` = 'employer'")
                     else:
-                        cur.execute(
-                            "SELECT `User_id` FROM `User` WHERE `Role` = %s",
-                            (audience,)
-                        )
+                        cur.execute("SELECT `User_id` FROM `User` WHERE `Role` = %s", (audience,))
                     users = cur.fetchall()
  
                     if not users:
