@@ -10,42 +10,72 @@
   </div>
 
   <nav class="sidebar-nav">
-    <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
+    <a href="{{ url_for('job_seeker.dashboard') }}"
+       class="nav-item {% if 'dashboard' in request.path %}active{% endif %}">
       <i class="fas fa-home"></i>
       <span>Dashboard</span>
     </a>
-    <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item {% if request.path.startswith('/seeker/jobs') %}active{% endif %}">
+
+    <a href="{{ url_for('job_posting.browse_jobs') }}"
+       class="nav-item {% if request.path == '/jobs' or request.path.startswith('/seeker/jobs') %}active{% endif %}">
       <i class="fas fa-briefcase"></i>
       <span>Search Opportunities</span>
     </a>
-    <a href="{{ url_for('job_posting.browse_jobs') }}" class="nav-item {% if request.path == '/jobs' %}active{% endif %}">
-      <i class="fas fa-briefcase"></i>
-      <span>Search Opportunities</span>
-    </a>
-    <a href="{{ url_for('job_posting.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
+
+    <a href="{{ url_for('job_posting.saved_jobs') }}"
+       class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
       <i class="fas fa-bookmark"></i>
       <span>Saved Jobs</span>
     </a>
-    <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item {% if 'applications' in request.path %}active{% endif %}">
+
+    <a href="{{ url_for('applicant.seeker_applications') }}"
+       class="nav-item {% if request.path == '/seeker/applications' %}active{% endif %}">
       <i class="fas fa-file-alt"></i>
       <span>Applications</span>
     </a>
-    <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item {% if 'saved-jobs' in request.path %}active{% endif %}">
-      <i class="fas fa-bookmark"></i>
-      <span>Saved Jobs</span>
+
+    <a href="{{ url_for('application_tracking.track') }}"
+       class="nav-item {% if 'applications/track' in request.path %}active{% endif %}">
+      <i class="fas fa-tasks"></i>
+      <span>Track Applications</span>
     </a>
-    <a href="{{ url_for('job_seeker.profile') }}" class="nav-item {% if 'profile' in request.path %}active{% endif %}">
-      <i class="fas fa-user"></i>
-      <span>Profile</span>
+
+    <a href="{{ url_for('skill_assessment.index') }}"
+       class="nav-item {% if 'assessments' in request.path %}active{% endif %}">
+      <i class="fas fa-award"></i>
+      <span>Skill Assessments</span>
     </a>
-    <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item {% if 'interview' in request.path %}active{% endif %}">
+
+    <a href="{{ url_for('interview.seeker_interviews') }}"
+       class="nav-item {% if 'interview' in request.path %}active{% endif %}">
       <i class="fas fa-video"></i>
       <span>Interviews</span>
     </a>
-    <a href="{{ url_for('reviews.reviews_index') }}" class="nav-item {% if 'reviews' in request.path %}active{% endif %}">
+
+    <a href="{{ url_for('reviews.reviews_index') }}"
+       class="nav-item {% if 'reviews' in request.path %}active{% endif %}">
       <i class="fas fa-star"></i>
       <span>Company Reviews</span>
     </a>
+
+    <a href="{{ url_for('job_alerts.index') }}"
+       class="nav-item {% if 'alerts' in request.path %}active{% endif %}">
+      <i class="fas fa-paper-plane"></i>
+      <span>Job Alerts</span>
+    </a>
+
+    <a href="{{ url_for('messages.index') }}"
+       class="nav-item {% if 'messages' in request.path %}active{% endif %}">
+      <i class="fas fa-headset"></i>
+      <span>Messages</span>
+    </a>
+
+    <a href="{{ url_for('job_seeker.profile') }}"
+       class="nav-item {% if 'profile' in request.path %}active{% endif %}">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </a>
+
     <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
       <i class="fas fa-sign-out-alt"></i>
       <span>Logout</span>

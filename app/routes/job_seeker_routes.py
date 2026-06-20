@@ -27,61 +27,6 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
-            JobSeekerProfileModel.ensure_profile_exists(user_id)
-            user_data = UserModel.get_by_id(user_id)
-            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
-
-            return render_template(
-                'seeker_dashboard.html',
-                user=user_data,
-                profile=profile_data,
-                completion_percentage=completion_percentage
-            )
-
-    def job_seeker_profile(self):
-
-        @self.blueprint.route('/job-seeker/profile', methods=['GET', 'POST'])
-        def profile():
-            if 'user_id' not in session or session.get('role') != 'job_seeker':
-                flash('Please log in as a job seeker to view your profile.', 'error')
-                return redirect(url_for('login.index'))
-
-            user_id = session['user_id']
-            JobSeekerProfileModel.ensure_profile_exists(user_id)
-            user_data = UserModel.get_by_id(user_id)
-            profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
-            completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
-
-            if request.method == 'POST':
-                bio = request.form.get('bio', '').strip()
-                location = request.form.get('location', '').strip()
-                education = request.form.get('education', '').strip()
-                skills = request.form.get('skills', '').strip()
-                experiences = request.form.get('experiences', '').strip()
-
-                if JobSeekerProfileModel.create_or_update_profile(user_id, bio, location, education, skills, experiences):
-                    new_completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
-                    JobSeekerProfileModel.update_profile_completion(user_id, new_completion_percentage)
-                    flash('Profile updated successfully!', 'success')
-                    return redirect(url_for('job_seeker.profile'))
-                else:
-                    flash('Failed to update profile. Please try again.', 'error')
-
-            return render_template(
-                'job_seeker_profile.html',
-                user=user_data,
-                profile=profile_data,
-                completion_percentage=completion_percentage
-            )
-
-        @self.blueprint.route('/job-seeker/dashboard', methods=['GET'])
-        def dashboard():
-            if 'user_id' not in session or session.get('role') != 'job_seeker':
-                flash('Please log in as a job seeker to view your dashboard.', 'error')
-                return redirect(url_for('login.index'))
-
-            user_id = session['user_id']
             user_data = UserModel.get_by_id(user_id)
             profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
@@ -189,6 +134,7 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
             user_data = UserModel.get_by_id(user_id)
             profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)

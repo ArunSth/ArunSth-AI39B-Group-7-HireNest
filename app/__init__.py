@@ -1,4 +1,6 @@
-from flask import Flask, send_from_directory
+from app.routes.skill_assessment_routes import SkillAssessmentRoutes
+from app.routes.application_tracking_routes import ApplicationTrackingRoutes
+from flask import Flask, send_from_directory  # Remove 'app' - it's not a Flask export
 import os
 import config
 
@@ -28,7 +30,7 @@ def create_app():
     app = Flask(__name__, static_folder='statics', template_folder='templates')
 
     # 🔥 LOAD CONFIG (VERY IMPORTANT)
-    app.config.from_object(config.Config)
+    app.config.from_object(config)
 
     # Secret key
     app.secret_key = getattr(config, 'SECRET_KEY', None)
@@ -56,6 +58,8 @@ def create_app():
     app.register_blueprint(JobAlertRoutes().job_alerts())
     app.register_blueprint(ReviewRoutes().review_routes())
     app.register_blueprint(SubscriptionRoutes().subscription_routes())
+    app.register_blueprint(SkillAssessmentRoutes().register_routes())
+    app.register_blueprint(ApplicationTrackingRoutes().register_routes())
 
     # Upload route
     app.register_blueprint(AdminRoutes().register_routes())
@@ -77,6 +81,8 @@ def create_app():
                 from app.modals.base_model import create_all, run_migrations
                 create_all()
                 run_migrations()
+                from app.modals.skill_assessment_model import SkillAssessmentModel
+                SkillAssessmentModel.seed_default_assessments()
             except Exception as e:
                 print("DB INIT ERROR:", e)
 
