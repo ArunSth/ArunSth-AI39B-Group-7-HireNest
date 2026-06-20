@@ -1,5 +1,24 @@
 {% extends 'employer_base.html' %}
 
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_employer.html' %}
+  <div class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h2>Manage Applicants</h2>
+        <p class="topbar-subtitle">Track candidate activity, applications, and status updates from one employer workspace.</p>
+      </div>
+      <div class="topbar-right">
+        <div class="user-profile">
+          <div class="user-avatar">{{ (user.First_name or 'U')|first }}</div>
+          <div>
+            <div class="user-name">{{ user.First_name }} {{ user.Last_name }}</div>
+            <div class="user-role">Employer</div>
+          </div>
+        </div>
+      </div>
+    </div>
 {% block page_title %}Manage Applicants{% endblock %}
 {% block page_subtitle %}Track candidate activity, applications, and status updates from one employer workspace.{% endblock %}
 
@@ -127,6 +146,12 @@
 </div>
 {% endblock %}
 
+{% block scripts %}
+<link rel="stylesheet" href="/static/css/employer_dashboard.css">
+<link rel="stylesheet" href="/static/css/employer_applicants.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/js/employer_dashboard.js"></script>
+{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_applicants.css') }}">
 {% endblock %}

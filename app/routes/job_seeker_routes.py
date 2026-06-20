@@ -134,6 +134,7 @@ class JobSeekerRoutes:
                 return redirect(url_for('login.index'))
 
             user_id = session['user_id']
+            JobSeekerProfileModel.ensure_profile_exists(user_id)
             user_data = UserModel.get_by_id(user_id)
             profile_data = JobSeekerProfileModel.get_profile_by_user_id(user_id)
             completion_percentage = JobSeekerProfileModel.calculate_profile_completion(user_id)
