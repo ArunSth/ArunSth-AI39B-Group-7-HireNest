@@ -77,9 +77,10 @@ def create_app():
     if getattr(config, 'AUTO_INIT_DB', False):
         with app.app_context():
             try:
-                from app.modals.base_model import create_all, run_migrations
+                from app.modals.base_model import create_all, run_migrations, seed_admin
                 create_all()
                 run_migrations()
+                seed_admin()
             except Exception as e:
                 print("DB INIT ERROR:", e)
 

@@ -64,8 +64,10 @@ CREATE TABLE IF NOT EXISTS `Jobs` (
     `Job_id` INT PRIMARY KEY AUTO_INCREMENT,
     `Employee_id` INT,
     `Title` VARCHAR(150),
+    `Job_Type` VARCHAR(50) DEFAULT 'Full-time', /*added*/
     `Description` TEXT,
     `Requirement` TEXT,
+    `Skills` TEXT, /*added*/
     `Salary` DECIMAL(10,2),
     `Location` VARCHAR(100),
     `Status` VARCHAR(50),
@@ -119,6 +121,7 @@ CREATE TABLE IF NOT EXISTS `Job_Alerts` (
     `Alert_id` INT PRIMARY KEY AUTO_INCREMENT,
     `Seekers_id` INT,
     `Keyword` VARCHAR(100),
+    `Category` VARCHAR(100), /*added*/
     `Location` VARCHAR(100),
     `Frequency` VARCHAR(50),
     FOREIGN KEY (`Seekers_id`) REFERENCES `Job_Seekers`(`Seekers_id`)
