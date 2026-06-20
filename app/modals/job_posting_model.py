@@ -358,7 +358,6 @@ class JobPostingModel:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                # Fetch job info BEFORE deleting so we can notify
                 cur.execute(
                     """
                     SELECT j.`Title`, e.`User_id`
@@ -373,14 +372,13 @@ class JobPostingModel:
                 cur.execute("DELETE FROM `Jobs` WHERE `Job_id`=%s", (job_id,))
                 conn.commit()
 
-                # Notify after successful delete
                 if job:
-                    from app.controllers.notification_controller import NotificationController
-                    NotificationController.create_notification(
+                    from app.modals.notification_model import NotificationModel
+                    NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Deleted",
-                        message=f"Your job posting '{job['Title']}' has been removed by an administrator.",
-                        notif_type="job_deleted",
+                        message=f"Your job posting '{job['Title']}' has been deleted by an administrator.",
+                        notification_type="job_deleted",
                         reference_id=job_id
                     )
                 return True
@@ -390,9 +388,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
-    # ── update_job_status — called by approve/reject routes ───────────
-    # Accepted values: 'Pending' | 'Approved' | 'Rejected'
+
     @staticmethod
     def update_job_status(job_id, status):
         allowed = {'Pending', 'Approved', 'Rejected'}
@@ -412,17 +408,17 @@ class JobPostingModel:
                     (job_id,)
                 )
                 job = cur.fetchone()
-                print(f"DEBUG update_job_status: job={job}, status={status}")  # ← add this
+                print(f"DEBUG: job_id={job_id}, job={job}, status={status}")
 
                 cur.execute(
                     "UPDATE `Jobs` SET `Status`=%s WHERE `Job_id`=%s",
                     (status, job_id),
                 )
                 conn.commit()
-                print(f"DEBUG rowcount={cur.rowcount}")  # ← and this
+                print(f"DEBUG: rowcount={cur.rowcount}")
 
                 if cur.rowcount > 0 and job and status == 'Rejected':
-                    from app.modals.notification_model import NotificationModel  # adjust filename
+                    from app.modals.notification_model import NotificationModel
                     NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Rejected",
