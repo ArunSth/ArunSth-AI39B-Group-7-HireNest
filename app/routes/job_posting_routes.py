@@ -60,12 +60,10 @@ class JobPostingRoutes:
                 conn = get_connection()
                 try:
                     with conn.cursor() as cur:
-<<<<<<< HEAD
                         cur.execute(
-                            "SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
-=======
-                        cur.execute("SELECT `Employee_id`, `Industry` FROM `Employee` WHERE `User_id`=%s", (user_id,))
->>>>>>> ac475879447c339535de87afce9ea356c0c1c4be
+                            "SELECT `Employee_id`, `Industry` FROM `Employee` WHERE `User_id`=%s",
+                            (user_id,),
+                        )
                         employee = cur.fetchone()
                         if not employee:
                             flash("Employer profile not found.", "error")
