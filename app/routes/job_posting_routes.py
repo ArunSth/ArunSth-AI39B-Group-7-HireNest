@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from app.controllers.job_alert_controller import JobAlertController
+from app.controllers.notification_controller import NotificationController
 from app.modals.job_posting_model import JobPostingModel
 from app.modals.employer_profile import EmployerProfileModel
 from app.modals.user import UserModel
@@ -55,13 +57,14 @@ class JobPostingRoutes:
                 conn = get_connection()
                 try:
                     with conn.cursor() as cur:
-                        cur.execute("SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
+                        cur.execute("SELECT `Employee_id`, `Industry` FROM `Employee` WHERE `User_id`=%s", (user_id,))
                         employee = cur.fetchone()
                         if not employee:
                             flash("Employer profile not found.", "error")
                             return redirect(url_for("employer.profile"))
                         
                         employee_id = employee['Employee_id']
+                        employer_industry = employee.get('Industry')
                 finally:
                     conn.close()
 
@@ -88,6 +91,23 @@ class JobPostingRoutes:
                 )
 
                 if job_id:
+                    matching_users = JobAlertController.match_job_seekers_for_job(
+                        title,
+                        location,
+                        job_type,
+                        employer_industry,
+                        description,
+                        requirement,
+                    )
+                    for user_id in matching_users:
+                        NotificationController.create_notification(
+                            user_id,
+                            'New job matches your alert',
+                            f"A new job posting for {title} matches your saved alert. Check it out!",
+                            'job_alert',
+                            reference_id=job_id,
+                        )
+
                     flash("Job posted successfully!", "success")
                     return redirect(url_for("job_posting.list_jobs"))
                 else:

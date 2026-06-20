@@ -2,71 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">
-        <i class="fas fa-user-graduate"></i>
-      </div>
-      <div class="sidebar-logo-text">
-        <h3>HireNest</h3>
-        <p>Your job search hub</p>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="{{ url_for('job_seeker.dashboard') }}" class="nav-item active">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-      <a href="{{ url_for('seeker_jobs.index') }}" class="nav-item">
-        <i class="fas fa-briefcase"></i>
-        <span>Search Opportunities</span>
-      </a>
-      <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
-        <i class="fas fa-bookmark"></i>
-        <span>Saved Jobs</span>
-      </a>
-      <a href="{{ url_for('applicant.seeker_applications') }}" class="nav-item">
-        <i class="fas fa-file-alt"></i>
-        <span>Applications</span>
-      </a>
-      <a href="{{ url_for('application_tracking.track') }}" class="nav-item">
-        <i class="fas fa-tasks"></i>
-        <span>Track Applications</span>
-      </a>
-      <a href="{{ url_for('skill_assessment.index') }}" class="nav-item">
-        <i class="fas fa-award"></i>
-        <span>Skill Assessments</span>
-      </a>
-      <a href="{{ url_for('interview.seeker_interviews') }}" class="nav-item">
-        <i class="fas fa-video"></i>
-        <span>Interviews</span>
-      </a>
-      <a href="{{ url_for('reviews.reviews_index') }}" class="nav-item">
-        <i class="fas fa-star"></i>
-        <span>Company Reviews</span>
-      </a>
-      <a href="{{ url_for('job_seeker.profile') }}" class="nav-item">
-        <i class="fas fa-user"></i>
-        <span>Profile</span>
-      <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="nav-item">
-        <i class="fas fa-bookmark"></i>
-        <span>Saved Jobs</span>
-      </a>
-      <a href="{{ url_for('job_alerts.index') }}" class="nav-item">
-        <i class="fas fa-paper-plane"></i>
-        <span>Job Alerts</span>
-      </a>
-      <a href="{{ url_for('messages.index') }}" class="nav-item">
-        <i class="fas fa-headset"></i>
-        <span>Messages</span>
-      </a>
-      <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </a>
-    </nav>
-  </aside>
+  {% include 'sidebar_job_seeker.html' %}
 
   <div class="main-content">
     <div class="topbar">
@@ -106,10 +42,6 @@
             <a href="{{ url_for('seeker_jobs.saved_jobs') }}" class="seeker-action seeker-action--secondary">
               <i class="fas fa-bookmark"></i>
               <span>Saved Jobs</span>
-            </a>
-            <a href="{{ url_for('seeker_jobs.index') }}" class="seeker-action seeker-action--primary">
-              <i class="fas fa-search"></i>
-              <span>Search Opportunities</span>
             </a>
             <a href="{{ url_for('job_seeker.profile') }}" class="seeker-action seeker-action--secondary">
               <i class="fas fa-user-edit"></i>

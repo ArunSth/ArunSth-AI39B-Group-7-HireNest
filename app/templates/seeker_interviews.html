@@ -38,13 +38,13 @@
                   <td>
                     <div>
                       <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
-                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                      <div class="small-muted-text">
                         {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span style="display: inline-block; padding: 4px 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                    <span class="mode-pill">
                       {{ interview.Mode }}
                     </span>
                   </td>
@@ -65,9 +65,9 @@
               </tbody>
             </table>
             {% else %}
-            <div style="padding: 60px 40px; text-align: center; color: var(--text-secondary);">
-              <i class="fas fa-video" style="font-size: 64px; margin-bottom: 20px; opacity: 0.3;"></i>
-              <h3 style="color: var(--text-primary); margin-bottom: 10px;">No Interviews Scheduled</h3>
+            <div class="empty-state">
+              <i class="fas fa-video empty-state-icon"></i>
+              <h3 class="empty-state-heading">No Interviews Scheduled</h3>
               <p>When employers schedule interviews with you, they will appear here.</p>
             </div>
             {% endif %}

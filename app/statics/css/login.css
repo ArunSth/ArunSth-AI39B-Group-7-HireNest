@@ -190,6 +190,7 @@ body {
   font-size: 22px;
   font-weight: 700;
   color: var(--text-logo);
+  text-decoration: none;
 }
 
 .nav-links {
