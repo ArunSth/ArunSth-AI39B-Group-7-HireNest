@@ -110,8 +110,8 @@
                 <p>{{ interview.job_title }}</p>
               </div>
               <div class="seeker-list__meta">
-                <span>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</span>
-                <span>{{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}</span>
+                <span>{{ interview.formatted_date }}</span>
+                <span>{{ interview.formatted_time }}</span>
               </div>
             </div>
           {% endfor %}
