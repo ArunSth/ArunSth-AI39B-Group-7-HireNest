@@ -53,6 +53,16 @@ class UserModel:
             conn.close()
 
     @staticmethod
+    def get_by_email(email: str):
+        conn = get_connection()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT * FROM `User` WHERE `Email`=%s", (email,))
+                return cur.fetchone()
+        finally:
+            conn.close()
+
+    @staticmethod
     def verify_password(email: str, password: str) -> bool:
         user = UserModel.get_by_email(email)
         if not user:

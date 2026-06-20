@@ -5,25 +5,21 @@
 // ─────────────────────────────────────────────
 // JS-only state (for new items added this session)
 // ─────────────────────────────────────────────
-// Load persisted state, or start fresh
 let JOBS    = JSON.parse(localStorage.getItem('hn_jobs')    || '[]');
 let REPORTS = JSON.parse(localStorage.getItem('hn_reports') || '[]');
 let _nextJobId = JOBS.reduce((m, j) => (!j.fromDB && typeof j.id === 'number') ? Math.max(m, j.id + 1) : m, 1);
 let _nextReportId = REPORTS.reduce((m, r) => Math.max(m, r.id + 1), 1);
  
- 
 function persistState() {
-  localStorage.setItem('hn_jobs',    JSON.stringify(JOBS));
+  localStorage.setItem('hn_jobs',    JSON.stringify(JOBS.filter(j => !j.fromDB)));
   localStorage.setItem('hn_reports', JSON.stringify(REPORTS));
 }
  
-// Small helper used everywhere to safely set an element's text
 function setEl(id, val) {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
 }
  
-// Refresh the small JS-driven stat badges (Reported/Pending counts, etc.)
 function updateStats() {
   const reportedJobs = REPORTS.filter(r => r.status === 'Under Review').length;
   const pendingMod   = JOBS.filter(j => j.status === 'Pending').length;
@@ -35,24 +31,14 @@ function updateStats() {
   setEl('modCount',         JOBS.length);
   setEl('reportCount',      REPORTS.length);
  
-  const approvedJS = JOBS.filter(j => j.status === 'Approved').length;
-  if (approvedJS > 0) {
-    const flaskJobs = parseInt(document.getElementById('stat-active-jobs')?.dataset.flask || '0');
-    setEl('stat-active-jobs', flaskJobs + approvedJS);
-  }
+  const totalActive = JOBS.filter(j => j.status === 'Approved').length;
+  setEl('stat-active-jobs', totalActive);
  
-  // Keep Platform Health in sync whenever stats change
   updatePlatformHealth();
 }
+ 
 // ─────────────────────────────────────────────
-// STATS
-// ─────────────────────────────────────────────
-// (updatePlatformHealth is defined further below, where the full version lives)
-// ─────────────────────────────────────────────
-// RECENT ACTIVITY (JS-only log, server logs shown via Jinja)
-// ─────────────────────────────────────────────
-// ─────────────────────────────────────────────
-// ACTIVITY LOG — powers both audit rows + Platform Health tab
+// ACTIVITY LOG
 // ─────────────────────────────────────────────
 const activityLog = JSON.parse(localStorage.getItem('hn_activity_log') || '[]');
  
@@ -63,9 +49,8 @@ function logActivity(action, target, status) {
     time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
   });
   if (activityLog.length > 100) activityLog.pop();
-  localStorage.setItem('hn_activity_log', JSON.stringify(activityLog)); 
+  localStorage.setItem('hn_activity_log', JSON.stringify(activityLog));
  
-  // Overview audit table (if present)
   const auditBody = document.getElementById('audit-body');
   if (auditBody && activityLog.length > 0) {
     const jsRows = activityLog.slice(0, 5).map(a => `
@@ -80,7 +65,6 @@ function logActivity(action, target, status) {
     auditBody.innerHTML = jsRows + auditBody.innerHTML;
   }
  
-  // Always refresh the Platform Health tab
   renderActionHistory(activityLog);
 }
  
@@ -88,14 +72,12 @@ function renderActionHistory(data) {
   const tbody = document.getElementById('ph-history-body');
   if (!tbody) return;
  
-  // Update stat cards
   setEl('ph-total-actions', data.length);
   setEl('ph-completed',     data.filter(a => a.status === 'success').length);
   setEl('ph-removals',      data.filter(a => a.status === 'danger').length);
   setEl('ph-reports-filed', data.filter(a => a.action.toLowerCase().includes('report')).length);
   setEl('ph-action-count',  data.length);
  
-  // Last action label
   const lastEl = document.getElementById('ph-last-action');
   if (lastEl) {
     lastEl.textContent = data.length > 0
@@ -139,12 +121,13 @@ function clearActionHistory() {
     'Clear', 'danger',
     () => {
       activityLog.length = 0;
-      localStorage.removeItem('hn_activity_log'); 
+      localStorage.removeItem('hn_activity_log');
       renderActionHistory([]);
       showToast('Action history cleared', 'danger');
     }
   );
 }
+ 
 // ─────────────────────────────────────────────
 // TAB SWITCHING
 // ─────────────────────────────────────────────
@@ -152,7 +135,7 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
   link.addEventListener('click', e => {
     e.preventDefault();
     const tab = link.dataset.tab;
-
+ 
     document.querySelectorAll('.nav-link[data-tab]').forEach(l => {
       l.classList.remove('active');
       const arrow = l.querySelector('.arrow');
@@ -162,16 +145,16 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
     const arrow = document.createElement('i');
     arrow.className = 'fa-solid fa-chevron-right arrow';
     link.appendChild(arrow);
-
+ 
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     const target = document.getElementById('tab-' + tab);
     if (target) target.classList.add('active');
-
+ 
     document.getElementById('sidebar')?.classList.remove('open');
-
-    // Refresh data when switching to these tabs
+ 
     if (tab === 'job-moderation') loadModerationJobsFromDB();
     if (tab === 'analytics')      updateAnalytics();
+    if (tab === 'company-jobs')   renderCompanyJobs();
   });
 });
  
@@ -188,16 +171,6 @@ document.addEventListener('click', e => {
     sidebar.classList.remove('open');
   }
 });
- 
-// ─────────────────────────────────────────────
-// EXIT ADMIN
-// ─────────────────────────────────────────────
-function confirmExit(e) {
-  e.preventDefault();
-  if (confirm('Exit the admin panel and return to the home page?')) {
-    window.location.href = '/';
-  }
-}
  
 // ─────────────────────────────────────────────
 // MODAL HELPERS
@@ -262,7 +235,6 @@ function showToast(message, type = 'success') {
 // ════════════════════════════════════════════
 // ANALYTICS TAB
 // ════════════════════════════════════════════
- 
 const announcementLog = [];
  
 function renderDonut(svgId, legendId, segments) {
@@ -319,18 +291,15 @@ function updateAnalytics() {
   const approvalRate   = totalJobs > 0 ? Math.round((approved / totalJobs) * 100) : 0;
   const resolutionRate = totalRep  > 0 ? Math.round(((resolved + dismissed) / totalRep) * 100) : 0;
  
-  // Jobs viewed — simulated counter
   let jobsViewed = parseInt(sessionStorage.getItem('hn_jobs_viewed') || '0');
   if (totalJobs > 0) {
     jobsViewed += Math.floor(Math.random() * 4) + 1;
     sessionStorage.setItem('hn_jobs_viewed', jobsViewed);
   }
  
-  // Avg applications per job
   const appActions = activityLog.filter(a => a.action.includes('Approved') || a.action.includes('Submitted')).length;
   const avgApps    = totalJobs > 0 ? (appActions / totalJobs).toFixed(1) : '0.0';
  
-  // Most active role
   const roleCounts = { jobseeker: 0, employer: 0, admin: 0 };
   document.querySelectorAll('#users-body tr[id^="server-user-row-"]').forEach(row => {
     const r = (row.cells[2]?.textContent || '').toLowerCase().replace(/[\s_-]/g, '');
@@ -342,12 +311,10 @@ function updateAnalytics() {
   const topRoleKey = Object.entries(roleCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
   const topRole    = topRoleKey && roleCounts[topRoleKey] > 0 ? roleMap[topRoleKey] : '—';
  
-  // Top job type
   const typeCounts = {};
   JOBS.forEach(j => { typeCounts[j.type] = (typeCounts[j.type] || 0) + 1; });
   const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
  
-  // KPI cards
   setEl('an-jobs-viewed',      jobsViewed > 0 ? jobsViewed.toLocaleString() : '—');
   setEl('an-avg-apps',         avgApps);
   setEl('an-most-active-role', topRole);
@@ -355,14 +322,12 @@ function updateAnalytics() {
   setEl('an-approval-rate',    approvalRate + '%');
   setEl('an-report-rate',      resolutionRate + '%');
  
-  // Report Outcomes donut
   renderDonut('reportStatusDonut', 'reportStatusLegend', [
     { label: 'Resolved',     value: resolved,    color: '#16A34A' },
     { label: 'Under Review', value: underReview, color: '#D97706' },
     { label: 'Dismissed',    value: dismissed,   color: '#94A3B8' },
   ]);
  
-  // Announcement History
   const annBody = document.getElementById('an-announce-body');
   if (annBody) {
     if (announcementLog.length === 0) {
@@ -379,65 +344,13 @@ function updateAnalytics() {
     }
   }
 }
-// Find the existing sendAnnouncementForm listener in admin_dashboard.js
-// and replace the .then(data => { ... }) block with this version.
-// The only change is the toast now shows how many users were notified.
- 
-document.getElementById('sendAnnouncementForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const f        = e.target;
-  const subject  = f.announceSubject.value.trim();
-  const audience = f.announceAudience.value;
-  const message  = f.announceMessage.value.trim();
-  if (!subject || !message) return;
- 
-  fetch('/admin/announcements/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ subject, audience, message })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.status === 'success') {
-      f.reset();
-      closeModal('sendAnnouncementModal');
-      logActivity('Announcement Sent', `${subject} → ${audience === 'all' ? 'All Users' : audience}`, 'info');
-      showToast(`Announcement sent to ${data.recipients} user(s)`, 'success');
-    } else {
-      showToast(data.message || 'Failed to send announcement', 'danger');
-    }
-  })
-  .catch(() => showToast('Network error — could not send announcement', 'danger'));
-});
- 
- 
-// Patch announcement form to log entries
-(function patchAnnouncementLog() {
-  const form = document.getElementById('sendAnnouncementForm');
-  if (!form) return;
-  form.addEventListener('submit', function () {
-    const subject  = form.announceSubject?.value?.trim() || '';
-    const audience = form.announceAudience?.value || 'all';
-    if (subject) {
-      announcementLog.unshift({
-        subject,
-        audience,
-        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      });
-    }
-  });
-})();
- 
-
  
 // ════════════════════════════════════════════
 // ADMIN NOTIFICATION DROPDOWN
 // ════════════════════════════════════════════
- 
 const adminNotifs = JSON.parse(localStorage.getItem('hn_admin_notifs') || '[]');
 let notifFilter = 'all';
  
-// Called by logActivity — auto-creates a notification for every admin action
 function pushAdminNotif(action, target, status) {
   const typeMap = {
     success: 'job',
@@ -446,11 +359,9 @@ function pushAdminNotif(action, target, status) {
     info:    'announcement',
     muted:   'system',
   };
-
-  // Override: if the action mentions "report", force type to 'report'
   let type = typeMap[status] || 'system';
   if (action.toLowerCase().includes('report')) type = 'report';
-    adminNotifs.unshift({
+  adminNotifs.unshift({
     id:     Date.now(),
     type:   type,
     title:  action,
@@ -463,7 +374,6 @@ function pushAdminNotif(action, target, status) {
   renderAdminNotifs();
 }
  
-// Patch logActivity so every action also creates a notification
 const _origLogActivity = logActivity;
 logActivity = function(action, target, status) {
   _origLogActivity(action, target, status);
@@ -485,8 +395,8 @@ function renderAdminNotifs() {
  
   const unread = adminNotifs.filter(n => n.unread).length;
   if (badge) {
-    badge.textContent = unread;
-    badge.style.display = unread === 0 ? 'none' : '';
+    badge.textContent = unread > 99 ? '99+' : unread;
+    badge.style.display = unread === 0 ? 'none' : 'flex';
   }
   if (label) label.textContent = unread > 0 ? `(${unread} unread)` : '';
  
@@ -543,19 +453,14 @@ function closeNotifDropdown() {
   document.getElementById('notifDropdown')?.classList.remove('open');
 }
  
-// Close dropdown when clicking outside
 document.addEventListener('click', e => {
   const wrap = document.getElementById('notifWrap');
   if (wrap && !wrap.contains(e.target)) closeNotifDropdown();
 });
  
 // ════════════════════════════════════════════
-// USER MANAGEMENT — SERVER SIDE USERS
-// Users are rendered by Jinja in the HTML.
-// JS handles: view modal, delete via API, report flow, filter, add new user.
+// USER MANAGEMENT
 // ════════════════════════════════════════════
- 
-// View a server user in modal
 function viewUserFromServer(id, name, email, role) {
   document.getElementById('viewJobTitle').textContent = name.trim() || email;
   document.getElementById('viewJobBody').innerHTML = `
@@ -579,7 +484,6 @@ function viewUserFromServer(id, name, email, role) {
   openModal('viewJobModal');
 }
  
-// Delete a server user via API
 function deleteUserFromServer(id, name) {
   showConfirm(
     'Delete User',
@@ -590,13 +494,10 @@ function deleteUserFromServer(id, name) {
         .then(r => r.json())
         .then(data => {
           if (data.status === 'success') {
-            // Remove the row from the table
             const row = document.getElementById(`server-user-row-${id}`);
             if (row) row.remove();
-            // Update the count badge
             const badge = document.getElementById('userCount');
             if (badge) badge.textContent = parseInt(badge.textContent || '0') - 1;
-            // Update overview stat
             const statEl = document.getElementById('stat-total-users');
             if (statEl) statEl.textContent = parseInt(statEl.textContent || '0') - 1;
             logActivity('User Deleted', name || `User #${id}`, 'danger');
@@ -611,12 +512,10 @@ function deleteUserFromServer(id, name) {
   );
 }
  
-// Normalize role text so "Job Seeker", "job_seeker", "job-seeker" etc. all compare equal
 function normalizeRole(s) {
   return (s || '').toLowerCase().replace(/[\s_-]/g, '');
 }
  
-// Filter server-rendered user rows in the table
 function filterServerUsers() {
   const q      = (document.getElementById('userSearch')?.value || '').toLowerCase();
   const role   = normalizeRole(document.getElementById('userRoleFilter')?.value || '');
@@ -643,11 +542,9 @@ function filterServerUsers() {
     }
   });
  
-  // Update count badge to reflect filtered count
   document.getElementById('userCount').textContent = visible;
 }
  
-// ── Role breakdown donut chart for the Overview tab ──
 function renderRoleBreakdown() {
   const svg    = document.getElementById('roleDonutSvg');
   const legend = document.getElementById('roleLegend');
@@ -710,7 +607,6 @@ function renderRoleBreakdown() {
   }).join('');
 }
  
-// ADD USER via API
 document.getElementById('addUserForm')?.addEventListener('submit', e => {
   e.preventDefault();
   const f         = e.target;
@@ -731,9 +627,7 @@ document.getElementById('addUserForm')?.addEventListener('submit', e => {
   .then(data => {
     if (data.status === 'success') {
       const user = data.user;
-      // Add new row to the top of the table
       const tbody = document.getElementById('users-body');
-      // Remove empty state row if present
       const emptyRow = tbody.querySelector('td.empty-state');
       if (emptyRow) emptyRow.closest('tr').remove();
  
@@ -768,7 +662,6 @@ document.getElementById('addUserForm')?.addEventListener('submit', e => {
         </td>`;
       tbody.prepend(newRow);
  
-      // Update counts
       const badge = document.getElementById('userCount');
       if (badge) badge.textContent = parseInt(badge.textContent || '0') + 1;
       const statEl = document.getElementById('stat-total-users');
@@ -787,14 +680,14 @@ document.getElementById('addUserForm')?.addEventListener('submit', e => {
 });
  
 // ════════════════════════════════════════════
-// JOB MODERATION (JS-only for now)
+// JOB MODERATION  ← APPROVE / REJECT via DB API
 // ════════════════════════════════════════════
  
 function renderModeration(data) {
   const tbody = document.getElementById('moderation-body');
   if (!tbody) return;
-  setEl('modCount',   data.length);
-  setEl('modPending', JOBS.filter(j => j.status === 'Pending').length);
+  setEl('modCount',    data.length);
+  setEl('modPending',  JOBS.filter(j => j.status === 'Pending').length);
   setEl('modApproved', JOBS.filter(j => j.status === 'Approved').length);
   setEl('modRejected', JOBS.filter(j => j.status === 'Rejected').length);
  
@@ -803,34 +696,50 @@ function renderModeration(data) {
       <i class="fa-solid fa-briefcase"></i><p>No jobs to moderate</p></td></tr>`;
     return;
   }
-  tbody.innerHTML = data.map(j => `
+ 
+  tbody.innerHTML = data.map(j => {
+    const isPending  = j.status === 'Pending';
+    const statusPill = j.status === 'Approved'
+      ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
+ 
+    return `
     <tr id="job-row-${j.id}">
       <td><strong>${j.title}</strong></td>
       <td style="color:var(--muted)">${j.company}</td>
       <td><span class="status-pill info">${j.type}</span></td>
       <td style="color:var(--muted)">${j.submitted}</td>
       <td>
-        <span class="status-pill ${j.status==='Approved'?'success':j.status==='Rejected'?'danger':'warning'}">
-          ${j.status}
-        </span>
+        <span class="status-pill ${statusPill}">${j.status}</span>
       </td>
       <td>
         <div class="td-actions">
           <button class="action-btn ghost sm" onclick="viewModerationJob('${j.id}')">
             <i class="fa-solid fa-eye"></i> View
           </button>
-          ${j.status === 'Pending' ? `
+          ${isPending ? `
             <button class="action-btn green sm" onclick="approveJob('${j.id}','${j.title}')">
-              <i class="fa-solid fa-check"></i> Approve</button>
+              <i class="fa-solid fa-check"></i> Approve
+            </button>
             <button class="action-btn danger sm" onclick="rejectJob('${j.id}','${j.title}')">
-              <i class="fa-solid fa-xmark"></i> Reject</button>` : ''}
-          <button class="action-btn secondary sm" onclick="reportModerationJob('${j.id}','${j.title}','${j.company}')">
-            <i class="fa-solid fa-flag"></i> Report</button>
-          <button class="action-btn danger sm" onclick="deleteModerationJob('${j.id}','${j.title}')">
-            <i class="fa-solid fa-trash"></i></button>
+              <i class="fa-solid fa-xmark"></i> Reject
+            </button>` : `
+            <button class="action-btn ghost sm" style="opacity:0.4;cursor:default" disabled>
+              ${j.status === 'Approved'
+                ? '<i class="fa-solid fa-circle-check"></i> Approved'
+                : '<i class="fa-solid fa-circle-xmark"></i> Rejected'}
+            </button>`}
+          <button class="action-btn secondary sm"
+            onclick="reportModerationJob('${j.id}','${j.title}','${j.company}')">
+            <i class="fa-solid fa-flag"></i>
+          </button>
+          <button class="action-btn danger sm"
+            onclick="deleteModerationJob('${j.id}','${j.title}')">
+            <i class="fa-solid fa-trash"></i>
+          </button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
  
 function filterModeration() {
@@ -845,52 +754,73 @@ function filterModeration() {
   renderModeration(data);
 }
  
-document.getElementById('addJobForm')?.addEventListener('submit', e => {
-  e.preventDefault();
-  const f = e.target;
-  const title   = f.jobTitle.value.trim();
-  const company = f.jobCompany.value.trim();
-  const type    = f.jobType.value;
-  const loc     = f.jobLocation.value.trim();
-  const desc    = f.jobDescription.value.trim();
-  if (!title || !company) return;
- 
-  const newJob = {
-    id: _nextJobId++, title, company, type,
-    location: loc || 'Remote', description: desc,
-    status: 'Pending',
-    submitted: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
-  };
-  JOBS.push(newJob);
-  persistState();
-  f.reset();
-  closeModal('addJobModal');
-  filterModeration();
-  updateStats();
-  logActivity('Job Submitted', `${title} at ${company}`, 'warning');
-  showToast(`"${title}" submitted for review`, 'info');
-});
- 
+// ── APPROVE — calls the backend, then updates the local JOBS array ──
 function approveJob(id, title) {
-  showConfirm('Approve Job', `Approve "${title}"? It will go live.`, 'Approve', 'green', () => {
+  showConfirm('Approve Job', `Approve "${title}"? It will go live and be visible to job seekers.`, 'Approve', 'green', () => {
     const j = JOBS.find(j => j.id === id);
-    if (j) {
+    if (!j) return;
+ 
+    if (j.fromDB) {
+      // Persist to database
+      fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            j.status = 'Approved';
+            persistState();
+            filterModeration();
+            updateStats();
+            renderCompanyJobs();
+            logActivity('Job Approved', title, 'success');
+            showToast(`"${title}" approved — now visible to job seekers`, 'success');
+          } else {
+            showToast(data.message || 'Approval failed', 'danger');
+          }
+        })
+        .catch(() => showToast('Network error — approval failed', 'danger'));
+    } else {
+      // JS-only job (not in DB)
       j.status = 'Approved';
-      persistState(); 
-      filterModeration(); updateStats();
+      persistState();
+      filterModeration();
+      updateStats();
+      renderCompanyJobs();
       logActivity('Job Approved', title, 'success');
       showToast(`"${title}" approved`, 'success');
     }
   });
 }
  
+// ── REJECT — calls the backend, then updates the local JOBS array ──
 function rejectJob(id, title) {
-  showConfirm('Reject Job', `Reject "${title}"?`, 'Reject', 'danger', () => {
+  showConfirm('Reject Job', `Reject "${title}"? Employers will be notified it was not approved.`, 'Reject', 'danger', () => {
     const j = JOBS.find(j => j.id === id);
-    if (j) {
+    if (!j) return;
+ 
+    if (j.fromDB) {
+      // Persist to database
+      fetch(`/admin/moderation/jobs/${j.dbId}/reject`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            j.status = 'Rejected';
+            persistState();
+            filterModeration();
+            updateStats();
+            renderCompanyJobs();
+            logActivity('Job Rejected', title, 'danger');
+            showToast(`"${title}" rejected — hidden from job seekers`, 'danger');
+          } else {
+            showToast(data.message || 'Rejection failed', 'danger');
+          }
+        })
+        .catch(() => showToast('Network error — rejection failed', 'danger'));
+    } else {
       j.status = 'Rejected';
       persistState();
-      filterModeration(); updateStats();
+      filterModeration();
+      updateStats();
+      renderCompanyJobs();
       logActivity('Job Rejected', title, 'danger');
       showToast(`"${title}" rejected`, 'danger');
     }
@@ -900,18 +830,28 @@ function rejectJob(id, title) {
 function viewModerationJob(id) {
   const j = JOBS.find(j => j.id === id);
   if (!j) return;
+  const statusPill = j.status === 'Approved' ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
   document.getElementById('viewJobTitle').textContent = j.title;
   document.getElementById('viewJobBody').innerHTML = `
     <div class="detail-grid">
       <div class="detail-item"><label>Company</label><span>${j.company}</span></div>
       <div class="detail-item"><label>Type</label><span>${j.type}</span></div>
       <div class="detail-item"><label>Location</label><span>${j.location}</span></div>
+      <div class="detail-item"><label>Salary</label><span>${j.salary || '—'}</span></div>
       <div class="detail-item"><label>Submitted</label><span>${j.submitted}</span></div>
       <div class="detail-item"><label>Status</label>
-        <span class="status-pill ${j.status==='Approved'?'success':j.status==='Rejected'?'danger':'warning'}">${j.status}</span>
+        <span class="status-pill ${statusPill}">${j.status}</span>
       </div>
     </div>
-    ${j.description ? `<div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.6">${j.description}</div>` : ''}`;
+    ${j.description ? `<div style="margin-top:16px;padding:14px;background:var(--bg);border-radius:8px;font-size:13px;line-height:1.6">${j.description}</div>` : ''}
+    ${j.status !== 'Pending' ? `
+      <div style="margin-top:14px;padding:12px 16px;border-radius:8px;font-size:13px;
+        background:${j.status === 'Approved' ? 'rgba(22,163,74,.08)' : 'rgba(239,68,68,.08)'};
+        color:${j.status === 'Approved' ? '#16A34A' : '#EF4444'};font-weight:600">
+        <i class="fa-solid ${j.status === 'Approved' ? 'fa-circle-check' : 'fa-circle-xmark'}"></i>
+        This job is ${j.status === 'Approved' ? 'live and visible to job seekers' : 'hidden from job seekers'}
+      </div>` : ''}`;
+ 
   document.getElementById('viewJobFooter').innerHTML = `
     <button class="action-btn ghost" onclick="closeModal('viewJobModal')">Cancel</button>
     ${j.status === 'Pending' ? `
@@ -925,21 +865,19 @@ function viewModerationJob(id) {
       <i class="fa-solid fa-trash"></i> Delete</button>`;
   openModal('viewJobModal');
 }
-// ── Report a job from the moderation tab ──
+ 
 function reportModerationJob(id, title, company) {
-  // Pre-fill the existing addReportModal and open it
   const form = document.getElementById('addReportForm');
   if (form) {
-    form.reportJobTitle.value = title;
-    form.reportCompany.value  = company;
-    form.reportedBy.value     = 'Admin';
-    form.reportReason.value   = 'Inappropriate';
-    form.reportDescription.value = '';
+    form.reportJobTitle.value       = title;
+    form.reportCompany.value        = company;
+    form.reportedBy.value           = 'Admin';
+    form.reportReason.value         = 'Inappropriate';
+    form.reportDescription.value    = '';
   }
   openModal('addReportModal');
 }
-
-// ── Delete a job from the moderation tab ──
+ 
 function deleteModerationJob(id, title) {
   showConfirm(
     'Delete Job',
@@ -948,16 +886,17 @@ function deleteModerationJob(id, title) {
     () => {
       const j = JOBS.find(j => j.id === id);
       if (!j) return;
-
+ 
       const doDelete = () => {
         JOBS = JOBS.filter(j => j.id !== id);
         persistState();
         filterModeration();
         updateStats();
+        renderCompanyJobs();
         logActivity('Job Deleted', title, 'danger');
         showToast(`"${title}" deleted`, 'danger');
       };
-
+ 
       if (j.fromDB) {
         fetch(`/admin/moderation/jobs/${j.dbId}/delete`, { method: 'POST' })
           .then(r => r.json())
@@ -973,10 +912,40 @@ function deleteModerationJob(id, title) {
   );
 }
  
-// ════════════════════════════════════════════
-// REPORTED JOBS  (handles both job reports AND user-account reports)
-// ════════════════════════════════════════════
+document.getElementById('addJobForm')?.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target;
+  const title   = f.jobTitle.value.trim();
+  const company = f.jobCompany.value.trim();
+  const type    = f.jobType.value;
+  const loc     = f.jobLocation.value.trim();
+  const desc    = f.jobDescription.value.trim();
+  const salary  = f.jobSalary ? f.jobSalary.value.trim() : '';
+  const website = f.jobWebsite ? f.jobWebsite.value.trim() : '';
+  const email   = f.jobEmail ? f.jobEmail.value.trim() : '';
+  if (!title || !company) return;
  
+  const newJob = {
+    id: _nextJobId++, title, company, type,
+    location: loc || 'Remote', description: desc,
+    salary, website, email,
+    status: 'Pending',
+    submitted: new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }),
+  };
+  JOBS.push(newJob);
+  persistState();
+  f.reset();
+  closeModal('addJobModal');
+  filterModeration();
+  updateStats();
+  renderCompanyJobs();
+  logActivity('Job Submitted', `${title} at ${company}`, 'warning');
+  showToast(`"${title}" submitted for review`, 'info');
+});
+ 
+// ════════════════════════════════════════════
+// REPORTED JOBS
+// ════════════════════════════════════════════
 function renderReports(data) {
   const tbody = document.getElementById('reports-body');
   if (!tbody) return;
@@ -1016,6 +985,127 @@ function renderReports(data) {
     </tr>`).join('');
 }
  
+// ════════════════════════════════════════════
+// COMPANY JOBS TAB
+// ════════════════════════════════════════════
+function companyKey(job) {
+  const email = (job.email || job.companyEmail || '').trim().toLowerCase();
+  if (email) return email;
+  return (job.company || 'unknown').trim().toLowerCase();
+}
+ 
+function companyWebsite(job) {
+  let url = (job.website || job.companyWebsite || job.companyUrl || '').trim();
+  if (!url) return null;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  return url;
+}
+ 
+function displayWebsite(url) {
+  return url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+}
+ 
+function renderCompanyJobs() {
+  const grid = document.getElementById('companyJobsGrid');
+  if (!grid) return;
+ 
+  const q = (document.getElementById('companySearch')?.value || '').toLowerCase();
+ 
+  const groups = {};
+  JOBS.forEach(j => {
+    const key = companyKey(j);
+    if (!groups[key]) {
+      groups[key] = { company: j.company, email: j.email || j.companyEmail || '—', jobs: [] };
+    }
+    groups[key].jobs.push(j);
+  });
+ 
+  let companies = Object.values(groups);
+ 
+  if (q) {
+    companies = companies.filter(c => {
+      const site = companyWebsite(c.jobs[0]) || '';
+      return c.company.toLowerCase().includes(q) ||
+             (c.email || '').toLowerCase().includes(q) ||
+             site.toLowerCase().includes(q);
+    });
+  }
+ 
+  if (companies.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <i class="fa-solid fa-building"></i><p>No company jobs found</p></div>`;
+    return;
+  }
+ 
+  companies.sort((a, b) => b.jobs.length - a.jobs.length);
+ 
+  grid.innerHTML = companies.map((c) => {
+    const pending  = c.jobs.filter(j => j.status === 'Pending').length;
+    const approved = c.jobs.filter(j => j.status === 'Approved').length;
+    const rejected = c.jobs.filter(j => j.status === 'Rejected').length;
+    const total    = c.jobs.length;
+    const cKey     = companyKey(c.jobs[0]);
+    const initial  = (c.company || '?').trim()[0] || '?';
+    const site     = companyWebsite(c.jobs[0]);
+ 
+    return `
+      <div class="company-job-card">
+        <div class="cjc-head">
+          <span class="cjc-tag"><i class="fa-solid fa-briefcase"></i> Job Postings</span>
+          <span class="cjc-count-badge">${total} job${total === 1 ? '' : 's'}</span>
+        </div>
+        <div class="cjc-identity">
+          <div class="cjc-avatar">${initial}</div>
+          <div class="cjc-identity-text">
+            <div class="cjc-company" title="${c.company}">${c.company}</div>
+            ${site
+              ? `<a class="cjc-website" href="${site}" target="_blank" rel="noopener noreferrer" title="${site}" onclick="event.stopPropagation()">
+                   <i class="fa-solid fa-arrow-up-right-from-square"></i> ${displayWebsite(site)}
+                 </a>`
+              : `<div class="cjc-email no-email">No website on file</div>`}
+          </div>
+        </div>
+        <div class="cjc-stats">
+          <div class="cjc-stat pending"><label>Pending</label><span>${pending}</span></div>
+          <div class="cjc-stat approved"><label>Approved</label><span>${approved}</span></div>
+          <div class="cjc-stat rejected"><label>Rejected</label><span>${rejected}</span></div>
+          <div class="cjc-stat total"><label>Total</label><span>${total}</span></div>
+        </div>
+        <button class="cjc-view-btn" onclick="viewCompanyJobs('${cKey.replace(/'/g, "\\'")}')">
+          <i class="fa-solid fa-eye"></i> View Jobs
+        </button>
+      </div>`;
+  }).join('');
+}
+ 
+function viewCompanyJobs(key) {
+  const jobs = JOBS.filter(j => companyKey(j) === key);
+  if (jobs.length === 0) return;
+ 
+  document.getElementById('companyJobsModalTitle').textContent =
+    `${jobs[0].company} — ${jobs.length} Job${jobs.length === 1 ? '' : 's'}`;
+ 
+  document.getElementById('companyJobsModalBody').innerHTML = jobs.map(j => `
+    <div class="cjc-job-row">
+      <div class="cjc-job-row-head">
+        <strong>${j.title}</strong>
+        <span class="status-pill ${j.status === 'Approved' ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning'}">
+          ${j.status}
+        </span>
+      </div>
+      <div class="cjc-job-meta">
+        <div>Type: <b>${j.type || '—'}</b></div>
+        <div>Location: <b>${j.location || '—'}</b></div>
+        <div>Submitted: <b>${j.submitted || '—'}</b></div>
+      </div>
+      ${j.description
+        ? `<div class="cjc-job-desc">${j.description}</div>`
+        : `<div class="cjc-job-desc" style="color:var(--light)">No description provided</div>`}
+    </div>`).join('');
+ 
+  openModal('viewCompanyJobsModal');
+}
+ 
 function filterReports() {
   const q      = (document.getElementById('reportSearch')?.value || '').toLowerCase();
   const reason = document.getElementById('reportReasonFilter')?.value || '';
@@ -1049,7 +1139,6 @@ document.getElementById('addReportForm')?.addEventListener('submit', e => {
   filterReports(); updateStats();
   logActivity('Job Reported', `${jobTitle} — ${reason}`, 'warning');
   showToast(`Report submitted for "${jobTitle}"`, 'warning');
-  // Navigate to Reported Jobs tab so admin can see it immediately
   document.querySelector('[data-tab="reported-jobs"]')?.click();
 });
  
@@ -1072,7 +1161,8 @@ function viewReport(id) {
   document.getElementById('viewReportFooter').innerHTML = r.status === 'Under Review' ? `
     <button class="action-btn ghost" onclick="closeModal('viewReportModal')">Cancel</button>
     <button class="action-btn ghost" onclick="closeModal('viewReportModal');dismissReport(${r.id},'${r.jobTitle}')">Dismiss</button>
-    <button class="action-btn danger" onclick="closeModal('viewReportModal');${isUser ? `removeReportedUser(${r.id},${r.targetUserId},'${r.jobTitle}')` : `removeReportedJob(${r.id},'${r.jobTitle}')`}"><i class="fa-solid fa-trash"></i> ${isUser ? 'Delete Account' : 'Remove Job'}</button>` :
+    <button class="action-btn danger" onclick="closeModal('viewReportModal');${isUser ? `removeReportedUser(${r.id},${r.targetUserId},'${r.jobTitle}')` : `removeReportedJob(${r.id},'${r.jobTitle}')`}">
+      <i class="fa-solid fa-trash"></i> ${isUser ? 'Delete Account' : 'Remove Job'}</button>` :
     `<button class="action-btn ghost" onclick="closeModal('viewReportModal')">Close</button>`;
   openModal('viewReportModal');
 }
@@ -1091,7 +1181,6 @@ function dismissReport(id, title) {
   });
 }
  
-// ── Report a user account (opens the reason modal) ──
 function reportUserJob(userId, userName) {
   const f = document.getElementById('reportUserForm');
   f.reportUserId.value = userId;
@@ -1163,13 +1252,12 @@ function removeReportedUser(reportId, userId, userName) {
 // ════════════════════════════════════════════
 // ANNOUNCEMENTS
 // ════════════════════════════════════════════
- 
 document.getElementById('sendAnnouncementForm')?.addEventListener('submit', e => {
   e.preventDefault();
-  const f         = e.target;
-  const subject   = f.announceSubject.value.trim();
-  const audience  = f.announceAudience.value;
-  const message   = f.announceMessage.value.trim();
+  const f        = e.target;
+  const subject  = f.announceSubject.value.trim();
+  const audience = f.announceAudience.value;
+  const message  = f.announceMessage.value.trim();
   if (!subject || !message) return;
  
   fetch('/admin/announcements/send', {
@@ -1182,14 +1270,32 @@ document.getElementById('sendAnnouncementForm')?.addEventListener('submit', e =>
     if (data.status === 'success') {
       f.reset();
       closeModal('sendAnnouncementModal');
-      logActivity('Announcement Sent', `${subject} (${audience === 'all' ? 'All Users' : audience})`, 'info');
-      showToast('Announcement sent successfully', 'success');
+      logActivity('Announcement Sent', `${subject} → ${audience === 'all' ? 'All Users' : audience}`, 'info');
+      showToast(`Announcement sent to ${data.recipients} user(s)`, 'success');
     } else {
       showToast(data.message || 'Failed to send announcement', 'danger');
     }
   })
   .catch(() => showToast('Network error — could not send announcement', 'danger'));
 });
+ 
+(function fixAnnouncementListener() {
+  const _origLogActivity2 = logActivity;
+  logActivity = function(action, target, status) {
+    _origLogActivity2(action, target, status);
+    if (action.toLowerCase().includes('announcement')) {
+      const parts    = target.split(' → ');
+      const subject  = parts[0] || target;
+      const audience = parts[1] || 'All Users';
+      if (!announcementLog.find(a => a.subject === subject)) {
+        announcementLog.unshift({
+          subject, audience,
+          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        });
+      }
+    }
+  };
+})();
  
 function updatePlatformHealth() {
   const totalUsers  = parseInt(document.getElementById('stat-total-users')?.textContent || '0');
@@ -1198,7 +1304,6 @@ function updatePlatformHealth() {
   const resolved    = REPORTS.filter(r => r.status === 'Resolved').length;
   const pendingJobs = JOBS.filter(j => j.status === 'Pending').length;
  
-  // Score out of 100
   let score = 100;
   if (totalUsers === 0)     score -= 30;
   if (activeJobs === 0)     score -= 20;
@@ -1213,13 +1318,11 @@ function updatePlatformHealth() {
   else if (score >= 55) { color = '#D97706'; label = 'Fair'; }
   else                  { color = '#EF4444'; label = 'Needs Attention'; }
  
-  // Update overview stat card
   const valEl   = document.getElementById('health-value');
   const pulseEl = document.getElementById('health-pulse');
-  if (valEl)   valEl.textContent      = score + '%';
+  if (valEl)   valEl.textContent         = score + '%';
   if (pulseEl) { pulseEl.style.background = color; pulseEl.title = label; }
  
-  // Update platform health tab stats
   setEl('ph-score',        score + '%');
   setEl('ph-open-reports', openReports);
   setEl('ph-pending-jobs', pendingJobs);
@@ -1230,14 +1333,13 @@ function updatePlatformHealth() {
   const phDot = document.getElementById('ph-dot');
   if (phDot) phDot.style.background = color;
  
-  // Health breakdown bars
   const breakdown = document.getElementById('ph-breakdown');
   if (breakdown) {
     const items = [
-      { label: 'User Base',          score: totalUsers > 0 ? 100 : 0,                          note: `${totalUsers} users` },
-      { label: 'Active Jobs',        score: activeJobs > 0 ? 100 : 0,                          note: `${activeJobs} live` },
-      { label: 'Report Backlog',     score: openReports === 0 ? 100 : openReports > 10 ? 20 : openReports > 4 ? 60 : 80, note: `${openReports} open` },
-      { label: 'Moderation Queue',   score: pendingJobs === 0 ? 100 : pendingJobs > 15 ? 20 : pendingJobs > 7 ? 55 : 80, note: `${pendingJobs} pending` },
+      { label: 'User Base',        score: totalUsers > 0 ? 100 : 0, note: `${totalUsers} users` },
+      { label: 'Active Jobs',      score: activeJobs > 0 ? 100 : 0, note: `${activeJobs} live` },
+      { label: 'Report Backlog',   score: openReports === 0 ? 100 : openReports > 10 ? 20 : openReports > 4 ? 60 : 80, note: `${openReports} open` },
+      { label: 'Moderation Queue', score: pendingJobs === 0 ? 100 : pendingJobs > 15 ? 20 : pendingJobs > 7 ? 55 : 80, note: `${pendingJobs} pending` },
     ];
     breakdown.innerHTML = items.map(item => {
       const c = item.score >= 80 ? '#16A34A' : item.score >= 55 ? '#D97706' : '#EF4444';
@@ -1254,7 +1356,6 @@ function updatePlatformHealth() {
     }).join('');
   }
  
-  // Status checklist
   const statusBlock = document.getElementById('ph-status-block');
   if (statusBlock) {
     const checks = [
@@ -1274,39 +1375,28 @@ function updatePlatformHealth() {
 }
  
 // ════════════════════════════════════════════
-// NOTIFICATION SYSTEM — JS ADDITIONS
-// These go at the VERY BOTTOM of admin_dashboard.js,
-// replacing nothing — just appended.
+// NOTIFICATION BELL SHAKE
 // ════════════════════════════════════════════
- 
-// ── Bell shake on new notification ──────────
 function shakeBell() {
   const btn = document.getElementById('notifBtn');
   if (!btn) return;
   btn.classList.remove('bell-shake');
-  // Force reflow so the animation restarts
   void btn.offsetWidth;
   btn.classList.add('bell-shake');
   setTimeout(() => btn.classList.remove('bell-shake'), 500);
 }
  
-// ── Patch pushAdminNotif to also shake the bell
-//    and show the badge correctly ─────────────
 const _origPushAdminNotif = pushAdminNotif;
 pushAdminNotif = function(action, target, status) {
   _origPushAdminNotif(action, target, status);
   shakeBell();
- 
-  // Make badge visible (renderAdminNotifs sets display:none but CSS default is none)
   const badge = document.getElementById('notifBadge');
   if (badge && badge.textContent !== '0') {
     badge.style.display = 'flex';
-    // also add has-unread class to btn
     document.getElementById('notifBtn')?.classList.add('has-unread');
   }
 };
  
-// ── Fix renderAdminNotifs to properly show/hide badge ──
 const _origRenderAdminNotifs = renderAdminNotifs;
 renderAdminNotifs = function() {
   _origRenderAdminNotifs();
@@ -1320,48 +1410,6 @@ renderAdminNotifs = function() {
   if (btn) btn.classList.toggle('has-unread', unread > 0);
 };
  
-// ════════════════════════════════════════════
-// FIX: Remove the duplicate sendAnnouncementForm
-// listener that was added in the analytics section.
-// The single correct listener below replaces both.
-// ════════════════════════════════════════════
-// NOTE: In your admin_dashboard.js, DELETE these two blocks:
-//   1. The first sendAnnouncementForm listener (~line 134, in the analytics section)
-//   2. The patchAnnouncementLog IIFE below it
-// Keep only the second sendAnnouncementForm listener (in the ANNOUNCEMENTS section).
-// Then update that listener's .then() success block to also log to announcementLog:
- 
-// ── Wrap the existing announcement listener to also
-//    push to announcementLog (for the Analytics tab) ──
-(function fixAnnouncementListener() {
-  // We can't remove old listeners, but we CAN patch at the fetch level.
-  // The cleanest fix: override the fetch for /admin/announcements/send
-  // so the first (duplicate) listener's fetch is a no-op.
-  // Instead, patch announcementLog to be filled by logActivity.
- 
-  const _origLogActivity2 = logActivity;
-  logActivity = function(action, target, status) {
-    _origLogActivity2(action, target, status);
- 
-    // If this is an announcement action, also log to announcementLog
-    if (action.toLowerCase().includes('announcement')) {
-      // Parse subject and audience from target string "Subject → Audience"
-      const parts    = target.split(' → ');
-      const subject  = parts[0] || target;
-      const audience = parts[1] || 'All Users';
-      // Avoid duplicates
-      if (!announcementLog.find(a => a.subject === subject)) {
-        announcementLog.unshift({
-          subject,
-          audience,
-          date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        });
-      }
-    }
-  };
-})();
- 
-// ── Initial badge render on page load ────────
 document.addEventListener('DOMContentLoaded', () => {
   renderAdminNotifs();
 });
@@ -1370,7 +1418,6 @@ function saveSettings() {
   showToast('Settings saved successfully!', 'success');
 }
  
-// Dark Mode Toggle (no-op if the toggle isn't in the page yet)
 document.getElementById("darkModeToggle")?.addEventListener("change", function() {
   if (this.checked) {
     document.body.style.background = "#1e1e2f";
@@ -1381,9 +1428,6 @@ document.getElementById("darkModeToggle")?.addEventListener("change", function()
   }
 });
  
-
- 
- 
 // ─────────────────────────────────────────────
 // GLOBAL SEARCH
 // ─────────────────────────────────────────────
@@ -1391,23 +1435,16 @@ document.querySelector('.search-bar input')?.addEventListener('input', function 
   const q = this.value.toLowerCase().trim();
   if (!q) return;
  
-  // Search server-rendered user rows
   const userRows = document.querySelectorAll('#users-body tr[id^="server-user-row-"]');
   let userMatch = false;
-  userRows.forEach(row => {
-    const text = row.textContent.toLowerCase();
-    if (text.includes(q)) { userMatch = true; }
-  });
+  userRows.forEach(row => { if (row.textContent.toLowerCase().includes(q)) userMatch = true; });
  
   const jMatch = JOBS.find(j => j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q));
   const rMatch = REPORTS.find(r => r.jobTitle.toLowerCase().includes(q));
  
   if (userMatch) {
     document.querySelector('[data-tab="user-management"]')?.click();
-    setTimeout(() => {
-      document.getElementById('userSearch').value = q;
-      filterServerUsers();
-    }, 100);
+    setTimeout(() => { document.getElementById('userSearch').value = q; filterServerUsers(); }, 100);
   } else if (jMatch) {
     document.querySelector('[data-tab="job-moderation"]')?.click();
     setTimeout(() => { document.getElementById('modSearch').value = q; filterModeration(); }, 100);
@@ -1417,14 +1454,16 @@ document.querySelector('.search-bar input')?.addEventListener('input', function 
   }
 });
  
-
+// ════════════════════════════════════════════
+// LOAD JOBS FROM DB  ← status gate enforced here
+// ════════════════════════════════════════════
 function loadModerationJobsFromDB() {
   fetch('/admin/moderation/jobs')
     .then(r => r.json())
     .then(dbJobs => {
-      // Remove previously loaded DB jobs to avoid duplicates on refresh
+      // Remove stale DB jobs; keep JS-only ones
       JOBS = JOBS.filter(j => !j.fromDB);
-
+ 
       dbJobs.forEach(dbJob => {
         JOBS.push({
           id:          'db-' + dbJob.id,
@@ -1433,37 +1472,32 @@ function loadModerationJobsFromDB() {
           company:     dbJob.company,
           type:        dbJob.type,
           location:    dbJob.location,
-          status:      dbJob.status,
+          // ── KEY: respect whatever status the DB returns ──
+          status:      dbJob.status,   // 'Pending' | 'Approved' | 'Rejected'
           submitted:   dbJob.submitted,
           description: dbJob.description || '',
+          salary:      dbJob.salary || '',
+          website:     dbJob.website || dbJob.companyWebsite || '',
+          email:       dbJob.email  || dbJob.companyEmail   || '',
           fromDB:      true,
         });
       });
-
+ 
       renderModeration(JOBS);
-
-      // Update active jobs count with real DB number
-      const activeFromDB = JOBS.filter(j => j.status === 'Approved').length;
-      const flaskBase    = parseInt(document.getElementById('stat-active-jobs')?.dataset.flask || '0');
-      setEl('stat-active-jobs', flaskBase + activeFromDB);
-
+      renderCompanyJobs();
+ 
+      const totalActive = JOBS.filter(j => j.status === 'Approved').length;
+      setEl('stat-active-jobs', totalActive);
+ 
       updateStats();
     })
     .catch(err => console.error('Could not load jobs for moderation:', err));
 }
-
-function persistState() {
-  localStorage.setItem('hn_jobs',    JSON.stringify(JOBS.filter(j => !j.fromDB)));
-  localStorage.setItem('hn_reports', JSON.stringify(REPORTS));
-}
-
+ 
 // ─────────────────────────────────────────────
-// INIT — do NOT call renderUsers here, Jinja already rendered them
+// INIT
 // ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  const activeJobsEl = document.getElementById('stat-active-jobs');
-  if (activeJobsEl) activeJobsEl.dataset.flask = activeJobsEl.textContent;
-
   updateStats();
   renderModeration(JOBS);
   renderReports(REPORTS);
@@ -1471,9 +1505,10 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePlatformHealth();
   updateAnalytics();
   renderActionHistory(activityLog);
+  renderCompanyJobs();
   loadModerationJobsFromDB();
-
-  // Auto-refresh moderation jobs every 30 seconds
-  // so new employer jobs appear without a page reload
+ 
+  // Auto-refresh moderation every 30s
   setInterval(loadModerationJobsFromDB, 30000);
 });
+ 
