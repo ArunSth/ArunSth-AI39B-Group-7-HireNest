@@ -1,24 +1,5 @@
 {% extends 'employer_base.html' %}
 
-{% block content %}
-<div class="dashboard-container">
-  {% include 'sidebar_employer.html' %}
-  <div class="main-content">
-    <div class="topbar">
-      <div class="topbar-left">
-        <h2>Manage Applicants</h2>
-        <p class="topbar-subtitle">Track candidate activity, applications, and status updates from one employer workspace.</p>
-      </div>
-      <div class="topbar-right">
-        <div class="user-profile">
-          <div class="user-avatar">{{ (user.First_name or 'U')|first }}</div>
-          <div>
-            <div class="user-name">{{ user.First_name }} {{ user.Last_name }}</div>
-            <div class="user-role">Employer</div>
-          </div>
-        </div>
-      </div>
-    </div>
 {% block page_title %}Manage Applicants{% endblock %}
 {% block page_subtitle %}Track candidate activity, applications, and status updates from one employer workspace.{% endblock %}
 

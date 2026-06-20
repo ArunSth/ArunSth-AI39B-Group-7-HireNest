@@ -25,11 +25,6 @@
       <h3>Manage Jobs</h3>
       <p>Review your open roles, keep postings current, and make it easy for candidates to apply.</p>
     </div>
-    <div class="jobs-hero-actions">
-      <a href="{{ url_for('job_posting.create_job') }}" class="btn-primary">
-        <i class="fas fa-plus"></i> Post New Job
-      </a>
-    </div>
   </section>
 
   <section class="section jobs-table-section">
@@ -102,15 +97,12 @@
           </tbody>
         </table>
         {% else %}
-        <div class="empty-state jobs-empty-state">
+        <div class="empty-state jobs-empty-state jobs-empty-state--compact">
           <div class="jobs-empty-state__icon">
             <i class="fas fa-briefcase"></i>
           </div>
           <h3>No jobs posted yet</h3>
-          <p>Start hiring by posting your first opportunity and attracting qualified candidates.</p>
-          <a href="{{ url_for('job_posting.create_job') }}" class="btn-primary jobs-empty-state__action">
-            <i class="fas fa-plus"></i> Post New Job
-          </a>
+          <p>Create your first job posting to start receiving applications from job seekers.</p>
         </div>
         {% endif %}
       </div>
