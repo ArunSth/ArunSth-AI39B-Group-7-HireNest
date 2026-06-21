@@ -90,7 +90,6 @@ def create_app():
                             ('employerVerification', '0'),
                             ('autoApproveJobs',      '0'),
                             ('jobModeration',        '1'),
-                            ('emailAlerts',          '1'),
                             ('weeklyReports',        '0'),
                         ]
                     )
@@ -104,15 +103,16 @@ def create_app():
             conn.close()
 
             saved = {row['key']: row['value'] == '1' for row in rows}
+            if saved.get('autoApproveJobs'):
+                saved['jobModeration'] = False
             app.config['ADMIN_SETTINGS'] = {
                 'userRegistration':     saved.get('userRegistration',     True),
                 'employerVerification': saved.get('employerVerification', False),
                 'autoApproveJobs':      saved.get('autoApproveJobs',      False),
-                'jobModeration':        saved.get('jobModeration',        True),
-                'emailAlerts':          saved.get('emailAlerts',          True),
+                'jobModeration':        saved.get('jobModeration',        False if saved.get('autoApproveJobs') else True),
                 'weeklyReports':        saved.get('weeklyReports',        False),
             }
-            print("✅ Admin settings loaded from DB")
+            print("Admin settings loaded from DB")
 
         except Exception as e:
             app.config['ADMIN_SETTINGS'] = {
@@ -120,10 +120,9 @@ def create_app():
                 'employerVerification': False,
                 'autoApproveJobs':      False,
                 'jobModeration':        True,
-                'emailAlerts':          True,
                 'weeklyReports':        False,
             }
-            print(f"⚠️ Admin settings defaulted: {e}")
+            print(f"Admin settings defaulted: {e}")
     # ─────────────────────────────────────────────────────────
     
     from flask import send_from_directory

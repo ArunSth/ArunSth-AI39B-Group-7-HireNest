@@ -193,6 +193,7 @@
   .job-chip-row span { padding:6px 10px; background:var(--light-gray); color:var(--text-secondary); border-radius:6px; font-size:12px; font-weight:600; }
   .job-card-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:auto; }
   .report-job-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .report-job-modal-overlay[hidden] { display:none !important; }
   .report-job-modal { width:min(520px, 92vw); background:var(--white); border-radius:12px; box-shadow:var(--shadow-md); padding:22px; }
   .report-job-modal__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
   .report-job-modal__header h3 { margin:0; }
@@ -218,14 +219,17 @@
     if (overlay) overlay.hidden = true;
   }
 
-  document.querySelectorAll('.report-job-trigger').forEach(button => {
-    button.addEventListener('click', () => {
-      openReportModal(button.dataset.jobId, button.dataset.jobTitle);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.report-job-trigger').forEach(button => {
+      button.addEventListener('click', () => {
+        console.log('REPORT BUTTON CLICKED');
+        openReportModal(button.dataset.jobId, button.dataset.jobTitle);
+      });
     });
-  });
 
-  document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
-    if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+    document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+    });
   });
 </script>
 {% endblock %}

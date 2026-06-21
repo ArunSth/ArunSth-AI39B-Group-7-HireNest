@@ -32,7 +32,7 @@ class JobPostingModel:
         }
 
     @staticmethod
-    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level", vacancies=1):
+    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level", vacancies=1, status="Pending"):
         conn = get_connection()
         try:
             vacancies = max(int(vacancies or 1), 1)
@@ -46,7 +46,7 @@ class JobPostingModel:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (employee_id, title, description, requirement, salary,
-                     location, "Pending", job_type, experience_level, vacancies, 0),
+                     location, status, job_type, experience_level, vacancies, 0),
                 )
                 conn.commit()
                 return cur.lastrowid

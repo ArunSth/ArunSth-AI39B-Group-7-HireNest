@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_dashboard.css') }}">
 </head>
-<body>
+<body data-active-tab="{{ active_tab }}">
 <div class="admin-container">
  
     <!-- ── SIDEBAR ── -->
@@ -64,33 +64,9 @@
                 <input type="text" placeholder="Search users, jobs, reports...">
             </div>
             <div class="topbar-right">
- 
-                <!-- ── NOTIFICATION BELL ── -->
-                <div class="notif-wrap" id="notifWrap">
-                    <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()">
-                        <i class="fa-solid fa-bell"></i>
-                        <span class="notif-badge" id="notifBadge">0</span>
-                    </button>
-                    <div class="notif-dropdown" id="notifDropdown">
-                        <div class="notif-drop-head">
-                            <h3>Notifications <span id="notifUnreadLabel"></span></h3>
-                            <button class="mark-all-btn" onclick="markAllAdminNotifs()">Mark all read</button>
-                        </div>
-                        <div class="notif-filter-tabs">
-                            <button class="nftab active" onclick="setNotifFilter('all',this)">All</button>
-                            <button class="nftab" onclick="setNotifFilter('unread',this)">Unread</button>
-                            <button class="nftab" onclick="setNotifFilter('announcement',this)">Announcements</button>
-                            <button class="nftab" onclick="setNotifFilter('report',this)">Reports</button>
-                        </div>
-                        <div class="notif-list-body" id="notifListBody"></div>
-                        <div class="notif-drop-footer">
-                            <button onclick="document.querySelector('[data-tab=platform-health]').click();closeNotifDropdown()">
-                                View all in Platform Health
-                            </button>
-                        </div>
-                    </div>
-                </div>
- 
+                <button type="button" id="darkModeToggle" class="action-btn ghost" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
                 <div class="admin-profile">
                     <div class="admin-avatar">A</div>
                     <div class="admin-meta"><strong>Admin</strong><small>Super Admin</small></div>
@@ -633,16 +609,9 @@
     </div>
   </div>
 
-  <!-- Reporting & Notifications -->
+  <!-- Reporting -->
   <div class="chart-card">
-    <h3>Reporting & Notifications</h3>
-    <div class="setting-row">
-      <div>
-        <strong>Email Alerts</strong>
-        <p>Notify admins of flagged content</p>
-      </div>
-      <label class="toggle"><input type="checkbox"><span class="slider"></span></label>
-    </div>
+    <h3>Reporting</h3>
     <div class="setting-row">
       <div>
         <strong>Weekly Reports</strong>

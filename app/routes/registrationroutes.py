@@ -15,10 +15,6 @@ class RegistrationRoutes:
                 from flask import current_app
                 settings = current_app.config.get('ADMIN_SETTINGS', {})
 
-# TEMPORARY DEBUG — remove after fixing
-                print(f"DEBUG REGISTER: ADMIN_SETTINGS = {settings}")
-                print(f"DEBUG REGISTER: userRegistration = {settings.get('userRegistration', True)}")
-
                 if not settings.get('userRegistration', True):
                     msg = 'New user registration is currently disabled. Please try again later.'
                     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

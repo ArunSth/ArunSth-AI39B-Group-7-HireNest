@@ -53,13 +53,19 @@ function logActivity(action, target, status) {
 
   const auditBody = document.getElementById('audit-body');
   if (auditBody && activityLog.length > 0) {
+    const statusText = {
+      success: 'Completed',
+      warning: 'Pending',
+      danger: 'Removed',
+      info: 'Updated',
+      muted: 'Dismissed'
+    };
     const jsRows = activityLog.slice(0, 5).map(a => `
       <tr>
         <td>${a.action}</td>
         <td style="color:var(--muted)">${a.target}</td>
         <td style="color:var(--muted)">${a.date}</td>
-        <td><span class="status-pill ${a.status}">${{ success: 'Completed', warning: 'Pending', danger: 'Removed', info: 'Updated', muted: 'Dismissed' }[a.status] || a.status
-      }</span></td>
+        <td><span class="status-pill ${a.status}">${statusText[a.status] || a.status}</span></td>
       </tr>`).join('');
     auditBody.innerHTML = jsRows + auditBody.innerHTML;
   }
@@ -173,6 +179,17 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
     if (tab === 'analytics') updateAnalytics();
     if (tab === 'company-jobs') renderCompanyJobs();
   });
+});
+
+function activateAdminTab(tabName) {
+  if (!tabName) return;
+  const tabLink = document.querySelector(`.nav-link[data-tab="${tabName}"]`);
+  if (tabLink) tabLink.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const activeTab = document.body?.dataset.activeTab || 'overview';
+  activateAdminTab(activeTab);
 });
 
 // ─────────────────────────────────────────────
@@ -363,119 +380,6 @@ function updateAnalytics() {
     }
   }
 }
-
-// ════════════════════════════════════════════
-// ADMIN NOTIFICATION DROPDOWN
-// ════════════════════════════════════════════
-const adminNotifs = JSON.parse(localStorage.getItem('hn_admin_notifs') || '[]');
-let notifFilter = 'all';
-
-function pushAdminNotif(action, target, status) {
-  const typeMap = {
-    success: 'job',
-    danger: 'report',
-    warning: 'job',
-    info: 'announcement',
-    muted: 'system',
-  };
-  let type = typeMap[status] || 'system';
-  if (action.toLowerCase().includes('report')) type = 'report';
-  adminNotifs.unshift({
-    id: Date.now(),
-    type: type,
-    title: action,
-    msg: target,
-    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-    unread: true,
-  });
-  if (adminNotifs.length > 50) adminNotifs.pop();
-  localStorage.setItem('hn_admin_notifs', JSON.stringify(adminNotifs));
-  renderAdminNotifs();
-}
-
-const _origLogActivity = logActivity;
-logActivity = function (action, target, status) {
-  _origLogActivity(action, target, status);
-  pushAdminNotif(action, target, status);
-};
-
-function getFilteredNotifs() {
-  if (notifFilter === 'unread') return adminNotifs.filter(n => n.unread);
-  if (notifFilter === 'announcement') return adminNotifs.filter(n => n.type === 'announcement');
-  if (notifFilter === 'report') return adminNotifs.filter(n => n.type === 'report');
-  return adminNotifs;
-}
-
-function renderAdminNotifs() {
-  const body = document.getElementById('notifListBody');
-  const badge = document.getElementById('notifBadge');
-  const label = document.getElementById('notifUnreadLabel');
-  if (!body) return;
-
-  const unread = adminNotifs.filter(n => n.unread).length;
-  if (badge) {
-    badge.textContent = unread > 99 ? '99+' : unread;
-    badge.style.display = unread === 0 ? 'none' : 'flex';
-  }
-  if (label) label.textContent = unread > 0 ? `(${unread} unread)` : '';
-
-  const data = getFilteredNotifs();
-  if (data.length === 0) {
-    body.innerHTML = `<div class="notif-empty">
-      <i class="fa-solid fa-bell-slash"></i>
-      <p>No notifications</p>
-    </div>`;
-    return;
-  }
-
-  const iconMap = { announcement: 'fa-bullhorn', user: 'fa-user-plus', report: 'fa-flag', job: 'fa-briefcase', system: 'fa-heart-pulse' };
-  const classMap = { announcement: 'announce', user: 'user', report: 'report', job: 'job', system: 'system' };
-
-  body.innerHTML = data.map(n => `
-    <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markAdminNotifRead(${n.id})">
-      <div class="notif-icon ${classMap[n.type] || 'system'}">
-        <i class="fa-solid ${iconMap[n.type] || 'fa-bell'}"></i>
-      </div>
-      <div class="notif-body">
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-msg">${n.msg}</div>
-        <div class="notif-time">${n.time}</div>
-      </div>
-      ${n.unread ? '<span class="notif-dot"></span>' : ''}
-    </div>`).join('');
-}
-
-function markAdminNotifRead(id) {
-  const n = adminNotifs.find(x => x.id === id);
-  if (n) n.unread = false;
-  renderAdminNotifs();
-}
-
-function markAllAdminNotifs() {
-  adminNotifs.forEach(n => n.unread = false);
-  renderAdminNotifs();
-}
-
-function setNotifFilter(f, btn) {
-  notifFilter = f;
-  document.querySelectorAll('.nftab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  renderAdminNotifs();
-}
-
-function toggleNotifDropdown() {
-  const dd = document.getElementById('notifDropdown');
-  if (dd) dd.classList.toggle('open');
-}
-
-function closeNotifDropdown() {
-  document.getElementById('notifDropdown')?.classList.remove('open');
-}
-
-document.addEventListener('click', e => {
-  const wrap = document.getElementById('notifWrap');
-  if (wrap && !wrap.contains(e.target)) closeNotifDropdown();
-});
 
 // ════════════════════════════════════════════
 // USER MANAGEMENT
@@ -721,6 +625,10 @@ function renderModeration(data) {
     const statusPill = j.status === 'Approved'
       ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
 
+    const safeId = jsStringArg(j.id);
+    const safeTitle = jsStringArg(j.title);
+    const safeCompany = jsStringArg(j.company);
+
     return `
     <tr id="job-row-${j.id}">
       <td><strong>${j.title}</strong></td>
@@ -732,14 +640,14 @@ function renderModeration(data) {
       </td>
       <td>
         <div class="td-actions">
-          <button class="action-btn ghost sm" onclick="viewModerationJob('${j.id}')">
+          <button class="action-btn ghost sm" onclick="viewModerationJob('${safeId}')">
             <i class="fa-solid fa-eye"></i> View
           </button>
           ${isPending ? `
-            <button class="action-btn green sm" onclick="approveJob('${j.id}','${j.title}')">
+            <button class="action-btn green sm" onclick="approveJob('${safeId}','${safeTitle}')">
               <i class="fa-solid fa-check"></i> Approve
             </button>
-            <button class="action-btn danger sm" onclick="rejectJob('${j.id}','${j.title}')">
+            <button class="action-btn danger sm" onclick="rejectJob('${safeId}','${safeTitle}')">
               <i class="fa-solid fa-xmark"></i> Reject
             </button>` : `
             <button class="action-btn ghost sm" style="opacity:0.4;cursor:default" disabled>
@@ -748,11 +656,11 @@ function renderModeration(data) {
         : '<i class="fa-solid fa-circle-xmark"></i> Rejected'}
             </button>`}
           <button class="action-btn secondary sm"
-            onclick="reportModerationJob('${j.id}','${j.title}','${j.company}')">
+            onclick="reportModerationJob('${safeId}','${safeTitle}','${safeCompany}')">
             <i class="fa-solid fa-flag"></i>
           </button>
           <button class="action-btn danger sm"
-            onclick="deleteModerationJob('${j.id}','${j.title}')">
+            onclick="deleteModerationJob('${safeId}','${safeTitle}')">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -773,13 +681,25 @@ function filterModeration() {
   renderModeration(data);
 }
 
+function jsStringArg(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\"/g, '\\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
 // ── APPROVE — calls the backend, then updates the local JOBS array ──
 function approveJob(id, title) {
+  console.log('approveJob called:', id, title);
   showConfirm('Approve Job', `Approve "${title}"? It will go live and be visible to job seekers.`, 'Approve', 'green', () => {
-    const j = JOBS.find(j => j.id === id);
+    const j = JOBS.find(j => String(j.id) === String(id));
+    console.log('approveJob found job:', j);
     if (!j) return;
 
     if (j.fromDB) {
+      console.log('approveJob backend request for job dbId=', j.dbId);
       // Persist to database
       fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' })
         .then(r => r.json())
@@ -796,7 +716,10 @@ function approveJob(id, title) {
             showToast(data.message || 'Approval failed', 'danger');
           }
         })
-        .catch(() => showToast('Network error — approval failed', 'danger'));
+        .catch(err => {
+          console.error('approveJob fetch error:', err);
+          showToast('Network error — approval failed', 'danger');
+        });
     } else {
       // JS-only job (not in DB)
       j.status = 'Approved';
@@ -812,11 +735,14 @@ function approveJob(id, title) {
 
 // ── REJECT — calls the backend, then updates the local JOBS array ──
 function rejectJob(id, title) {
+  console.log('rejectJob called:', id, title);
   showConfirm('Reject Job', `Reject "${title}"? Employers will be notified it was not approved.`, 'Reject', 'danger', () => {
-    const j = JOBS.find(j => j.id === id);
+    const j = JOBS.find(j => String(j.id) === String(id));
+    console.log('rejectJob found job:', j);
     if (!j) return;
 
     if (j.fromDB) {
+      console.log('rejectJob backend request for job dbId=', j.dbId);
       // Persist to database
       fetch(`/admin/moderation/jobs/${j.dbId}/reject`, { method: 'POST' })
         .then(r => r.json())
@@ -833,7 +759,10 @@ function rejectJob(id, title) {
             showToast(data.message || 'Rejection failed', 'danger');
           }
         })
-        .catch(() => showToast('Network error — rejection failed', 'danger'));
+        .catch(err => {
+          console.error('rejectJob fetch error:', err);
+          showToast('Network error — rejection failed', 'danger');
+        });
     } else {
       j.status = 'Rejected';
       persistState();
@@ -847,7 +776,7 @@ function rejectJob(id, title) {
 }
 
 function viewModerationJob(id) {
-  const j = JOBS.find(j => j.id === id);
+  const j = JOBS.find(j => String(j.id) === String(id));
   if (!j) return;
   const statusPill = j.status === 'Approved' ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
   document.getElementById('viewJobTitle').textContent = j.title;
@@ -903,11 +832,11 @@ function deleteModerationJob(id, title) {
     `Permanently delete "${title}"? This cannot be undone.`,
     'Delete', 'danger',
     () => {
-      const j = JOBS.find(j => j.id === id);
+      const j = JOBS.find(j => String(j.id) === String(id));
       if (!j) return;
 
       const doDelete = () => {
-        JOBS = JOBS.filter(j => j.id !== id);
+        JOBS = JOBS.filter(j => String(j.id) !== String(id));
         persistState();
         filterModeration();
         updateStats();
@@ -1015,7 +944,6 @@ const defaultSettings = {
   employerVerification: false,
   autoApproveJobs:      false,
   jobModeration:        true,
-  emailAlerts:          true,
   weeklyReports:        false,
 };
  
@@ -1025,8 +953,7 @@ function getSettingsCheckboxes() {
   // [1] Employer Verification
   // [2] Auto-approve Jobs
   // [3] Job Moderation
-  // [4] Email Alerts
-  // [5] Weekly Reports
+  // [4] Weekly Reports
   return document.querySelectorAll('#tab-settings .toggle input[type="checkbox"]');
 }
  
@@ -1034,10 +961,46 @@ function loadSettings() {
   return Object.assign({}, defaultSettings,
     JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
 }
+
+const THEME_STORAGE_KEY = 'hn_admin_theme';
+function getSavedTheme() {
+  return localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+}
+
+function updateThemeToggleButton(theme) {
+  const button = document.getElementById('darkModeToggle');
+  if (!button) return;
+  button.innerHTML = theme === 'dark'
+    ? '<i class="fa-solid fa-sun"></i>'
+    : '<i class="fa-solid fa-moon"></i>';
+  button.title = theme === 'dark'
+    ? 'Switch to light mode'
+    : 'Switch to dark mode';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeToggleButton(theme);
+}
+
+function toggleTheme() {
+  const nextTheme = getSavedTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  applyTheme(nextTheme);
+}
+
+function initThemeToggle() {
+  const savedTheme = getSavedTheme();
+  applyTheme(savedTheme);
+  const button = document.getElementById('darkModeToggle');
+  if (button) {
+    button.addEventListener('click', toggleTheme);
+  }
+}
  
 function syncToggleUI(settings) {
   const cbs = getSettingsCheckboxes();
-  const keys = ['userRegistration','employerVerification','autoApproveJobs','jobModeration','emailAlerts','weeklyReports'];
+  const keys = ['userRegistration','employerVerification','autoApproveJobs','jobModeration','weeklyReports'];
   keys.forEach((key, i) => { if (cbs[i]) cbs[i].checked = !!settings[key]; });
 }
  
@@ -1117,35 +1080,7 @@ function applySettings(settings) {
     }
   }
  
-  // ── 5. EMAIL ALERTS ──
-  // Visual indicator in the topbar
-  const topbar = document.querySelector('.topbar');
-  let alertPill = document.getElementById('hn-alert-pill');
-  if (!alertPill && topbar) {
-    alertPill = document.createElement('span');
-    alertPill.id = 'hn-alert-pill';
-    alertPill.style.cssText = `
-      font-size:11px; padding:3px 10px; border-radius:999px;
-      font-weight:600; margin-right:8px;
-    `;
-    const notifWrap = document.getElementById('notifWrap');
-    if (notifWrap) notifWrap.before(alertPill);
-  }
-  if (alertPill) {
-    if (settings.emailAlerts) {
-      alertPill.textContent = '📧 Alerts ON';
-      alertPill.style.background = 'rgba(22,163,74,0.12)';
-      alertPill.style.color = '#16A34A';
-      alertPill.style.display = '';
-    } else {
-      alertPill.textContent = '🔕 Alerts OFF';
-      alertPill.style.background = 'rgba(239,68,68,0.10)';
-      alertPill.style.color = '#EF4444';
-      alertPill.style.display = '';
-    }
-  }
- 
-  // ── 6. WEEKLY REPORTS ──
+  // ── 5. WEEKLY REPORTS ──
   // Shown as a status line under the Settings save button
   let weeklyNote = document.getElementById('hn-weekly-note');
   if (!weeklyNote) {
@@ -1162,32 +1097,42 @@ function applySettings(settings) {
  
 function saveSettings() {
   const cbs = getSettingsCheckboxes();
+  const previousSettings = loadSettings();
  
   const settings = {
     userRegistration:     cbs[0]?.checked ?? true,
     employerVerification: cbs[1]?.checked ?? false,
     autoApproveJobs:      cbs[2]?.checked ?? false,
     jobModeration:        cbs[3]?.checked ?? true,
-    emailAlerts:          cbs[4]?.checked ?? true,
-    weeklyReports:        cbs[5]?.checked ?? false,
+    weeklyReports:        cbs[4]?.checked ?? false,
   };
  
-  // ── CONFLICT: auto-approve + moderation both on ──
   if (settings.autoApproveJobs && settings.jobModeration) {
     showToast('Conflict: Auto-approve disables Job Moderation.', 'warning');
     settings.jobModeration = false;
     if (cbs[3]) cbs[3].checked = false;
   }
  
-  // Save locally
+  if (settings.userRegistration === false) {
+    settings.userRegistration = false;
+  }
+ 
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
  
-  // Send to Flask backend (fire-and-forget — works offline too)
   fetch('/admin/settings/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(settings),
-  }).catch(() => {});
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status !== 'success') {
+        showToast('Failed to save settings.', 'danger');
+      }
+    })
+    .catch(() => {
+      showToast('Settings save failed; offline mode active.', 'warning');
+    });
  
   applySettings(settings);
   logActivity('Settings Updated', buildSettingsSummary(settings), 'info');
@@ -1200,7 +1145,6 @@ function buildSettingsSummary(s) {
     employerVerification: 'Employer Verify',
     autoApproveJobs:      'Auto-approve',
     jobModeration:        'Moderation',
-    emailAlerts:          'Email Alerts',
     weeklyReports:        'Weekly Reports',
   };
   return Object.entries(labels)
@@ -1210,6 +1154,7 @@ function buildSettingsSummary(s) {
  
 // ── Settings load + live row highlight on toggle change ──
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
  
   fetch('/admin/settings/load')
     .then(r => r.json())
@@ -1689,60 +1634,6 @@ function updatePlatformHealth() {
   }
 }
 
-// ════════════════════════════════════════════
-// NOTIFICATION BELL SHAKE
-// ════════════════════════════════════════════
-function shakeBell() {
-  const btn = document.getElementById('notifBtn');
-  if (!btn) return;
-  btn.classList.remove('bell-shake');
-  void btn.offsetWidth;
-  btn.classList.add('bell-shake');
-  setTimeout(() => btn.classList.remove('bell-shake'), 500);
-}
-
-const _origPushAdminNotif = pushAdminNotif;
-pushAdminNotif = function (action, target, status) {
-  _origPushAdminNotif(action, target, status);
-  shakeBell();
-  const badge = document.getElementById('notifBadge');
-  if (badge && badge.textContent !== '0') {
-    badge.style.display = 'flex';
-    document.getElementById('notifBtn')?.classList.add('has-unread');
-  }
-};
-
-const _origRenderAdminNotifs = renderAdminNotifs;
-renderAdminNotifs = function () {
-  _origRenderAdminNotifs();
-  const unread = adminNotifs.filter(n => n.unread).length;
-  const badge = document.getElementById('notifBadge');
-  const btn = document.getElementById('notifBtn');
-  if (badge) {
-    badge.style.display = unread > 0 ? 'flex' : 'none';
-    badge.textContent = unread > 99 ? '99+' : unread;
-  }
-  if (btn) btn.classList.toggle('has-unread', unread > 0);
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderAdminNotifs();
-});
-
-function saveSettings() {
-  showToast('Settings saved successfully!', 'success');
-}
-
-document.getElementById("darkModeToggle")?.addEventListener("change", function () {
-  if (this.checked) {
-    document.body.style.background = "#1e1e2f";
-    document.body.style.color = "#f5f5f5";
-  } else {
-    document.body.style.background = "#f5f7fa";
-    document.body.style.color = "#333";
-  }
-});
-
 // ─────────────────────────────────────────────
 // GLOBAL SEARCH
 // ─────────────────────────────────────────────
@@ -1781,7 +1672,7 @@ function loadModerationJobsFromDB() {
 
       dbJobs.forEach(dbJob => {
         JOBS.push({
-          id: 'db-' + dbJob.id,
+          id: String(dbJob.id),
           dbId: dbJob.id,
           title: dbJob.title,
           company: dbJob.company,
@@ -1850,3 +1741,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadModerationJobsFromDB, 30000);
   setInterval(loadReportsFromDB, 30000);
 });
+
+

@@ -119,7 +119,7 @@
     <div class="logo-section">
       <a href="{{ url_for('login.index') }}" class="logo-link">
         <img
-          src="https://scontent.xx.fbcdn.net/v/t1.15752-9/703976951_848251768332342_2544034181798847641_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=H0f_H__v4aMQ7kNvwF7GAE3&_nc_oc=AdpknzsGcyBxDbVDETTUszbHxblyqi0ojCiCnX_iDhbbfNTmj46Zz2YY_fi-31FdudNMhAJlwvxfUu3tHn7OhmxX&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD5QELn4YfsHlT7_tBIxyeZAawRGwf0bLzNeZjyVNEbugOGg&oe=6A352935"
+          src="{{ url_for('download_file', filename='logos/logo_6.png') }}"
           alt="HireNest Logo"
           class="logo"
         />
@@ -131,12 +131,12 @@
     </nav>
 
     <div class="nav-icons auth-group">
-      <i class="fa-solid fa-sun" id="theme-toggle" aria-label="Toggle theme"></i>
       {% if session.get('user_id') %}
         <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
           <i class="fa-solid fa-bell"></i>
           <span class="notif-badge" id="notifBadge"></span>
         </button>
+        <i class="fa-solid fa-sun" id="theme-toggle" aria-label="Toggle theme"></i>
         {% if session.get('role') == 'job_seeker' %}
           <a href="{{ url_for('job_seeker.profile') }}" class="nav-user-greeting" style="font-size:14px; color:var(--text-secondary); margin:0 8px; text-decoration:none; display:flex; align-items:center; gap:6px;">
             <i class="fa-solid fa-user" aria-hidden="true"></i>
@@ -154,6 +154,7 @@
         <a href="{{ url_for('logout.process_logout') }}" class="signup-btn logout-confirm-link" data-logout-url="{{ url_for('logout.process_logout') }}" style="text-decoration:none;">Log Out</a>
       {% else %}
         <!-- Guest state -->
+        <i class="fa-solid fa-sun" id="theme-toggle" aria-label="Toggle theme"></i>
          <a href="/login" class="login-btn" style="text-decoration:none;">
           Log In
         </a>
@@ -380,7 +381,7 @@
         <div class="logo-section">
           <a href="{{ url_for('login.index') }}" class="logo-link">
             <img
-              src="https://scontent.xx.fbcdn.net/v/t1.15752-9/703976951_848251768332342_2544034181798847641_n.png?_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=H0f_H__v4aMQ7kNvwF7GAE3&_nc_oc=AdpknzsGcyBxDbVDETTUszbHxblyqi0ojCiCnX_iDhbbfNTmj46Zz2YY_fi-31FdudNMhAJlwvxfUu3tHn7OhmxX&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD5QELn4YfsHlT7_tBIxyeZAawRGwf0bLzNeZjyVNEbugOGg&oe=6A352935"
+              src="{{ url_for('download_file', filename='logos/logo_6.png') }}"
               alt="HireNest Logo"
               class="logo"
             />

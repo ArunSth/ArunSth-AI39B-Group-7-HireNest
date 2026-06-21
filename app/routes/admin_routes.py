@@ -34,6 +34,7 @@ class AdminRoutes:
                 'total_reports': len(JobReportModel.get_reports_for_admin()),
             }
             reviews = ReviewController.get_all_reviews_for_admin()
+            active_tab = request.args.get('tab', 'overview')
 
             return render_template(
                 'admin_dashboard.html',
@@ -43,6 +44,7 @@ class AdminRoutes:
                 stats=stats,
                 users=users,
                 reviews=reviews,
+                active_tab=active_tab,
             )
 
         # ── 2. Add User ───────────────────────────────────────
@@ -100,7 +102,8 @@ class AdminRoutes:
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
-    # fetch BEFORE deleting — you need owner + title after the row is gone
+            print(f"Delete moderation route hit: job_id={job_id}")
+
             job = JobPostingModel.get_job_by_id(job_id)
             if not job:
                 return jsonify({'status': 'error', 'message': 'Job not found.'}), 404
@@ -114,17 +117,16 @@ class AdminRoutes:
                 f'Job #{job_id} deleted by admin.'
             )
 
-            NotificationModel.create_notification(
-                user_id=job['Employer_id'],   # <-- confirm actual column name
-                title='Job Posting Removed',
-                message=f'Your job posting "{job["Title"]}" was removed by an administrator.',
-                notification_type='job_deleted',
-                reference_id=job_id,
-            )
+            employer_user_id = job.get('employer_user_id') or job.get('User_id')
+            if employer_user_id:
+                NotificationModel.create_notification(
+                    user_id=employer_user_id,
+                    title='Job Posting Removed',
+                    message=f'Your job posting "{job["Title"]}" was removed by an administrator.',
+                    notification_type='job_deleted',
+                    reference_id=job_id,
+                )
 
-            return jsonify({'status': 'success'})
- 
-       
             return jsonify({'status': 'success'})
 
         # ── 5. Approve Job ────────────────────────────────────
@@ -133,6 +135,8 @@ class AdminRoutes:
         def approve_job(job_id):
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+            print(f"Approve route hit: job_id={job_id}")
 
             # 'Approved' is the DB value recognised by search_jobs_for_seekers
             # (the model checks  LOWER(status) = 'approved')
@@ -159,6 +163,8 @@ class AdminRoutes:
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
+            print(f"Reject route hit: job_id={job_id}")
+
             success = JobPostingModel.update_job_status(job_id, 'Rejected')
             if not success:
                 return jsonify({'status': 'error', 'message': 'Failed to reject job.'}), 500
@@ -172,13 +178,15 @@ class AdminRoutes:
             )
 
             if job:
-                NotificationModel.create_notification(
-                    user_id=job['Employer_id'],   # <-- confirm actual column name
-                    title='Job Posting Rejected',
-                    message=f'Your job posting "{title}" was rejected by an administrator.',
-                    notification_type='job_rejected',
-                    reference_id=job_id,
-                )
+                employer_user_id = job.get('employer_user_id') or job.get('User_id')
+                if employer_user_id:
+                    NotificationModel.create_notification(
+                        user_id=employer_user_id,
+                        title='Job Posting Rejected',
+                        message=f'Your job posting "{title}" was rejected by an administrator.',
+                        notification_type='job_rejected',
+                        reference_id=job_id,
+                    )
 
             return jsonify({
                 'status':  'success',
@@ -233,7 +241,7 @@ class AdminRoutes:
                 flash('Review approved successfully.', 'success')
             else:
                 flash('Failed to approve review.', 'error')
-            return redirect(url_for('admin.admin_dashboard'))
+            return redirect(url_for('admin.admin_dashboard', tab='company-reviews'))
 
         @self.blueprint.route('/admin/reviews/<int:review_id>/reject', methods=['POST'])
         def reject_review(review_id):
@@ -249,7 +257,7 @@ class AdminRoutes:
                 flash('Review rejected successfully.', 'success')
             else:
                 flash('Failed to reject review.', 'error')
-            return redirect(url_for('admin.admin_dashboard'))
+            return redirect(url_for('admin.admin_dashboard', tab='company-reviews'))
 
         @self.blueprint.route('/admin/reviews/<int:review_id>/hide', methods=['POST'])
         def hide_review(review_id):
@@ -265,7 +273,7 @@ class AdminRoutes:
                 flash('Review hidden successfully.', 'success')
             else:
                 flash('Failed to hide review.', 'error')
-            return redirect(url_for('admin.admin_dashboard'))
+            return redirect(url_for('admin.admin_dashboard', tab='company-reviews'))
 
         # ── 9. Report Management API ─────────────────────────
         @self.blueprint.route('/admin/reports', methods=['GET'])
@@ -488,23 +496,23 @@ class AdminRoutes:
             from app.database import get_connection
  
             data = request.get_json(silent=True) or {}
-            print(f"DEBUG SAVE: received data = {data}")
 
             settings = {
-                'userRegistration':     data.get('userRegistration',     True),
-                'employerVerification': data.get('employerVerification', False),
-                'autoApproveJobs':      data.get('autoApproveJobs',      False),
-                'jobModeration':        data.get('jobModeration',         True),
-                'emailAlerts':          data.get('emailAlerts',           True),
-                'weeklyReports':        data.get('weeklyReports',         False),
+                'userRegistration':     bool(data.get('userRegistration',     True)),
+                'employerVerification': bool(data.get('employerVerification', False)),
+                'autoApproveJobs':      bool(data.get('autoApproveJobs',      False)),
+                'jobModeration':        bool(data.get('jobModeration',         True)),
+                'weeklyReports':        bool(data.get('weeklyReports',         False)),
             }
 
-            print(f"DEBUG SAVE: settings = {settings}")
+            # Auto-approve implies moderation is effectively disabled.
+            if settings['autoApproveJobs']:
+                settings['jobModeration'] = False
 
-    # Update app.config immediately
+            # Update app.config immediately
             current_app.config['ADMIN_SETTINGS'] = settings
 
-    # Save to DB so it survives restarts
+            # Save to DB so it survives restarts
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
@@ -515,20 +523,18 @@ class AdminRoutes:
                            ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)
                            """, (key, '1' if value else '0'))
                 conn.commit()
-                print("DEBUG SAVE: DB write successful")
             except Exception as e:
-                print(f"DEBUG SAVE: DB write FAILED = {e}")
                 return jsonify({'status': 'error', 'message': str(e)}), 500
             finally:
-               conn.close()
+                conn.close()
 
-    # Auto-approve pending jobs if toggled on
+            # Auto-approve pending jobs if toggled on
             if settings.get('autoApproveJobs'):
                 conn2 = get_connection()
                 try:
                     with conn2.cursor() as cur:
                         cur.execute(
-                            "UPDATE `Job_posting` SET `Status` = 'approved' WHERE `Status` = 'pending'"
+                            "UPDATE `Jobs` SET `Status` = 'approved' WHERE `Status` = 'pending'"
                         )
                     conn2.commit()
                 except Exception:
@@ -556,7 +562,6 @@ class AdminRoutes:
                 'employerVerification': False,
                 'autoApproveJobs':      False,
                 'jobModeration':        True,
-                'emailAlerts':          True,
                 'weeklyReports':        False,
             })
             return jsonify({'status': 'success', 'settings': settings})

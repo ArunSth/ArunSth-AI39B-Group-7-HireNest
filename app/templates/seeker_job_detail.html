@@ -242,6 +242,7 @@
   .action-wide { width:100%; justify-content:center; margin-bottom:10px; }
   .applied-note { display:flex; gap:10px; align-items:center; padding:14px; border-radius:8px; background:rgba(34,197,94,.1); color:#16a34a; margin-bottom:14px; font-weight:700; }
   .report-job-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .report-job-modal-overlay[hidden] { display:none !important; }
   .report-job-modal { width:min(520px, 92vw); background:var(--white); border-radius:12px; box-shadow:var(--shadow-md); padding:22px; }
   .report-job-modal__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
   .report-job-modal__header h3 { margin:0; }
@@ -266,14 +267,17 @@
     if (overlay) overlay.hidden = true;
   }
 
-  document.querySelectorAll('.report-job-trigger').forEach(button => {
-    button.addEventListener('click', () => {
-      openReportModal(button.dataset.jobId);
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.report-job-trigger').forEach(button => {
+      button.addEventListener('click', () => {
+        console.log('REPORT BUTTON CLICKED');
+        openReportModal(button.dataset.jobId);
+      });
     });
-  });
 
-  document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
-    if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+    document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+    });
   });
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

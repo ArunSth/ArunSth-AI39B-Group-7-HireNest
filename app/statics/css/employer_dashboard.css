@@ -176,9 +176,7 @@ body {
 }
 
 .employer-navbar__theme {
-  flex: 1;
-  display: flex;
-  justify-content: center;
+  display: none;
 }
 
 .employer-theme-toggle {
@@ -198,6 +196,14 @@ body {
 .employer-theme-toggle:hover {
   background: var(--light-bg);
   transform: translateY(-1px);
+}
+
+.employer-navbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: nowrap;
 }
 
 .employer-theme-toggle i {
