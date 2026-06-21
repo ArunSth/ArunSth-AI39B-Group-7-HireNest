@@ -1,104 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Company Reviews — HireNest</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/seeker_dashboard_override.css') }}">
-</head>
-<body class="job-seeker-layout">
-  <div class="dashboard-container">
-    {% include 'sidebar_job_seeker.html' %}
-    <main class="main-content">
-      <div class="topbar">
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="dashboard-container">
+  {% include 'sidebar_job_seeker.html' %}
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
         <div>
           <h2>Company Reviews</h2>
-          <p>Share your experience and read others&rsquo; reviews for this employer.</p>
+          <p>Share your experience and read feedback from other job seekers.</p>
         </div>
       </div>
+    </div>
 
-      <section class="section">
-        <div class="card-grid">
-          <article class="company-card">
-            <div class="card-header">
+    <div class="content">
+      <div class="seeker-dashboard-shell">
+        {% set company_display = (reviews[0].Company_name if reviews and reviews[0].Company_name else 'Company Review') %}
+        {% set avg_rating = summary.average_rating if summary and summary.average_rating else 0 %}
+        {% set total_reviews = summary.total_reviews if summary and summary.total_reviews else 0 %}
+        {% set has_reviewed = current_seekers_id and reviews and reviews|selectattr('Seekers_id', 'equalto', current_seekers_id)|list|length > 0 %}
+        {% set review_status = 'Reviewed' if has_reviewed else 'Not Reviewed' %}
+
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Company review</span>
+            <h1>{{ company_display }}</h1>
+            <p>Share your experience and help future candidates.</p>
+          </div>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('reviews.reviews_index') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-arrow-left"></i>
+              <span>Back to companies</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="seeker-stat-grid" aria-label="Review summary statistics">
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Average Rating</p>
+              <strong>{{ avg_rating|round(1) if avg_rating else '0.0' }}</strong>
+              <span>{{ total_reviews }} total ratings</span>
+            </div>
+            <i class="fas fa-star"></i>
+          </div>
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Total Reviews</p>
+              <strong>{{ total_reviews }}</strong>
+              <span>Community feedback</span>
+            </div>
+            <i class="fas fa-comment-dots"></i>
+          </div>
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Your Review Status</p>
+              <strong>{{ review_status }}</strong>
+              <span>{% if has_reviewed %}You have already shared feedback{% else %}Ready to submit a review{% endif %}</span>
+            </div>
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </section>
+
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading">
+            <div>
+              <span class="seeker-kicker">Company summary</span>
+              <h2>{{ company_display }}</h2>
+            </div>
+            <span class="seeker-chip">{{ total_reviews }} review{% if total_reviews != 1 %}s{% endif %}</span>
+          </div>
+          <div class="seeker-item-list">
+            <div class="seeker-application-row">
               <div>
-                <h3>Review summary</h3>
-                <p>Average rating and total feedback.</p>
+                <h3>Overall rating</h3>
+                <p>{{ avg_rating|round(1) if avg_rating else 'No ratings yet' }}</p>
+              </div>
+              <div class="seeker-row-meta">
+                <span>{{ total_reviews }} review{% if total_reviews != 1 %}s{% endif %}</span>
+                <span class="seeker-status seeker-status--{% if avg_rating >= 4 %}positive{% elif avg_rating >= 3 %}neutral{% else %}warning{% endif %}">
+                  {% if avg_rating >= 4 %}Excellent{% elif avg_rating >= 3 %}Good{% elif avg_rating > 0 %}Needs attention{% else %}New{% endif %}
+                </span>
               </div>
             </div>
-            <div class="company-info">
-              <p><strong>Average rating:</strong> {{ summary.average_rating|round(1) if summary and summary.average_rating else 'N/A' }}</p>
-              <p><strong>Total reviews:</strong> {{ summary.total_reviews if summary else 0 }}</p>
-            </div>
-          </article>
+          </div>
+        </section>
 
-          <article class="activity-card">
-            <div class="card-header">
-              <div>
-                <h3>Write a review</h3>
-                <p>Help other job seekers by sharing your experience.</p>
-              </div>
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading">
+            <div>
+              <span class="seeker-kicker">Write review</span>
+              <h2>Share your experience</h2>
             </div>
-            <form method="POST" class="profile-form" action="{{ url_for('reviews.edit_review', employee_id=employee_id, review_id=edit_review.Review_id) if edit_review else url_for('reviews.company_review', employee_id=employee_id) }}">
-              <div class="form-group">
-                <label for="rating">Rating</label>
-                <select id="rating" name="rating">
-                  <option value="">Select rating</option>
-                  {% for value in range(1, 6) %}
-                    <option value="{{ value }}" {% if edit_review and edit_review.Rating == value %}selected{% endif %}>{{ value }} star{{ 's' if value > 1 else '' }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="review_text">Review</label>
-                <textarea id="review_text" name="review_text" rows="5" placeholder="Write your review here...">{{ edit_review.Review_text if edit_review else '' }}</textarea>
-              </div>
-              <button type="submit" class="btn-primary">{{ 'Update Review' if edit_review else 'Submit Review' }}</button>
-              {% if edit_review %}
-                <a href="{{ url_for('reviews.company_review', employee_id=employee_id) }}" class="btn-secondary">Cancel</a>
-              {% endif %}
-            </form>
-          </article>
-        </div>
-      </section>
+          </div>
+          <form method="POST" class="profile-form" action="{{ url_for('reviews.company_review', employee_id=employee_id) }}">
+            <div class="form-group">
+              <label for="rating">Rating</label>
+              <select id="rating" name="rating">
+                <option value="">Select rating</option>
+                {% for value in range(1, 6) %}
+                  <option value="{{ value }}">{{ value }} star{{ 's' if value > 1 else '' }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="review_text">Review</label>
+              <textarea id="review_text" name="review_text" rows="6" placeholder="Write your review here..."></textarea>
+            </div>
+            <div class="review-actions-row">
+              <button type="submit" class="btn-primary">Submit Review</button>
+            </div>
+          </form>
+        </section>
 
-      <section class="section">
-        <div class="section-header">
-          <h3>Recent reviews</h3>
-        </div>
-        <div class="table-container">
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading">
+            <div>
+              <span class="seeker-kicker">Recent reviews</span>
+              <h2>What others are saying</h2>
+            </div>
+          </div>
+
           {% if reviews %}
-            <div class="review-list">
-              {% for review in reviews %}
-                <div class="review-card">
-                  <div class="review-header">
-                    <div>
-                      <h4>{{ review.First_name }} {{ review.Last_name }}</h4>
-                      <p class="muted">Rated {{ review.Rating }}/5</p>
-                    </div>
-                    <span class="review-date">{{ review.Created_at.strftime('%d %b %Y') if review.Created_at else '' }}</span>
-                  </div>
-                  <p>{{ review.Review_text }}</p>
-                  {% if current_seekers_id and review.Seekers_id == current_seekers_id %}
-                    <div class="review-actions">
-                      <a href="{{ url_for('reviews.edit_review', employee_id=employee_id, review_id=review.Review_id) }}" class="btn-small btn-edit">Edit</a>
-                      <form method="POST" action="{{ url_for('reviews.delete_review', employee_id=employee_id, review_id=review.Review_id) }}" style="display:inline;">
-                        <button type="submit" class="btn-small btn-delete">Delete</button>
-                      </form>
-                    </div>
-                  {% endif %}
+          <div class="review-list">
+            {% for review in reviews %}
+            <div class="review-card">
+              <div class="review-header">
+                <div>
+                  <h4>{{ review.First_name }} {{ review.Last_name }}</h4>
+                  <p class="muted">Rated {{ review.Rating }}/5</p>
                 </div>
-              {% endfor %}
+                <span class="review-date">{{ review.Created_at.strftime('%d %b %Y') if review.Created_at else '' }}</span>
+              </div>
+              <p>{{ review.Review_text }}</p>
             </div>
+            {% endfor %}
+          </div>
           {% else %}
-            <div class="empty-state">
-              <p>No reviews yet. Be the first to leave feedback.</p>
-            </div>
+          <div class="seeker-empty-block">
+            <h3>No reviews yet</h3>
+            <p>Be the first to share your experience for this company.</p>
+          </div>
           {% endif %}
-        </div>
-      </section>
-    </main>
-  </div>
-</body>
-</html>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
+{% endblock %}

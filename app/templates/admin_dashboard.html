@@ -28,6 +28,9 @@
             <a href="#" class="nav-link" data-tab="job-moderation">
                 <i class="fa-solid fa-briefcase-medical"></i><span>Job Moderation</span>
             </a>
+            <a href="#" class="nav-link" data-tab="company-reviews">
+                <i class="fa-solid fa-star"></i><span>Company Reviews</span>
+            </a>
             <a href="#" class="nav-link" data-tab="company-jobs">
                 <i class="fa-solid fa-building"></i><span>Company Jobs</span>
             </a>
@@ -301,6 +304,71 @@
             </div>
         </div>
 
+        <!-- ── COMPANY REVIEWS ── -->
+        <div class="tab-content" id="tab-company-reviews">
+            <div class="page-head">
+                <h1>Company Reviews</h1>
+                <p>Review all submitted company feedback and approve or reject it.</p>
+            </div>
+            <div class="table-card" style="max-width:100%">
+                <div class="chart-head">
+                    <h3>Submitted Reviews</h3>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Review ID</th>
+                            <th>Company</th>
+                            <th>Reviewer</th>
+                            <th>Rating</th>
+                            <th>Review</th>
+                            <th>Status</th>
+                            <th>Created Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reviews %}
+                            {% for review in reviews %}
+                            <tr>
+                                <td>#{{ review.Review_id }}</td>
+                                <td>{{ review.Company_name }}</td>
+                                <td>{{ review.Reviewer }}</td>
+                                <td>{{ review.Rating }}/5</td>
+                                <td style="max-width: 420px;">{{ review.Review_text }}</td>
+                                <td>
+                                    {% set review_status = review.Status or 'Pending' %}
+                                    <span class="status-pill {{ 'warning' if review_status == 'Pending' else 'success' if review_status == 'Approved' else 'danger' }}">{{ review_status }}</span>
+                                </td>
+                                <td>{{ review.Created_at.strftime('%d %b %Y') if review.Created_at else '—' }}</td>
+                                <td>
+                                    <div class="td-actions">
+                                        <form method="POST" action="{{ url_for('admin.approve_review', review_id=review.Review_id) }}" style="display:inline;">
+                                            <button type="submit" class="action-btn ghost sm">Approve</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.reject_review', review_id=review.Review_id) }}" style="display:inline;">
+                                            <button type="submit" class="action-btn danger sm">Reject</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.hide_review', review_id=review.Review_id) }}" style="display:inline;">
+                                            <button type="submit" class="action-btn secondary sm">Hide</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="empty-state">
+                                    <i class="fa-solid fa-star"></i>
+                                    <p>No company reviews found</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- ── COMPANY JOBS ── -->
 <div class="tab-content" id="tab-company-jobs">
     <div class="page-head">
@@ -348,11 +416,16 @@
                 <div class="filter-group">
                     <select id="reportReasonFilter" onchange="filterReports()">
                         <option value="">All Reasons</option>
-                        <option>Spam</option><option>Misleading</option><option>Inappropriate</option><option>Scam</option><option>Duplicate</option>
+                        <option>Scam/Fraud</option>
+                        <option>Fake Company</option>
+                        <option>Misleading Information</option>
+                        <option>Spam/Duplicate</option>
+                        <option>Offensive Content</option>
+                        <option>Other</option>
                     </select>
                     <select id="reportStatusFilter" onchange="filterReports()">
                         <option value="">All Statuses</option>
-                        <option>Under Review</option><option>Resolved</option><option>Dismissed</option>
+                        <option>Pending</option><option>Resolved</option><option>Dismissed</option>
                     </select>
                 </div>
             </div>
@@ -364,7 +437,7 @@
                     </button>
                 </div>
                 <table class="admin-table">
-                    <thead><tr><th>Job Title</th><th>Company</th><th>Reported By</th><th>Reason</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                    <thead><tr><th>Report ID</th><th>Job Title</th><th>Reporter</th><th>Reason</th><th>Status</th><th>Created Date</th><th>Actions</th></tr></thead>
                     <tbody id="reports-body">
                         <tr><td colspan="7" class="empty-state"><i class="fa-solid fa-flag"></i><p>No reported jobs</p></td></tr>
                     </tbody>

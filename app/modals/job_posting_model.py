@@ -46,7 +46,7 @@ class JobPostingModel:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (employee_id, title, description, requirement, salary,
-                     location, "active", job_type, experience_level, vacancies, 0),
+                     location, "Pending", job_type, experience_level, vacancies, 0),
                 )
                 conn.commit()
                 return cur.lastrowid
@@ -425,7 +425,7 @@ class JobPostingModel:
                 conn.commit()
 
                 if job:
-                    from app.modals.notification_model import NotificationModel
+                    from app.modals.notification import NotificationModel
                     NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Deleted",
@@ -442,10 +442,10 @@ class JobPostingModel:
             conn.close()
 
     # ── update_job_status — called by approve/reject routes ───────────
-    # Accepted values: 'Pending' | 'Approved' | 'Rejected' | 'active' | 'closed'
+    # Accepted values: 'Pending' | 'Approved' | 'Rejected' | 'Closed'
     @staticmethod
     def update_job_status(job_id, status):
-        allowed = {'Pending', 'Approved', 'Rejected', 'active', 'closed'}
+        allowed = {'Pending', 'Approved', 'Rejected', 'Closed'}
         if status not in allowed:
             print(f"update_job_status: invalid status '{status}'")
             return False
@@ -470,7 +470,7 @@ class JobPostingModel:
                 conn.commit()
 
                 if cur.rowcount > 0 and job and status == 'Rejected':
-                    from app.modals.notification_model import NotificationModel
+                    from app.modals.notification import NotificationModel
                     NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Rejected",
@@ -493,7 +493,7 @@ class JobPostingModel:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT COUNT(*) AS total FROM `Jobs` WHERE LOWER(`Status`) IN ('active', 'approved')"
+                    "SELECT COUNT(*) AS total FROM `Jobs` WHERE LOWER(`Status`) = 'approved'"
                 )
                 result = cur.fetchone()
                 return result['total'] if result else 0

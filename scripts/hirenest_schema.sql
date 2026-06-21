@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS `Company_Review` (
     `Employee_id` INT,
     `Review_text` TEXT,
     `Rating` INT,
+    `Status` VARCHAR(20) NOT NULL DEFAULT 'Pending',
     `Created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`Seekers_id`) REFERENCES `Job_Seekers`(`Seekers_id`),
     FOREIGN KEY (`Employee_id`) REFERENCES `Employee`(`Employee_id`)

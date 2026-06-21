@@ -60,38 +60,35 @@ class NotificationModel:
             conn.close()
 
     @staticmethod
-    def send_announcement(subject, message, audience, db):
+    def send_announcement(subject, message, audience, db=None):
         """
         audience: 'all' | 'Job Seeker' | 'Employer'
-        db: your SQLAlchemy db instance (or however you access the session)
- 
-        Adjust the import / query style to match your existing controller patterns.
+        db: retained for backward compatibility; not required by the current model layer.
         """
-        from app.models.user import User            # adjust import path as needed
-        from app.models.notification import Notification  # adjust import path as needed
- 
-    # Build the recipient query
+        from app.modals.user import UserModel
+        from app.modals.notification import NotificationModel
+
+        all_users = UserModel.get_all_users()
         if audience == 'all':
-           users = db.session.query(User).all()
+            users = all_users
         else:
-           users = db.session.query(User).filter(User.Role == audience).all()
- 
-        notifications = [
-            Notification(
-              user_id=u.User_id,
-              title=f"📢 {subject}",
-              message=message,
-              is_read=False,
+            role_map = {
+                'Job Seeker': 'job_seeker',
+                'Employer': 'employer',
+            }
+            normalized_role = role_map.get(audience, audience)
+            users = [user for user in all_users if user.get(
+                'Role') == normalized_role]
+
+        for user in users:
+            NotificationModel.create_notification(
+                user_id=user['User_id'],
+                title=f"📢 {subject}",
+                message=message,
+                notification_type='general',
             )
-            for u in users
-        ]
- 
-        if notifications:
-            db.session.bulk_save_objects(notifications)
-            db.session.commit()
- 
-        return len(notifications)
- 
+
+        return len(users)
 
     @staticmethod
     def unread_count(user_id):

@@ -62,8 +62,9 @@
               <div>
                 <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; letter-spacing: 0.5px;">Status</p>
                 <div style="display: flex; gap: 10px;">
-                  <button class="btn-small" onclick="updateJobStatus('{{ job.Job_id }}', 'active')" style="background: {% if job.Status == 'active' %}var(--primary-purple){% else %}rgba(109, 93, 252, 0.1){% endif %}; color: {% if job.Status == 'active' %}var(--white){% else %}var(--primary-purple){% endif %};">Active</button>
-                  <button class="btn-small" onclick="updateJobStatus('{{ job.Job_id }}', 'closed')" style="background: {% if job.Status == 'closed' %}var(--primary-red){% else %}rgba(239, 68, 68, 0.1){% endif %}; color: {% if job.Status == 'closed' %}var(--white){% else %}var(--primary-red){% endif %};">Closed</button>
+                  {% set status_key = (job.Status or '')|lower %}
+                  <button class="btn-small" onclick="updateJobStatus('{{ job.Job_id }}', 'Approved')" style="background: {% if status_key == 'approved' %}var(--primary-purple){% else %}rgba(109, 93, 252, 0.1){% endif %}; color: {% if status_key == 'approved' %}var(--white){% else %}var(--primary-purple){% endif %};">Active</button>
+                  <button class="btn-small" onclick="updateJobStatus('{{ job.Job_id }}', 'Closed')" style="background: {% if status_key == 'closed' %}var(--primary-red){% else %}rgba(239, 68, 68, 0.1){% endif %}; color: {% if status_key == 'closed' %}var(--white){% else %}var(--primary-red){% endif %};">Closed</button>
                 </div>
               </div>
             </div>

@@ -514,6 +514,12 @@ def run_migrations():
                     ADD COLUMN `Reference_id` INT NULL
                 """)
 
+            if not _column_exists(cur, 'Company_Review', 'Status'):
+                cur.execute("""
+                    ALTER TABLE `Company_Review`
+                    ADD COLUMN `Status` VARCHAR(20) NOT NULL DEFAULT 'Pending'
+                """)
+
             if not _column_exists(cur, 'Job_Alerts', 'Job_type'):
                 cur.execute("""
                     ALTER TABLE `Job_Alerts`

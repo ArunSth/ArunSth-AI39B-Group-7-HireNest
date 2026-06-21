@@ -79,6 +79,27 @@ class InterviewRoutes:
         normalized["time_input_value"] = (
             scheduled_at.strftime("%H:%M") if scheduled_at else ""
         )
+
+        meeting_link = normalized.get("Meeting_link")
+        normalized["meeting_link_display"] = (
+            meeting_link or "No meeting details provided."
+        )
+        normalized["meeting_link_is_url"] = bool(
+            meeting_link and meeting_link.startswith(("http://", "https://"))
+        )
+        normalized["status_display"] = (
+            (normalized.get("Status") or "scheduled")
+            .replace("_", " ")
+            .title()
+        )
+        normalized["mode_display"] = normalized.get("Mode") or "Not specified"
+        normalized["company_display"] = (
+            normalized.get("Company_name")
+            or normalized.get("company_name")
+        )
+        normalized["job_title_display"] = (
+            normalized.get("job_title") or "Position"
+        )
         return normalized
 
     def interview_scheduling(self):

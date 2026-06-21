@@ -203,7 +203,15 @@ class JobPostingRoutes:
                     return redirect(url_for("job_posting.edit_job", job_id=job_id))
 
             user_data = UserModel.get_by_id(session["user_id"])
-            return render_template("edit_job.html", user=user_data, job=job)
+            total_vacancies = int(job.get("Vacancies", 1) or 1)
+            filled_positions = int(job.get("Filled_vacancies", 0) or 0)
+            remaining_positions = max(total_vacancies - filled_positions, 0)
+            return render_template(
+                "edit_job.html",
+                user=user_data,
+                job=job,
+                remaining_positions=remaining_positions
+            )
 
         @self.blueprint.route("/employer/jobs/<int:job_id>/delete", methods=["POST"])
         def delete_job(job_id):
@@ -221,7 +229,7 @@ class JobPostingRoutes:
                 return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
             status = request.json.get("status", "").strip()
-            if status not in ["active", "closed", "archived"]:
+            if status not in ["Pending", "Approved", "Rejected", "Closed"]:
                 return jsonify({"status": "error", "message": "Invalid status."}), 400
 
             if JobPostingModel.update_job_status(job_id, status):

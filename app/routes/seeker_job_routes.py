@@ -2,6 +2,7 @@ from flask import Blueprint, flash, redirect, render_template, request, session,
 
 from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.job_posting_model import JobPostingModel
+from app.modals.job_report_model import JobReportModel
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 from app.modals.saved_job_model import SavedJobModel
 from app.modals.user import UserModel
@@ -20,7 +21,8 @@ class SeekerJobRoutes:
 
             user_id = session["user_id"]
             JobSeekerProfileModel.ensure_profile_exists(user_id)
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                user_id)
             seekers_id = seeker_profile["Seekers_id"] if seeker_profile else None
 
             filters = {
@@ -60,11 +62,12 @@ class SeekerJobRoutes:
 
             user_id = session["user_id"]
             JobSeekerProfileModel.ensure_profile_exists(user_id)
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                user_id)
             seekers_id = seeker_profile["Seekers_id"] if seeker_profile else None
             job = JobPostingModel.get_job_detail_for_seeker(job_id, seekers_id)
 
-            if not job or str(job.get("Status", "")).lower() != "active":
+            if not job or str(job.get("Status", "")).lower() != "approved":
                 flash("This job is no longer available.", "error")
                 return redirect(url_for("seeker_jobs.index"))
 
@@ -83,13 +86,15 @@ class SeekerJobRoutes:
 
             user_id = session["user_id"]
             JobSeekerProfileModel.ensure_profile_exists(user_id)
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                user_id)
             if not seeker_profile:
-                flash("Please complete your job seeker profile before applying.", "error")
+                flash(
+                    "Please complete your job seeker profile before applying.", "error")
                 return redirect(url_for("job_seeker.profile"))
 
             job = JobPostingModel.get_job_by_id(job_id)
-            if not job or str(job.get("Status", "")).lower() != "active":
+            if not job or str(job.get("Status", "")).lower() != "approved":
                 flash("This job is no longer accepting applications.", "error")
                 return redirect(url_for("seeker_jobs.index"))
 
@@ -110,6 +115,36 @@ class SeekerJobRoutes:
                 flash("Could not submit your application. Please try again.", "error")
             return redirect(url_for("seeker_jobs.detail", job_id=job_id))
 
+        @self.blueprint.route("/seeker/jobs/<int:job_id>/report", methods=["POST"])
+        def report_job(job_id):
+            if "user_id" not in session or session.get("role") != "job_seeker":
+                flash("Please log in as a job seeker.", "error")
+                return redirect(url_for("login.index"))
+
+            user_id = session["user_id"]
+            job = JobPostingModel.get_job_by_id(job_id)
+            if not job or str(job.get("Status", "")).lower() != "approved":
+                flash("This job is no longer available.", "error")
+                return redirect(url_for("seeker_jobs.index"))
+
+            if JobReportModel.has_reported(job_id, user_id):
+                flash("You have already reported this job.", "error")
+                return redirect(request.referrer or url_for("seeker_jobs.detail", job_id=job_id))
+
+            reason = request.form.get("reason", "").strip()
+            details = request.form.get("details", "").strip()
+            if not reason:
+                flash("Please select a report reason.", "error")
+                return redirect(request.referrer or url_for("seeker_jobs.detail", job_id=job_id))
+
+            created = JobReportModel.create_report(
+                job_id, user_id, reason, details)
+            if created:
+                flash("Your report has been submitted for review.", "success")
+            else:
+                flash("Could not submit your report. Please try again.", "error")
+            return redirect(request.referrer or url_for("seeker_jobs.detail", job_id=job_id))
+
         @self.blueprint.route("/seeker/jobs/<int:job_id>/save", methods=["POST"])
         def save(job_id):
             if "user_id" not in session or session.get("role") != "job_seeker":
@@ -117,13 +152,15 @@ class SeekerJobRoutes:
                 return redirect(url_for("login.index"))
 
             JobSeekerProfileModel.ensure_profile_exists(session["user_id"])
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                session["user_id"])
             if not seeker_profile:
-                flash("Please complete your job seeker profile before saving jobs.", "error")
+                flash(
+                    "Please complete your job seeker profile before saving jobs.", "error")
                 return redirect(url_for("job_seeker.profile"))
 
             job = JobPostingModel.get_job_by_id(job_id)
-            if not job or str(job.get("Status", "")).lower() != "active":
+            if not job or str(job.get("Status", "")).lower() != "approved":
                 flash("This job is no longer available.", "error")
                 return redirect(url_for("seeker_jobs.index"))
 
@@ -140,7 +177,8 @@ class SeekerJobRoutes:
                 return redirect(url_for("login.index"))
 
             JobSeekerProfileModel.ensure_profile_exists(session["user_id"])
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(session["user_id"])
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                session["user_id"])
             if not seeker_profile:
                 flash("Please complete your job seeker profile first.", "error")
                 return redirect(url_for("job_seeker.profile"))
@@ -159,7 +197,8 @@ class SeekerJobRoutes:
 
             user_id = session["user_id"]
             JobSeekerProfileModel.ensure_profile_exists(user_id)
-            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(user_id)
+            seeker_profile = JobSeekerProfileModel.get_profile_by_user_id(
+                user_id)
             if not seeker_profile:
                 flash("Please complete your job seeker profile first.", "error")
                 return redirect(url_for("job_seeker.profile"))

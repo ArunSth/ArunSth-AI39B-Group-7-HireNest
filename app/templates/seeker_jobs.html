@@ -123,10 +123,45 @@
               <button type="submit" class="btn-secondary"><i class="far fa-bookmark"></i> Save</button>
             </form>
             {% endif %}
+            <button type="button" class="btn-secondary report-job-trigger" data-job-id="{{ job.Job_id }}" data-job-title="{{ job.Title }}">
+              <i class="fas fa-flag"></i> Report Job
+            </button>
           </div>
         </article>
         {% endfor %}
       </section>
+
+      <div class="report-job-modal-overlay" id="reportJobModalOverlay" hidden>
+        <div class="report-job-modal">
+          <div class="report-job-modal__header">
+            <h3>Report Job</h3>
+            <button type="button" class="report-job-modal__close" aria-label="Close report modal" onclick="closeReportModal()">&times;</button>
+          </div>
+          <form method="POST" id="reportJobForm">
+            <input type="hidden" name="job_id" id="reportJobId">
+            <div class="form-group">
+              <label for="reportReason">Reason <span class="required">*</span></label>
+              <select name="reason" id="reportReason" required>
+                <option value="">Select a reason</option>
+                <option>Scam/Fraud</option>
+                <option>Fake Company</option>
+                <option>Misleading Information</option>
+                <option>Spam/Duplicate</option>
+                <option>Offensive Content</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="reportDetails">Details</label>
+              <textarea id="reportDetails" name="details" rows="5" placeholder="Add any extra details"></textarea>
+            </div>
+            <div class="report-job-modal__footer">
+              <button type="button" class="btn-secondary" onclick="closeReportModal()">Cancel</button>
+              <button type="submit" class="btn-primary">Submit Report</button>
+            </div>
+          </form>
+        </div>
+      </div>
       {% else %}
       <div class="table-container empty-state">
         <i class="fas fa-search empty-state-icon"></i>
@@ -157,7 +192,40 @@
   .job-chip-row { display:flex; flex-wrap:wrap; gap:8px; }
   .job-chip-row span { padding:6px 10px; background:var(--light-gray); color:var(--text-secondary); border-radius:6px; font-size:12px; font-weight:600; }
   .job-card-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:auto; }
+  .report-job-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .report-job-modal { width:min(520px, 92vw); background:var(--white); border-radius:12px; box-shadow:var(--shadow-md); padding:22px; }
+  .report-job-modal__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .report-job-modal__header h3 { margin:0; }
+  .report-job-modal__close { border:0; background:transparent; font-size:24px; cursor:pointer; color:var(--text-secondary); }
+  .report-job-modal__footer { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .required { color:#dc2626; }
   @media (max-width: 980px) { .job-search-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   @media (max-width: 620px) { .job-search-grid, .job-card-grid { grid-template-columns:1fr; } }
 </style>
+<script>
+  function openReportModal(jobId, jobTitle) {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    const jobIdInput = document.getElementById('reportJobId');
+    const form = document.getElementById('reportJobForm');
+    if (!overlay || !jobIdInput || !form) return;
+    jobIdInput.value = jobId;
+    form.action = '/seeker/jobs/' + jobId + '/report';
+    overlay.hidden = false;
+  }
+
+  function closeReportModal() {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    if (overlay) overlay.hidden = true;
+  }
+
+  document.querySelectorAll('.report-job-trigger').forEach(button => {
+    button.addEventListener('click', () => {
+      openReportModal(button.dataset.jobId, button.dataset.jobTitle);
+    });
+  });
+
+  document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+  });
+</script>
 {% endblock %}

@@ -6,8 +6,8 @@
   <title>{% block page_title %}Employer Workspace - HireNest{% endblock %}</title>
   <script>
     try {
-      localStorage.setItem('theme', 'light');
-      document.documentElement.setAttribute('data-theme', 'light');
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
     } catch (e) {
       document.documentElement.setAttribute('data-theme', 'light');
     }
@@ -38,17 +38,35 @@
     </div>
 
     <div class="employer-navbar__theme">
-      <button type="button" id="theme-toggle" class="employer-theme-toggle" aria-label="Toggle theme" style="display:none;">
+      <button type="button" id="theme-toggle" class="employer-theme-toggle" aria-label="Toggle theme">
         <i class="fa-solid fa-sun"></i>
       </button>
     </div>
 
     <div class="employer-navbar__actions">
+      <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-badge" id="notifBadge"></span>
+      </button>
+      {% include 'partials/notification_dropdown.html' %}
       <span class="employer-navbar__greeting">Hi, {{ employer_user_name }}</span>
-      <a href="{{ url_for('employer.profile') }}" class="employer-navbar__link">My Profile</a>
-      <a href="{{ url_for('logout.process_logout') }}" class="employer-navbar__button">Log Out</a>
+      <a href="{{ url_for('logout.process_logout') }}" class="employer-navbar__button logout-confirm-link" data-logout-url="{{ url_for('logout.process_logout') }}">Log Out</a>
     </div>
   </header>
+
+  <div class="logout-confirm-overlay" id="logoutConfirmModal" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
+    <div class="logout-confirm-modal">
+      <div class="modal-head">
+        <h3 id="logoutConfirmTitle">Logout</h3>
+        <button type="button" class="modal-close" aria-label="Close logout confirmation">&times;</button>
+      </div>
+      <p class="logout-confirm-message">Are you sure you want to log out?</p>
+      <div class="logout-confirm-actions">
+        <button type="button" class="logout-confirm-btn logout-confirm-btn--cancel">Cancel</button>
+        <button type="button" class="logout-confirm-btn logout-confirm-btn--confirm" id="logoutConfirmBtn">Yes, Logout</button>
+      </div>
+    </div>
+  </div>
 
   <div class="dashboard-container">
     {% include 'sidebar_employer.html' %}
@@ -58,22 +76,6 @@
         <div class="topbar-left">
           <h2>{% block page_title_inner %}{{ self.page_title() }}{% endblock %}</h2>
           <p class="topbar-subtitle">{% block page_subtitle %}Everything you need to manage hiring from one place.{% endblock %}</p>
-        </div>
-        <div class="topbar-right">
-          <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            <span class="notif-badge" id="notifBadge"></span>
-          </button>
-          {% include 'partials/notification_dropdown.html' %}
-          {% block topbar_right %}
-          <div class="user-profile">
-            <div class="user-avatar">{{ employer_initials }}</div>
-            <div>
-              <div class="user-name">{{ employer_user_name }}</div>
-              <div class="user-role">Employer</div>
-            </div>
-          </div>
-          {% endblock %}
         </div>
       </div>
 
@@ -91,6 +93,80 @@
   </div>
 
   {% block extra_scripts %}{% endblock %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const root = document.documentElement;
+      const themeToggle = document.getElementById('theme-toggle');
+
+      function updateThemeToggle(theme) {
+        if (!themeToggle) return;
+        themeToggle.innerHTML = theme === 'dark'
+          ? '<i class="fa-solid fa-moon"></i>'
+          : '<i class="fa-solid fa-sun"></i>';
+      }
+
+      const savedTheme = root.getAttribute('data-theme') || localStorage.getItem('theme') || 'light';
+      root.setAttribute('data-theme', savedTheme);
+      updateThemeToggle(savedTheme);
+
+      themeToggle?.addEventListener('click', function () {
+        const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', nextTheme);
+        localStorage.setItem('theme', nextTheme);
+        updateThemeToggle(nextTheme);
+      });
+
+      const modal = document.getElementById('logoutConfirmModal');
+      if (!modal) return;
+
+      const closeBtn = modal.querySelector('.modal-close');
+      const cancelBtn = modal.querySelector('.logout-confirm-btn--cancel');
+      const confirmBtn = document.getElementById('logoutConfirmBtn');
+      let currentLogoutUrl = '';
+
+      function openModal() {
+        modal.classList.add('open');
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      function setLogoutTarget(url) {
+        currentLogoutUrl = url || '';
+      }
+
+      document.querySelectorAll('.logout-confirm-link').forEach(link => {
+        link.addEventListener('click', function (event) {
+          event.preventDefault();
+          setLogoutTarget(link.dataset.logoutUrl || link.getAttribute('href') || '');
+          openModal();
+        });
+      });
+
+      closeBtn?.addEventListener('click', closeModal);
+      cancelBtn?.addEventListener('click', closeModal);
+      confirmBtn?.addEventListener('click', function () {
+        if (currentLogoutUrl) {
+          window.location.href = currentLogoutUrl;
+        } else {
+          closeModal();
+        }
+      });
+
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && modal.classList.contains('open')) {
+          closeModal();
+        }
+      });
+    });
+  </script>
   <script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
 </body>
 </html>

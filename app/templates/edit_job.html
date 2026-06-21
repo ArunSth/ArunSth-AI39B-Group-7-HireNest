@@ -77,8 +77,6 @@
                 </div>
 
                 {% set filled_positions = job.Filled_vacancies or 0 %}
-                {% set total_vacancies = job.Vacancies or 1 %}
-                {% set remaining_positions = max(total_vacancies - filled_positions, 0) %}
                 <div style="margin-top: 18px; padding: 16px 18px; background: #ffffff; border: 1px solid #dbeafe; border-radius: 10px;">
                   <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px;">
                     <span style="font-size: 14px; color: #4b5563;">Filled Positions</span>

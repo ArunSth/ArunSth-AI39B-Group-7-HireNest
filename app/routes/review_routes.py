@@ -97,72 +97,13 @@ class ReviewRoutes:
 
         @self.blueprint.route("/seeker/company-review/<int:employee_id>/edit/<int:review_id>", methods=["GET", "POST"])
         def edit_review(employee_id, review_id):
-            if "user_id" not in session or session.get("role") != "job_seeker":
-                flash("Please log in as a job seeker to edit reviews.", "error")
-                return redirect(url_for("login.index"))
-
-            user_data = UserModel.get_by_id(session["user_id"])
-            seekers_id = self._get_seeker_id(session["user_id"])
-            if seekers_id is None:
-                flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.dashboard"))
-
-            review = ReviewController.get_review(review_id)
-            if not review or review.get("Seekers_id") != seekers_id or review.get("Employee_id") != employee_id:
-                flash("Review not found or unauthorized.", "error")
-                return redirect(url_for("reviews.company_review", employee_id=employee_id))
-
-            if request.method == "POST":
-                review_text = request.form.get("review_text", "").strip()
-                rating = request.form.get("rating", "").strip()
-
-                if not review_text or not rating:
-                    flash("Please provide both review text and rating.", "error")
-                    return redirect(url_for("reviews.edit_review", employee_id=employee_id, review_id=review_id))
-
-                try:
-                    rating_value = int(rating)
-                except ValueError:
-                    flash("Rating must be an integer between 1 and 5.", "error")
-                    return redirect(url_for("reviews.edit_review", employee_id=employee_id, review_id=review_id))
-
-                if rating_value < 1 or rating_value > 5:
-                    flash("Rating must be between 1 and 5.", "error")
-                    return redirect(url_for("reviews.edit_review", employee_id=employee_id, review_id=review_id))
-
-                if ReviewController.update_review(review_id, seekers_id, review_text, rating_value):
-                    flash("Review updated successfully.", "success")
-                    return redirect(url_for("reviews.company_review", employee_id=employee_id))
-                flash("Failed to update review. Please try again.", "error")
-
-            review_summary = ReviewController.get_review_summary(employee_id)
-            reviews = ReviewController.get_reviews_by_employee(employee_id)
-            return render_template(
-                "company_review.html",
-                user=user_data,
-                employee_id=employee_id,
-                summary=review_summary,
-                reviews=reviews,
-                current_seekers_id=seekers_id,
-                edit_review=review,
-            )
+            flash(
+                "Editing reviews is not allowed. Please submit a new review if needed.", "error")
+            return redirect(url_for("reviews.company_review", employee_id=employee_id))
 
         @self.blueprint.route("/seeker/company-review/<int:employee_id>/delete/<int:review_id>", methods=["POST"])
         def delete_review(employee_id, review_id):
-            if "user_id" not in session or session.get("role") != "job_seeker":
-                flash("Please log in as a job seeker to delete reviews.", "error")
-                return redirect(url_for("login.index"))
-
-            seekers_id = self._get_seeker_id(session["user_id"])
-            if seekers_id is None:
-                flash("Job seeker profile not found.", "error")
-                return redirect(url_for("job_seeker.dashboard"))
-
-            if ReviewController.delete_review(review_id, seekers_id):
-                flash("Review deleted successfully.", "success")
-            else:
-                flash("Failed to delete review. Please try again.", "error")
-
+            flash("Deleting reviews is not allowed.", "error")
             return redirect(url_for("reviews.company_review", employee_id=employee_id))
 
         return self.blueprint
@@ -172,7 +113,8 @@ class ReviewRoutes:
         conn = get_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s", (user_id,))
+                cur.execute(
+                    "SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s", (user_id,))
                 seeker = cur.fetchone()
                 return seeker["Seekers_id"] if seeker else None
         finally:
