@@ -785,6 +785,12 @@ td.empty-state { border: none; }
   flex-shrink: 0;
   text-transform: uppercase;
 }
+
+.cjc-avatar-img {
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .cjc-identity-text { min-width: 0; }
 .cjc-company {
   font-size: 16px;

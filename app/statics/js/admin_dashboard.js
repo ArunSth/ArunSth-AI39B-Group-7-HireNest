@@ -126,7 +126,7 @@ function clearActionHistory() {
     }
   );
 }
-
+ 
 // ─────────────────────────────────────────────
 // LOGOUT CONFIRMATION
 // ─────────────────────────────────────────────
@@ -958,8 +958,13 @@ document.getElementById('addJobForm')?.addEventListener('submit', e => {
   filterModeration();
   updateStats();
   renderCompanyJobs();
-  logActivity('Job Submitted', `${title} at ${company}`, 'warning');
-  showToast(`"${title}" submitted for review`, 'info');
+  if (autoApprove) {
+    logActivity('Job Auto-Approved', `${title} at ${company}`, 'success');
+    showToast(`"${title}" added and auto-approved — live now`, 'success');
+  } else {
+    logActivity('Job Submitted', `${title} at ${company}`, 'warning');
+    showToast(`"${title}" submitted for review`, 'info');
+  }
 });
 
 // ════════════════════════════════════════════
@@ -1001,6 +1006,245 @@ function renderReports(data) {
 }
 
 // ════════════════════════════════════════════
+// SETTINGS — fully wired to your HTML toggles
+// ════════════════════════════════════════════
+const SETTINGS_KEY = 'hn_admin_settings';
+ 
+const defaultSettings = {
+  userRegistration:     true,
+  employerVerification: false,
+  autoApproveJobs:      false,
+  jobModeration:        true,
+  emailAlerts:          true,
+  weeklyReports:        false,
+};
+ 
+function getSettingsCheckboxes() {
+  // Matches your exact HTML order:
+  // [0] User Registration
+  // [1] Employer Verification
+  // [2] Auto-approve Jobs
+  // [3] Job Moderation
+  // [4] Email Alerts
+  // [5] Weekly Reports
+  return document.querySelectorAll('#tab-settings .toggle input[type="checkbox"]');
+}
+ 
+function loadSettings() {
+  return Object.assign({}, defaultSettings,
+    JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
+}
+ 
+function syncToggleUI(settings) {
+  const cbs = getSettingsCheckboxes();
+  const keys = ['userRegistration','employerVerification','autoApproveJobs','jobModeration','emailAlerts','weeklyReports'];
+  keys.forEach((key, i) => { if (cbs[i]) cbs[i].checked = !!settings[key]; });
+}
+ 
+function applySettings(settings) {
+ 
+  // ── 1. USER REGISTRATION ──
+  // Shows a banner at the top of settings when registration is off
+  let banner = document.getElementById('hn-reg-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'hn-reg-banner';
+    banner.style.cssText = `
+      display:none; background:rgba(239,68,68,0.08);
+      border:1px solid rgba(239,68,68,0.3);
+      border-radius:10px; padding:12px 16px; margin-bottom:16px;
+      font-size:13px; color:#EF4444; font-weight:600;
+    `;
+    banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> User registration is currently <strong>DISABLED</strong>. New sign-ups are blocked.';
+    const pageHead = document.querySelector('#tab-settings .page-head');
+    if (pageHead) pageHead.after(banner);
+  }
+  banner.style.display = settings.userRegistration ? 'none' : 'block';
+ 
+  // ── 2. EMPLOYER VERIFICATION ──
+  // Stores flag — your Flask /jobs/post route reads this to block unverified employers
+  // Frontend: show a notice in the Job Moderation tab header
+  let verBanner = document.getElementById('hn-ver-banner');
+  if (!verBanner) {
+    verBanner = document.createElement('div');
+    verBanner.id = 'hn-ver-banner';
+    verBanner.style.cssText = `
+      display:none; background:rgba(108,92,231,0.08);
+      border:1px solid rgba(108,92,231,0.3);
+      border-radius:10px; padding:10px 14px; margin-bottom:14px;
+      font-size:13px; color:#6C5CE7; font-weight:600;
+    `;
+    verBanner.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Employer verification is <strong>ON</strong> — only verified employers can post jobs.';
+    const modHead = document.querySelector('#tab-job-moderation .page-head');
+    if (modHead) modHead.after(verBanner);
+  }
+  verBanner.style.display = settings.employerVerification ? 'block' : 'none';
+ 
+  // ── 3. AUTO-APPROVE JOBS ──
+  // Immediately approves all currently pending jobs
+  if (settings.autoApproveJobs) {
+    let autoApproved = 0;
+    JOBS.forEach(j => {
+      if (j.status === 'Pending') {
+        j.status = 'Approved';
+        autoApproved++;
+        if (j.fromDB) {
+          fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' }).catch(() => {});
+        }
+      }
+    });
+    if (autoApproved > 0) {
+      persistState();
+      filterModeration();
+      updateStats();
+      renderCompanyJobs();
+      showToast(`Auto-approved ${autoApproved} pending job(s)`, 'success');
+    }
+  }
+ 
+  // ── 4. JOB MODERATION ──
+  // Dims the moderation nav link when disabled
+  const modNavLink = document.querySelector('[data-tab="job-moderation"]');
+  if (modNavLink) {
+    if (settings.jobModeration) {
+      modNavLink.style.opacity = '';
+      modNavLink.style.pointerEvents = '';
+      modNavLink.title = '';
+    } else {
+      modNavLink.style.opacity = '0.4';
+      modNavLink.style.pointerEvents = 'none';
+      modNavLink.title = 'Job Moderation is disabled in Settings';
+    }
+  }
+ 
+  // ── 5. EMAIL ALERTS ──
+  // Visual indicator in the topbar
+  const topbar = document.querySelector('.topbar');
+  let alertPill = document.getElementById('hn-alert-pill');
+  if (!alertPill && topbar) {
+    alertPill = document.createElement('span');
+    alertPill.id = 'hn-alert-pill';
+    alertPill.style.cssText = `
+      font-size:11px; padding:3px 10px; border-radius:999px;
+      font-weight:600; margin-right:8px;
+    `;
+    const notifWrap = document.getElementById('notifWrap');
+    if (notifWrap) notifWrap.before(alertPill);
+  }
+  if (alertPill) {
+    if (settings.emailAlerts) {
+      alertPill.textContent = '📧 Alerts ON';
+      alertPill.style.background = 'rgba(22,163,74,0.12)';
+      alertPill.style.color = '#16A34A';
+      alertPill.style.display = '';
+    } else {
+      alertPill.textContent = '🔕 Alerts OFF';
+      alertPill.style.background = 'rgba(239,68,68,0.10)';
+      alertPill.style.color = '#EF4444';
+      alertPill.style.display = '';
+    }
+  }
+ 
+  // ── 6. WEEKLY REPORTS ──
+  // Shown as a status line under the Settings save button
+  let weeklyNote = document.getElementById('hn-weekly-note');
+  if (!weeklyNote) {
+    weeklyNote = document.createElement('p');
+    weeklyNote.id = 'hn-weekly-note';
+    weeklyNote.style.cssText = 'font-size:12px; margin-top:10px; color:var(--muted);';
+    const saveBtn = document.querySelector('#tab-settings .action-btn.purple');
+    if (saveBtn) saveBtn.after(weeklyNote);
+  }
+  weeklyNote.textContent = settings.weeklyReports
+    ? '✅ Weekly platform summary reports are scheduled.'
+    : '⏸ Weekly reports are off. Enable to receive Sunday summaries.';
+}
+ 
+function saveSettings() {
+  const cbs = getSettingsCheckboxes();
+ 
+  const settings = {
+    userRegistration:     cbs[0]?.checked ?? true,
+    employerVerification: cbs[1]?.checked ?? false,
+    autoApproveJobs:      cbs[2]?.checked ?? false,
+    jobModeration:        cbs[3]?.checked ?? true,
+    emailAlerts:          cbs[4]?.checked ?? true,
+    weeklyReports:        cbs[5]?.checked ?? false,
+  };
+ 
+  // ── CONFLICT: auto-approve + moderation both on ──
+  if (settings.autoApproveJobs && settings.jobModeration) {
+    showToast('Conflict: Auto-approve disables Job Moderation.', 'warning');
+    settings.jobModeration = false;
+    if (cbs[3]) cbs[3].checked = false;
+  }
+ 
+  // Save locally
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+ 
+  // Send to Flask backend (fire-and-forget — works offline too)
+  fetch('/admin/settings/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  }).catch(() => {});
+ 
+  applySettings(settings);
+  logActivity('Settings Updated', buildSettingsSummary(settings), 'info');
+  showToast('Settings saved!', 'success');
+}
+ 
+function buildSettingsSummary(s) {
+  const labels = {
+    userRegistration:     'Registration',
+    employerVerification: 'Employer Verify',
+    autoApproveJobs:      'Auto-approve',
+    jobModeration:        'Moderation',
+    emailAlerts:          'Email Alerts',
+    weeklyReports:        'Weekly Reports',
+  };
+  return Object.entries(labels)
+    .map(([k, label]) => `${label}: ${s[k] ? 'ON' : 'OFF'}`)
+    .join(' | ');
+}
+ 
+// ── Settings load + live row highlight on toggle change ──
+document.addEventListener('DOMContentLoaded', () => {
+ 
+  fetch('/admin/settings/load')
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success') {
+        const settings = data.settings;
+        // Save to localStorage too
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        syncToggleUI(settings);
+        applySettings(settings);
+      }
+    })
+    .catch(() => {
+      // Fallback to localStorage if fetch fails
+      const saved = loadSettings();
+      syncToggleUI(saved);
+      applySettings(saved);
+    });
+ 
+  // Highlight row on toggle change (before saving)
+  getSettingsCheckboxes().forEach(cb => {
+    cb.addEventListener('change', () => {
+      const row = cb.closest('.setting-row');
+      if (!row) return;
+      row.style.transition = 'background 0.4s';
+      row.style.background = cb.checked
+        ? 'rgba(22,163,74,0.07)'
+        : 'rgba(239,68,68,0.07)';
+      setTimeout(() => { row.style.background = ''; }, 900);
+    });
+  });
+});
+ 
+ 
+// ════════════════════════════════════════════
 // COMPANY JOBS TAB
 // ════════════════════════════════════════════
 function companyKey(job) {
@@ -1030,7 +1274,7 @@ function renderCompanyJobs() {
   JOBS.forEach(j => {
     const key = companyKey(j);
     if (!groups[key]) {
-      groups[key] = { company: j.company, email: j.email || j.companyEmail || '—', jobs: [] };
+      groups[key] = { company: j.company, email: j.email || j.companyEmail || '—', logo: j.logo || '', jobs: [] };
     }
     groups[key].jobs.push(j);
   });
@@ -1058,11 +1302,12 @@ function renderCompanyJobs() {
     const pending = c.jobs.filter(j => j.status === 'Pending').length;
     const approved = c.jobs.filter(j => j.status === 'Approved').length;
     const rejected = c.jobs.filter(j => j.status === 'Rejected').length;
-    const total = c.jobs.length;
-    const cKey = companyKey(c.jobs[0]);
-    const initial = (c.company || '?').trim()[0] || '?';
-    const site = companyWebsite(c.jobs[0]);
-
+    const total    = c.jobs.length;
+    const cKey     = companyKey(c.jobs[0]);
+    const initial  = (c.company || '?').trim()[0] || '?';
+    const site     = companyWebsite(c.jobs[0]);
+    const logoUrl  = c.logo ? `/uploads/logos/${c.logo}` : '';
+ 
     return `
       <div class="company-job-card">
         <div class="cjc-head">
@@ -1070,7 +1315,9 @@ function renderCompanyJobs() {
           <span class="cjc-count-badge">${total} job${total === 1 ? '' : 's'}</span>
         </div>
         <div class="cjc-identity">
-          <div class="cjc-avatar">${initial}</div>
+          ${logoUrl
+            ? `<img class="cjc-avatar cjc-avatar-img" src="${logoUrl}" alt="${c.company} logo" onerror="this.outerHTML='<div class=&quot;cjc-avatar&quot;>${initial}</div>'">`
+            : `<div class="cjc-avatar">${initial}</div>`}
           <div class="cjc-identity-text">
             <div class="cjc-company" title="${c.company}">${c.company}</div>
             ${site
@@ -1544,10 +1791,11 @@ function loadModerationJobsFromDB() {
           status: dbJob.status,   // 'Pending' | 'Approved' | 'Rejected'
           submitted: dbJob.submitted,
           description: dbJob.description || '',
-          salary: dbJob.salary || '',
-          website: dbJob.website || dbJob.companyWebsite || '',
-          email: dbJob.email || dbJob.companyEmail || '',
-          fromDB: true,
+          salary:      dbJob.salary || '',
+          website:     dbJob.website || dbJob.companyWebsite || '',
+          email:       dbJob.email  || dbJob.companyEmail   || '',
+          logo:        dbJob.logo || '',
+          fromDB:      true,
         });
       });
 
@@ -1558,6 +1806,27 @@ function loadModerationJobsFromDB() {
       setEl('stat-active-jobs', totalActive);
 
       updateStats();
+ 
+      // ── If Auto-approve Jobs is ON, sweep up any freshly-submitted
+      //    employer jobs that are still sitting at "Pending" in the DB ──
+      if (loadSettings().autoApproveJobs) {
+        const stillPending = JOBS.filter(j => j.fromDB && j.status === 'Pending');
+        stillPending.forEach(j => {
+          fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+              if (data.status === 'success') {
+                j.status = 'Approved';
+                persistState();
+                filterModeration();
+                updateStats();
+                renderCompanyJobs();
+                logActivity('Job Auto-Approved', j.title, 'success');
+              }
+            })
+            .catch(() => {});
+        });
+      }
     })
     .catch(err => console.error('Could not load jobs for moderation:', err));
 }
