@@ -6,7 +6,8 @@ class JobPostingModel:
  
     # ── Create job — always starts as Pending (hidden from seekers) ──
     @staticmethod
-    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level"):
+    def create_job(employee_id, title, description, requirement, salary, location,
+                    job_type="Full-time", experience_level="Entry-level", status="Pending"):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
@@ -18,7 +19,7 @@ class JobPostingModel:
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (employee_id, title, description, requirement, salary,
-                     location, "Pending", job_type, experience_level),
+                    location, status, job_type, experience_level),
                 )
                 conn.commit()
                 return cur.lastrowid

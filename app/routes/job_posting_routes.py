@@ -49,8 +49,7 @@ class JobPostingRoutes:
 
             if request.method == "POST":
                 user_id = session["user_id"]
-                
-                # Get employer profile
+
                 from app.database import get_connection
                 conn = get_connection()
                 try:
@@ -60,7 +59,6 @@ class JobPostingRoutes:
                         if not employee:
                             flash("Employer profile not found.", "error")
                             return redirect(url_for("employer.profile"))
-                        
                         employee_id = employee['Employee_id']
                 finally:
                     conn.close()
@@ -83,8 +81,14 @@ class JobPostingRoutes:
                     flash("Salary must be a valid number.", "error")
                     return redirect(url_for("job_posting.create_job"))
 
+        # NEW: read auto-approve from the same in-memory settings the admin routes write to
+                from flask import current_app
+                admin_settings = current_app.config.get('ADMIN_SETTINGS', {})
+                initial_status = "Approved" if admin_settings.get("autoApproveJobs") else "Pending"
+
                 job_id = JobPostingModel.create_job(
-                    employee_id, title, description, requirement, salary, location, job_type, experience_level
+                    employee_id, title, description, requirement, salary, location,
+                    job_type, experience_level, status=initial_status
                 )
 
                 if job_id:

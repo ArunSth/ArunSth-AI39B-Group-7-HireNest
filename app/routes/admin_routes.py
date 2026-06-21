@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, session, render_template, redirec
 from app.modals.admin_profile import AdminProfileModel
 from app.modals.job_posting_model import JobPostingModel
 from app.modals.user import UserModel
+from app.modals.notification import NotificationModel
  
  
 class AdminRoutes:
@@ -86,10 +87,16 @@ class AdminRoutes:
                 conn.close()
  
         # ── 4. Delete Moderation Job ──────────────────────────
+        # ── 4. Delete Moderation Job ──────────────────────────
         @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/delete', methods=['POST'])
         def delete_moderation_job(job_id):
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+    # fetch BEFORE deleting — you need owner + title after the row is gone
+            job = JobPostingModel.get_job_by_id(job_id)
+            if not job:
+                return jsonify({'status': 'error', 'message': 'Job not found.'}), 404
 
             success = JobPostingModel.delete_job(job_id)
             if not success:
@@ -99,51 +106,45 @@ class AdminRoutes:
                 session['user_id'], 'job_deleted', 'job', job_id,
                 f'Job #{job_id} deleted by admin.'
             )
-            return jsonify({'status': 'success'})
-        
- 
-        # ── 5. Approve Job ────────────────────────────────────
-        @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/approve', methods=['POST'])
-        def approve_job(job_id):
-            if 'user_id' not in session or session.get('role') != 'admin':
-                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
- 
-            # 'Approved' is the DB value recognised by search_jobs_for_seekers
-            # (the model checks  LOWER(status) = 'approved')
-            success = JobPostingModel.update_job_status(job_id, 'Approved')
-            if not success:
-                return jsonify({'status': 'error', 'message': 'Failed to approve job.'}), 500
- 
-            # Fetch job title for a nicer audit message
-            job = JobPostingModel.get_job_by_id(job_id)
-            title = job['Title'] if job else f'Job #{job_id}'
- 
-            AdminProfileModel.record_audit_log(
-                session['user_id'], 'job_approved', 'job', job_id,
-                f'Job "{title}" approved — now visible to job seekers.'
+
+            NotificationModel.create_notification(
+                user_id=job['Employer_id'],   # <-- confirm actual column name
+                title='Job Posting Removed',
+                message=f'Your job posting "{job["Title"]}" was removed by an administrator.',
+                notification_type='job_deleted',
+                reference_id=job_id,
             )
-            return jsonify({
-                'status':  'success',
-                'message': f'"{title}" approved and is now live.',
-            })
+
+            return jsonify({'status': 'success'})
  
+       
         # ── 6. Reject Job ─────────────────────────────────────
         @self.blueprint.route('/admin/moderation/jobs/<int:job_id>/reject', methods=['POST'])
         def reject_job(job_id):
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
- 
+
             success = JobPostingModel.update_job_status(job_id, 'Rejected')
             if not success:
                 return jsonify({'status': 'error', 'message': 'Failed to reject job.'}), 500
- 
+
             job = JobPostingModel.get_job_by_id(job_id)
             title = job['Title'] if job else f'Job #{job_id}'
- 
+
             AdminProfileModel.record_audit_log(
                 session['user_id'], 'job_rejected', 'job', job_id,
                 f'Job "{title}" rejected — hidden from job seekers.'
             )
+
+            if job:
+                NotificationModel.create_notification(
+                    user_id=job['Employer_id'],   # <-- confirm actual column name
+                    title='Job Posting Rejected',
+                    message=f'Your job posting "{title}" was rejected by an administrator.',
+                    notification_type='job_rejected',
+                    reference_id=job_id,
+                )
+
             return jsonify({
                 'status':  'success',
                 'message': f'"{title}" rejected and hidden from job seekers.',
@@ -176,6 +177,7 @@ class AdminRoutes:
                     'status':      ui_status,
                     'submitted':   j['Created_at'].strftime('%#d %b %Y') if j['Created_at'] else '—',
                     'description': j['Description'] or '',
+                    'logo':        j['Logo'] if j.get('Logo') else None,
                 })
             return jsonify(result)
  
@@ -309,6 +311,90 @@ class AdminRoutes:
                 return jsonify({'status': 'error', 'message': str(e)}), 500
             finally:
                 conn.close()
+
+        
+        # ── 11. Save Settings ─────────────────────────────────
+        @self.blueprint.route('/admin/settings/save', methods=['POST'])
+        def save_admin_settings():
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+            from flask import current_app
+            from app.database import get_connection
  
+            data = request.get_json(silent=True) or {}
+            print(f"DEBUG SAVE: received data = {data}")
+
+            settings = {
+                'userRegistration':     data.get('userRegistration',     True),
+                'employerVerification': data.get('employerVerification', False),
+                'autoApproveJobs':      data.get('autoApproveJobs',      False),
+                'jobModeration':        data.get('jobModeration',         True),
+                'emailAlerts':          data.get('emailAlerts',           True),
+                'weeklyReports':        data.get('weeklyReports',         False),
+            }
+
+            print(f"DEBUG SAVE: settings = {settings}")
+
+    # Update app.config immediately
+            current_app.config['ADMIN_SETTINGS'] = settings
+
+    # Save to DB so it survives restarts
+            conn = get_connection()
+            try:
+                with conn.cursor() as cur:
+                    for key, value in settings.items():
+                        cur.execute("""
+                           INSERT INTO `AdminSettings` (`key`, `value`)
+                           VALUES (%s, %s)
+                           ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)
+                           """, (key, '1' if value else '0'))
+                conn.commit()
+                print("DEBUG SAVE: DB write successful")
+            except Exception as e:
+                print(f"DEBUG SAVE: DB write FAILED = {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
+            finally:
+               conn.close()
+
+    # Auto-approve pending jobs if toggled on
+            if settings.get('autoApproveJobs'):
+                conn2 = get_connection()
+                try:
+                    with conn2.cursor() as cur:
+                        cur.execute(
+                            "UPDATE `Job_posting` SET `Status` = 'approved' WHERE `Status` = 'pending'"
+                        )
+                    conn2.commit()
+                except Exception:
+                    pass
+                finally:
+                    conn2.close()
+
+            AdminProfileModel.record_audit_log(
+                session['user_id'], 'settings_updated', 'admin_settings', None,
+                f"Registration:{settings['userRegistration']} "
+                f"AutoApprove:{settings['autoApproveJobs']} "
+                f"Moderation:{settings['jobModeration']}"
+            )
+
+            return jsonify({'status': 'success'})
+ 
+        @self.blueprint.route('/admin/settings/load', methods=['GET'])
+        def load_admin_settings():
+            if 'user_id' not in session or session.get('role') != 'admin':
+                return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+
+            from flask import current_app
+            settings = current_app.config.get('ADMIN_SETTINGS', {
+                'userRegistration':     True,
+                'employerVerification': False,
+                'autoApproveJobs':      False,
+                'jobModeration':        True,
+                'emailAlerts':          True,
+                'weeklyReports':        False,
+            })
+            return jsonify({'status': 'success', 'settings': settings})
+        
         return self.blueprint
  
