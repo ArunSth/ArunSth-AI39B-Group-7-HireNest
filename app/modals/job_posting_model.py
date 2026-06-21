@@ -1,25 +1,52 @@
 from app.database import get_connection
 from datetime import datetime
+
+
 from app.modals.notification import NotificationModel
- 
+
+
 class JobPostingModel:
- 
+
     # ── Create job — always starts as Pending (hidden from seekers) ──
     @staticmethod
-    def create_job(employee_id, title, description, requirement, salary, location,
-                    job_type="Full-time", experience_level="Entry-level", status="Pending"):
+    def calculate_vacancy_metrics(total_vacancies, filled_vacancies):
+        try:
+            total_vacancies = int(total_vacancies or 0)
+        except (TypeError, ValueError):
+            total_vacancies = 0
+
+        try:
+            filled_vacancies = int(filled_vacancies or 0)
+        except (TypeError, ValueError):
+            filled_vacancies = 0
+
+        total_vacancies = max(total_vacancies, 0)
+        filled_vacancies = max(filled_vacancies, 0)
+        remaining_vacancies = max(total_vacancies - filled_vacancies, 0)
+
+        return {
+            "total_vacancies": total_vacancies,
+            "filled_vacancies": filled_vacancies,
+            "remaining_vacancies": remaining_vacancies,
+            "is_filled": remaining_vacancies == 0 and total_vacancies > 0,
+        }
+
+    @staticmethod
+    def create_job(employee_id, title, description, requirement, salary, location, job_type="Full-time", experience_level="Entry-level", vacancies=1):
         conn = get_connection()
         try:
+            vacancies = max(int(vacancies or 1), 1)
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO `Jobs`
-                        (`Employee_id`, `Title`, `Description`, `Requirement`,
-                         `Salary`, `Location`, `Status`, `Job_type`, `Experience_level`)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    INSERT INTO `Jobs` (
+                        `Employee_id`, `Title`, `Description`, `Requirement`, `Salary`, `Location`,
+                        `Status`, `Job_type`, `Experience_level`, `Vacancies`, `Filled_vacancies`
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (employee_id, title, description, requirement, salary,
-                    location, status, job_type, experience_level),
+                     location, "Pending", job_type, experience_level, vacancies, 0),
                 )
                 conn.commit()
                 return cur.lastrowid
@@ -29,8 +56,9 @@ class JobPostingModel:
             return None
         finally:
             conn.close()
- 
+
     # ── Job search for job seekers — APPROVED only ────────────────────
+
     @staticmethod
     def search_jobs(keyword, location, job_type):
         conn = get_connection()
@@ -42,21 +70,21 @@ class JobPostingModel:
                 WHERE LOWER(j.`Status`) = 'approved'
             """
             params = []
- 
+
             if keyword:
                 query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
                 params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
- 
+
             if location:
                 query += " AND j.`Location` LIKE %s"
                 params.append(f"%{location}%")
- 
+
             if job_type and job_type != "All Types":
                 query += " AND j.`Job_type` = %s"
                 params.append(job_type)
- 
+
             query += " ORDER BY j.`Created_at` DESC"
- 
+
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
@@ -65,7 +93,7 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
- 
+
     # ── Advanced search for seekers — APPROVED only ───────────────────
     @staticmethod
     def search_jobs_for_seekers(filters, seekers_id=None):
@@ -89,7 +117,7 @@ class JobPostingModel:
                     e.`Logo`
             """
             params = []
- 
+
             if seekers_id:
                 query += """,
                     CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
@@ -97,12 +125,12 @@ class JobPostingModel:
                 """
             else:
                 query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
- 
+
             query += """
                 FROM `Jobs` j
                 JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
             """
- 
+
             if seekers_id:
                 query += """
                     LEFT JOIN `Saved_Jobs` sj
@@ -111,52 +139,52 @@ class JobPostingModel:
                         ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
                 """
                 params.extend([seekers_id, seekers_id])
- 
+
             # ── GATE: seekers only ever see Approved jobs ──
             query += " WHERE LOWER(j.`Status`) = 'approved'"
- 
+
             keyword = filters.get("keyword")
             if keyword:
                 query += " AND (j.`Title` LIKE %s OR j.`Description` LIKE %s OR j.`Requirement` LIKE %s)"
                 params.extend([f"%{keyword}%", f"%{keyword}%", f"%{keyword}%"])
- 
+
             company = filters.get("company")
             if company:
                 query += " AND e.`Company_name` LIKE %s"
                 params.append(f"%{company}%")
- 
+
             location = filters.get("location")
             if location:
                 query += " AND j.`Location` LIKE %s"
                 params.append(f"%{location}%")
- 
+
             industry = filters.get("industry")
             if industry:
                 query += " AND e.`Industry` LIKE %s"
                 params.append(f"%{industry}%")
- 
+
             job_type = filters.get("job_type")
             if job_type and job_type != "All Types":
                 query += " AND j.`Job_type` = %s"
                 params.append(job_type)
- 
+
             experience_level = filters.get("experience_level")
             if experience_level and experience_level != "All Levels":
                 query += " AND j.`Experience_level` = %s"
                 params.append(experience_level)
- 
+
             salary_min = filters.get("salary_min")
             if salary_min:
                 query += " AND j.`Salary` >= %s"
                 params.append(salary_min)
- 
+
             salary_max = filters.get("salary_max")
             if salary_max:
                 query += " AND j.`Salary` <= %s"
                 params.append(salary_max)
- 
+
             query += " ORDER BY j.`Created_at` DESC"
- 
+
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchall()
@@ -165,7 +193,7 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
- 
+
     # ── Single job detail for seekers — APPROVED only ─────────────────
     @staticmethod
     def get_job_detail_for_seeker(job_id, seekers_id=None):
@@ -182,7 +210,7 @@ class JobPostingModel:
                     e.`Description` AS `Company_description`
             """
             params = []
- 
+
             if seekers_id:
                 query += """,
                     CASE WHEN sj.`Saved_id` IS NULL THEN 0 ELSE 1 END AS `Is_saved`,
@@ -190,12 +218,12 @@ class JobPostingModel:
                 """
             else:
                 query += ", 0 AS `Is_saved`, 0 AS `Has_applied`"
- 
+
             query += """
                 FROM `Jobs` j
                 JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
             """
- 
+
             if seekers_id:
                 query += """
                     LEFT JOIN `Saved_Jobs` sj
@@ -204,18 +232,19 @@ class JobPostingModel:
                         ON a.`Job_id` = j.`Job_id` AND a.`Seekers_id` = %s
                 """
                 params.extend([seekers_id, seekers_id])
- 
+
             # ── GATE: only return this job if it's approved ──
             query += " WHERE j.`Job_id` = %s AND LOWER(j.`Status`) = 'approved'"
             params.append(job_id)
- 
+
             with conn.cursor() as cur:
                 cur.execute(query, params)
                 return cur.fetchone()   # None if job is Pending or Rejected
         finally:
             conn.close()
- 
+
     # ── Employer: see their own jobs (all statuses, so they know what's pending) ──
+
     @staticmethod
     def get_jobs_by_employer(employee_id):
         conn = get_connection()
@@ -223,9 +252,10 @@ class JobPostingModel:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT `Job_id`, `Title`, `Description`, `Requirement`,
-                           `Salary`, `Location`, `Status`, `Created_at`,
-                           `Job_type`, `Experience_level`
+                    SELECT
+                        `Job_id`, `Title`, `Description`, `Requirement`,
+                        `Salary`, `Location`, `Status`, `Created_at`,
+                        `Job_type`, `Experience_level`, `Vacancies`, `Filled_vacancies`
                     FROM `Jobs`
                     WHERE `Employee_id` = %s
                     ORDER BY `Created_at` DESC
@@ -235,7 +265,7 @@ class JobPostingModel:
                 return cur.fetchall()
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_job_by_id(job_id):
         conn = get_connection()
@@ -254,7 +284,7 @@ class JobPostingModel:
                 return cur.fetchone()
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_saved_jobs(seekers_id):
         conn = get_connection()
@@ -274,20 +304,20 @@ class JobPostingModel:
                 return cur.fetchall()
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_saved_job_ids(seekers_id):
         conn = get_connection()
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id` = %s",
-                    (seekers_id,)
+                    "SELECT `Job_id` FROM `Saved_Jobs` WHERE `Seekers_id`=%s",
+                    (seekers_id,),
                 )
                 return {row["Job_id"] for row in cur.fetchall()}
         finally:
             conn.close()
- 
+
     @staticmethod
     def save_job(seekers_id, job_id):
         conn = get_connection()
@@ -311,7 +341,7 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
     @staticmethod
     def unsave_job(seekers_id, job_id):
         conn = get_connection()
@@ -329,21 +359,23 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
     @staticmethod
-    def update_job(job_id, title, description, requirement, salary, location, job_type, experience_level):
+    def update_job(job_id, title, description, requirement, salary, location, job_type, experience_level, vacancies):
         conn = get_connection()
         try:
+            vacancies = max(int(vacancies or 1), 1)
             with conn.cursor() as cur:
                 cur.execute(
                     """
                     UPDATE `Jobs`
                     SET `Title`=%s, `Description`=%s, `Requirement`=%s,
-                        `Salary`=%s, `Location`=%s, `Job_type`=%s, `Experience_level`=%s
+                        `Salary`=%s, `Location`=%s,
+                        `Job_type`=%s, `Experience_level`=%s, `Vacancies`=%s
                     WHERE `Job_id`=%s
                     """,
-                    (title, description, requirement, salary, location,
-                     job_type, experience_level, job_id),
+                    (title, description, requirement, salary,
+                     location, job_type, experience_level, vacancies, job_id),
                 )
                 conn.commit()
                 return True
@@ -353,7 +385,26 @@ class JobPostingModel:
             return False
         finally:
             conn.close()
- 
+
+    @staticmethod
+    def update_filled_vacancies(job_id, filled_vacancies):
+        conn = get_connection()
+        try:
+            filled_vacancies = max(int(filled_vacancies or 0), 0)
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE `Jobs` SET `Filled_vacancies`=%s WHERE `Job_id`=%s",
+                    (filled_vacancies, job_id),
+                )
+                conn.commit()
+                return True
+        except Exception as e:
+            print(f"Error updating filled vacancies: {e}")
+            conn.rollback()
+            return False
+        finally:
+            conn.close()
+
     @staticmethod
     def delete_job(job_id):
         conn = get_connection()
@@ -363,10 +414,10 @@ class JobPostingModel:
                     """
                     SELECT j.`Title`, e.`User_id`
                     FROM `Jobs` j
-                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    JOIN `Employee` e ON j.`Employee_id`=e.`Employee_id`
                     WHERE j.`Job_id` = %s
                     """,
-                    (job_id,)
+                    (job_id,),
                 )
                 job = cur.fetchone()
 
@@ -374,13 +425,13 @@ class JobPostingModel:
                 conn.commit()
 
                 if job:
-                    from app.modals.notification_model import NotificationModel
+                    from app.modals.notification import NotificationModel
                     NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Deleted",
                         message=f"Your job posting '{job['Title']}' has been deleted by an administrator.",
                         notification_type="job_deleted",
-                        reference_id=job_id
+                        reference_id=job_id,
                     )
                 return True
         except Exception as e:
@@ -390,9 +441,11 @@ class JobPostingModel:
         finally:
             conn.close()
 
+    # ── update_job_status — called by approve/reject routes ───────────
+    # Accepted values: 'Pending' | 'Approved' | 'Rejected' | 'Closed'
     @staticmethod
     def update_job_status(job_id, status):
-        allowed = {'Pending', 'Approved', 'Rejected'}
+        allowed = {'Pending', 'Approved', 'Rejected', 'Closed'}
         if status not in allowed:
             print(f"update_job_status: invalid status '{status}'")
             return False
@@ -403,38 +456,36 @@ class JobPostingModel:
                     """
                     SELECT j.`Title`, e.`User_id`
                     FROM `Jobs` j
-                    JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    JOIN `Employee` e ON j.`Employee_id`=e.`Employee_id`
                     WHERE j.`Job_id` = %s
                     """,
-                    (job_id,)
+                    (job_id,),
                 )
                 job = cur.fetchone()
-                print(f"DEBUG: job_id={job_id}, job={job}, status={status}")
 
                 cur.execute(
                     "UPDATE `Jobs` SET `Status`=%s WHERE `Job_id`=%s",
                     (status, job_id),
                 )
                 conn.commit()
-                print(f"DEBUG: rowcount={cur.rowcount}")
 
                 if cur.rowcount > 0 and job and status == 'Rejected':
-                    from app.modals.notification_model import NotificationModel
+                    from app.modals.notification import NotificationModel
                     NotificationModel.create_notification(
                         user_id=job['User_id'],
                         title="Job Post Rejected",
                         message=f"Your job posting '{job['Title']}' has been rejected by an administrator.",
                         notification_type="job_rejected",
-                        reference_id=job_id
+                        reference_id=job_id,
                     )
                 return cur.rowcount > 0
         except Exception as e:
-            print(f"Error updating job status: {e}")  # ← this will show the real error
+            print(f"Error updating job status: {e}")
             conn.rollback()
             return False
         finally:
             conn.close()
- 
+
     # ── Active (approved) job count for the dashboard stat card ───────
     @staticmethod
     def get_active_jobs():
@@ -451,7 +502,7 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
- 
+
     # ── All jobs for the admin moderation panel (no status filter) ────
     @staticmethod
     def get_all_jobs_for_admin():
@@ -464,7 +515,7 @@ class JobPostingModel:
                            j.`Job_type`, j.`Status`, j.`Created_at`,
                            COALESCE(e.`Company_name`, 'Unknown') AS `Company_name`
                     FROM `Jobs` j
-                    LEFT JOIN `Employee` e ON j.`Employee_id` = e.`Employee_id`
+                    LEFT JOIN `Employee` e ON j.`Employee_id`=e.`Employee_id`
                     ORDER BY j.`Created_at` DESC
                     """
                 )
@@ -474,7 +525,7 @@ class JobPostingModel:
             return []
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_application_count(job_id):
         conn = get_connection()
@@ -491,7 +542,7 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
- 
+
     @staticmethod
     def get_total_jobs():
         conn = get_connection()
@@ -505,4 +556,3 @@ class JobPostingModel:
             return 0
         finally:
             conn.close()
- 

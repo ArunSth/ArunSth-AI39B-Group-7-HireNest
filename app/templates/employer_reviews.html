@@ -1,0 +1,241 @@
+{% extends 'employer_base.html' %}
+
+{% block page_title %}Employer Reviews{% endblock %}
+{% block page_subtitle %}Review feedback submitted for your company.{% endblock %}
+
+{% block content %}
+<style>
+  .review-page-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .review-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .review-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .review-stat-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+  }
+
+  .review-stat-card strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 1.9rem;
+    color: var(--text-primary);
+  }
+
+  .review-rating-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .review-stars {
+    color: #f59e0b;
+    letter-spacing: 1px;
+    font-size: 1rem;
+  }
+
+  .review-rating-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .review-panel {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .review-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .review-panel-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+  }
+
+  .review-card-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .review-card {
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 18px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .review-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+  }
+
+  .review-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .review-card-top h4 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .review-card-date {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .review-card-text {
+    margin: 12px 0 0;
+    color: var(--text-secondary);
+    line-height: 1.65;
+  }
+
+  .review-empty-card {
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 56px 32px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+
+  .review-empty-card i {
+    font-size: 2rem;
+    color: #f59e0b;
+    background: var(--surface-warning-soft);
+    width: 64px;
+    height: 64px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  .review-empty-card h3 {
+    margin: 16px 0 10px;
+    color: var(--text-primary);
+  }
+
+  .review-empty-card p {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 768px) {
+    .review-stat-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .review-card-top {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<div class="review-page-shell">
+  <section class="seeker-welcome-hero">
+    <div class="seeker-welcome-copy">
+      <span class="seeker-kicker">Company feedback</span>
+      <h1>Employer Reviews</h1>
+      <p>See what candidates are saying about your company and how your employer brand is performing.</p>
+    </div>
+  </section>
+
+  <section class="review-stat-grid" aria-label="Review statistics">
+    <div class="review-stat-card">
+      <p>Average Rating</p>
+      <strong>{{ (review_summary.average_rating if review_summary and review_summary.average_rating else 0) | round(1) }}</strong>
+      <div class="review-rating-display">
+        <span class="review-stars">
+          {% set avg_rating = review_summary.average_rating if review_summary and review_summary.average_rating else 0 %}
+          {% for i in range(1, 6) %}
+            {% if i <= avg_rating|int %}
+              <i class="fas fa-star"></i>
+            {% else %}
+              <i class="far fa-star"></i>
+            {% endif %}
+          {% endfor %}
+        </span>
+        <span class="review-rating-text">out of 5</span>
+      </div>
+    </div>
+    <div class="review-stat-card">
+      <p>Total Reviews</p>
+      <strong>{{ review_summary.total_reviews if review_summary and review_summary.total_reviews else 0 }}</strong>
+    </div>
+    <div class="review-stat-card">
+      <p>5-Star Reviews</p>
+      <strong>{{ reviews|selectattr('Rating', 'equalto', 5)|list|length }}</strong>
+    </div>
+  </section>
+
+  {% if reviews %}
+    <section class="review-panel">
+      <div class="review-panel-header">
+        <h3>Approved Reviews</h3>
+      </div>
+      <div class="review-card-grid">
+        {% for review in reviews %}
+          <article class="review-card">
+            <div class="review-card-top">
+              <div>
+                <h4>{{ review.First_name }} {{ review.Last_name }}</h4>
+                <div class="review-stars">
+                  {% for i in range(1, 6) %}
+                    {% if i <= review.Rating %}
+                      <i class="fas fa-star"></i>
+                    {% else %}
+                      <i class="far fa-star"></i>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+              <span class="review-card-date">{{ review.Created_at.strftime('%d %b %Y') if review.Created_at else '—' }}</span>
+            </div>
+            <p class="review-card-text">{{ review.Review_text }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <section class="review-empty-card">
+      <i class="fa-solid fa-star"></i>
+      <h3>No Reviews Yet</h3>
+      <p>There are no approved reviews for your company right now. Once candidates share feedback, it will appear here.</p>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -2,23 +2,7 @@
 
 {% block content %}
 <div class="dashboard-container">
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-icon">
-        <i class="fas fa-user"></i>
-      </div>
-      <div class="sidebar-logo-text">
-        <h3>HireNest</h3>
-      </div>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a href="/seeker/interviews" class="nav-item active">
-        <i class="fas fa-video"></i>
-        <span>Interviews</span>
-      </a>
-    </nav>
-  </aside>
+  {% include 'sidebar_job_seeker.html' %}
 
   <div class="main-content">
     <div class="topbar">
@@ -28,78 +12,103 @@
     </div>
 
     <div class="content">
-      <div style="max-width: 900px;">
-        <div class="table-container">
-          <div style="padding: 30px;">
-            <!-- Interview Info -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
+      <div class="seeker-dashboard-shell">
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Interview details</span>
+            <h1>{{ interview.job_title_display }}</h1>
+            <p>{{ interview.company_display }} · {{ interview.date_display or 'Date TBD' }}</p>
+          </div>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('interview.seeker_interviews') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-arrow-left"></i>
+              <span>Back to interviews</span>
+            </a>
+            <a href="{{ url_for('job_seeker.dashboard') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-home"></i>
+              <span>Dashboard</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="seeker-focus-grid">
+          <div class="seeker-panel">
+            <div class="seeker-panel-heading">
               <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Company</p>
-                <p style="font-size: 18px; font-weight: 700;">{{ interview.Company_name }}</p>
+                <span class="seeker-kicker">Interview overview</span>
+                <h2>Meeting details</h2>
               </div>
-              <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Position</p>
-                <p style="font-size: 18px; font-weight: 700;">{{ interview.job_title }}</p>
-              </div>
+              <span class="seeker-status seeker-status--{{ (interview.Status or 'scheduled')|lower }}">
+                {{ interview.status_display }}
+              </span>
             </div>
 
-            <!-- Interview Details -->
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
-              <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Date</p>
-                <p style="font-size: 16px; font-weight: 700;">{{ interview.date_display or 'N/A' }}</p>
+            <div class="seeker-item-list">
+              <div class="seeker-application-row">
+                <div>
+                  <h3>Company</h3>
+                  <p>{{ interview.company_display }}</p>
+                </div>
+                <div class="seeker-row-meta">
+                  <span>{{ interview.date_display or 'Date TBD' }}</span>
+                  <span>{{ interview.time_display or 'Time TBD' }}</span>
+                </div>
               </div>
-              <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Time</p>
-                <p style="font-size: 16px; font-weight: 700;">{{ interview.time_display or 'N/A' }}</p>
+              <div class="seeker-application-row">
+                <div>
+                  <h3>Position</h3>
+                  <p>{{ interview.job_title_display }}</p>
+                </div>
+                <div class="seeker-row-meta">
+                  <span>{{ interview.mode_display }}</span>
+                  <span class="seeker-chip">{{ interview.status_display }}</span>
+                </div>
               </div>
-              <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Mode</p>
-                <span style="display: inline-block; padding: 6px 12px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                  {{ interview.Mode }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Meeting Link -->
-            <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
-              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Meeting Link</p>
-              <div style="background: var(--light-purple); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-purple);">
-                {% if interview.Meeting_link and interview.Meeting_link.startswith('http') %}
-                  <a href="{{ interview.Meeting_link }}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex;">
-                    <i class="fas fa-video"></i> Join Video Meeting
-                  </a>
-                {% else %}
-                  <code style="color: var(--text-primary); font-family: 'Courier New', monospace;">
-                    {{ interview.Meeting_link or 'No meeting details provided.' }}
-                  </code>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Interviewer Info -->
-            <div style="margin-bottom: 30px;">
-              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Interviewer</p>
-              <div style="background: var(--light-bg); padding: 16px; border-radius: 8px;">
-                <p style="font-weight: 600; margin-bottom: 4px;">{{ interview.employer_first_name }} {{ interview.employer_last_name }}</p>
-                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 4px;">{{ interview.employer_email }}</p>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--border-color);">
-              <a href="/seeker/interviews" class="btn-secondary">Back to Interviews</a>
             </div>
           </div>
-        </div>
+
+          <div class="seeker-panel seeker-membership-card">
+            <div class="seeker-membership-icon">
+              <i class="fas fa-video"></i>
+            </div>
+            <div>
+              <h3>Meeting link</h3>
+              {% if interview.meeting_link_is_url %}
+                <p>Join the interview using the secure link below.</p>
+                <a href="{{ interview.meeting_link_display }}" target="_blank" rel="noopener noreferrer" class="seeker-action seeker-action--primary">
+                  <i class="fas fa-external-link-alt"></i>
+                  <span>Open meeting</span>
+                </a>
+              {% else %}
+                <p>{{ interview.meeting_link_display }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading seeker-panel-heading--compact">
+            <div>
+              <span class="seeker-kicker">Interviewer</span>
+              <h2>Contact details</h2>
+            </div>
+          </div>
+          <div class="seeker-item-list">
+            <div class="seeker-application-row">
+              <div>
+                <h3>{{ (interview.employer_first_name or 'Interviewer') }} {{ interview.employer_last_name or '' }}</h3>
+                <p>{{ interview.employer_email or 'No email provided' }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 {% endblock %}
+

@@ -10,12 +10,6 @@
         <h2>Profile center for {{ user.First_name or 'Job Seeker' }}</h2>
         <p class="topbar-subtitle">Keep your profile photo, resume, and core details ready for employers.</p>
       </div>
-      <div class="topbar-right">
-        <div class="user-profile">
-          <div class="user-avatar">{{ user.First_name[0] if user.First_name else 'J' }}</div>
-          <div class="user-name">{{ user.First_name or 'Seeker' }}</div>
-        </div>
-      </div>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}

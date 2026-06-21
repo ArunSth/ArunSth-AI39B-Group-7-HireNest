@@ -19,7 +19,7 @@
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           {% for category, message in messages %}
-          <div style="padding:12px 16px;border-radius:8px;margin-bottom:16px;background:{% if category == 'success' %}rgba(34,197,94,.1){% else %}rgba(239,68,68,.1){% endif %};color:{% if category == 'success' %}#16a34a{% else %}#dc2626{% endif %};">
+          <div class="flash-message flash-{{ category }}">
             {{ message }}
           </div>
           {% endfor %}
@@ -27,7 +27,7 @@
       {% endwith %}
 
       <div class="job-detail-layout">
-        <section class="table-container" style="padding:28px;">
+        <section class="table-container padded-panel">
           <div class="job-detail-header">
             <div class="company-logo-box company-logo-box--large">
               {% if job.Logo %}
@@ -45,7 +45,7 @@
                 <span>{{ job.Industry or 'Industry not specified' }}</span>
               </div>
               {% if job.employer_user_id %}
-              <div style="margin-top: 16px;">
+              <div class="action-row">
                 <a href="{{ url_for('messages.conversation', conversation_id=job.employer_user_id) }}" class="btn-secondary action-wide">
                   <i class="fas fa-envelope"></i> Message Employer
                 </a>
@@ -89,6 +89,10 @@
 
           <hr>
 
+          <button type="button" class="btn-secondary action-wide report-job-trigger" data-job-id="{{ job.Job_id }}" data-job-title="{{ job.Title }}">
+            <i class="fas fa-flag"></i> Report Job
+          </button>
+
           {% if job.Has_applied %}
           <div class="applied-note">
             <i class="fas fa-circle-check"></i>
@@ -115,17 +119,49 @@
           </form>
           {% endif %}
         </aside>
-      <div style="max-width: 900px;">
-        <div class="table-container" style="margin-bottom: 30px;">
-          <div style="padding: 30px;">
-            <div style="display:flex; justify-content:space-between; gap:20px; align-items:flex-start; margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
+
+        <div class="report-job-modal-overlay" id="reportJobModalOverlay" hidden>
+          <div class="report-job-modal">
+            <div class="report-job-modal__header">
+              <h3>Report Job</h3>
+              <button type="button" class="report-job-modal__close" aria-label="Close report modal" onclick="closeReportModal()">&times;</button>
+            </div>
+            <form method="POST" id="reportJobForm">
+              <input type="hidden" name="job_id" id="reportJobId">
+              <div class="form-group">
+                <label for="reportReason">Reason <span class="required">*</span></label>
+                <select name="reason" id="reportReason" required>
+                  <option value="">Select a reason</option>
+                  <option>Scam/Fraud</option>
+                  <option>Fake Company</option>
+                  <option>Misleading Information</option>
+                  <option>Spam/Duplicate</option>
+                  <option>Offensive Content</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reportDetails">Details</label>
+                <textarea id="reportDetails" name="details" rows="5" placeholder="Add any extra details"></textarea>
+              </div>
+              <div class="report-job-modal__footer">
+                <button type="button" class="btn-secondary" onclick="closeReportModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Submit Report</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      <div class="page-width-limit">
+        <div class="table-container section-block">
+          <div class="page-panel">
+            <div class="icon-panel">
               <div>
-                <h3 style="font-size:28px; margin-bottom:10px;">{{ job.Title }}</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                <h3 class="summary-heading">{{ job.Title }}</h3>
+                <p class="summary-label">
                   <i class="fas fa-building"></i> {{ job.Company_name }}
                   &nbsp; <i class="fas fa-map-marker-alt"></i> {{ job.Location or 'Remote' }}
                 </p>
-                <span style="display:inline-block; padding:6px 12px; background:var(--light-purple); color:var(--primary-purple); border-radius:6px; font-size:13px; font-weight:600;">
+                <span class="summary-pill">
                   {{ job.Job_type or 'Full-time' }}
                 </span>
               </div>
@@ -137,41 +173,41 @@
               </form>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
+            <div class="detail-grid">
               <div>
-                <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">Salary</p>
-                <p style="font-size:20px; font-weight:700; color:var(--primary-purple);">{{ "Rs. {:,.0f}".format(job.Salary) if job.Salary else 'Not specified' }}</p>
+                <p class="section-title-small">Salary</p>
+                <p class="job-stat-value highlight-value">{{ "Rs. {:,.0f}".format(job.Salary) if job.Salary else 'Not specified' }}</p>
               </div>
               <div>
-                <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:600;">Experience</p>
-                <p style="font-size:20px; font-weight:700;">{{ job.Experience_level or 'Entry-level' }}</p>
+                <p class="section-title-small">Experience</p>
+                <p class="job-stat-value">{{ job.Experience_level or 'Entry-level' }}</p>
               </div>
             </div>
 
-            <div style="margin-bottom:30px; padding-bottom:30px; border-bottom:1px solid var(--border-color);">
-              <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:12px; font-weight:600;">Description</p>
-              <p style="line-height:1.8; color:var(--text-primary);">{{ job.Description }}</p>
+            <div class="section-divider">
+              <p class="section-title-small">Description</p>
+              <p class="detail-text">{{ job.Description }}</p>
             </div>
 
-            <div style="margin-bottom:30px;">
-              <p style="color: var(--text-secondary); font-size:12px; text-transform:uppercase; margin-bottom:12px; font-weight:600;">Requirements & Skills</p>
-              <p style="line-height:1.8; color:var(--text-primary);">{{ job.Requirement }}</p>
+            <div class="section-block">
+              <p class="section-title-small">Requirements & Skills</p>
+              <p class="detail-text">{{ job.Requirement }}</p>
             </div>
 
             {% if application %}
-            <div class="alert alert-info" style="margin-top: 20px;">
+            <div class="alert alert-info alert-top">
               You already applied for this job. Current status: {{ application.Status|replace('_', ' ')|title }}.
             </div>
             {% else %}
-            <form method="POST" action="{{ url_for('seeker_jobs.apply', job_id=job.Job_id) }}" class="profile-form" style="margin-top:30px; padding-top:30px; border-top:1px solid var(--border-color);">
+            <form method="POST" action="{{ url_for('seeker_jobs.apply', job_id=job.Job_id) }}" class="profile-form section-divider-top">
               <div class="form-group">
                 <label for="cover_letter">Cover Letter</label>
                 <textarea id="cover_letter" name="cover_letter" rows="5" placeholder="Write a short note for the employer..."></textarea>
               </div>
               {% if seeker_profile and seeker_profile.Resume %}
-              <p style="color: var(--text-secondary); font-size: 14px;">Resume attached from profile: {{ seeker_profile.Resume }}</p>
+              <p class="note-text">Resume attached from profile: {{ seeker_profile.Resume }}</p>
               {% else %}
-              <p style="color: var(--primary-red); font-size: 14px;">No resume found on your profile. You can still apply, but uploading a resume is recommended.</p>
+              <p class="note-warning">No resume found on your profile. You can still apply, but uploading a resume is recommended.</p>
               {% endif %}
               <button type="submit" class="btn-primary"><i class="fas fa-paper-plane"></i> Apply Now</button>
             </form>
@@ -205,7 +241,40 @@
   .apply-card textarea { width:100%; border:1px solid var(--border-color); border-radius:8px; padding:12px; font:inherit; resize:vertical; }
   .action-wide { width:100%; justify-content:center; margin-bottom:10px; }
   .applied-note { display:flex; gap:10px; align-items:center; padding:14px; border-radius:8px; background:rgba(34,197,94,.1); color:#16a34a; margin-bottom:14px; font-weight:700; }
+  .report-job-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .report-job-modal { width:min(520px, 92vw); background:var(--white); border-radius:12px; box-shadow:var(--shadow-md); padding:22px; }
+  .report-job-modal__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .report-job-modal__header h3 { margin:0; }
+  .report-job-modal__close { border:0; background:transparent; font-size:24px; cursor:pointer; color:var(--text-secondary); }
+  .report-job-modal__footer { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .required { color:#dc2626; }
   @media (max-width: 900px) { .job-detail-layout { grid-template-columns:1fr; } }
 </style>
+<script>
+  function openReportModal(jobId) {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    const jobIdInput = document.getElementById('reportJobId');
+    const form = document.getElementById('reportJobForm');
+    if (!overlay || !jobIdInput || !form) return;
+    jobIdInput.value = jobId;
+    form.action = '/seeker/jobs/' + jobId + '/report';
+    overlay.hidden = false;
+  }
+
+  function closeReportModal() {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    if (overlay) overlay.hidden = true;
+  }
+
+  document.querySelectorAll('.report-job-trigger').forEach(button => {
+    button.addEventListener('click', () => {
+      openReportModal(button.dataset.jobId);
+    });
+  });
+
+  document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+  });
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}

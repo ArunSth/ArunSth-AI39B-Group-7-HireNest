@@ -4,10 +4,8 @@ from flask import Flask, send_from_directory  # Remove 'app' - it's not a Flask 
 import os
 import config
 
-from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 
-db = SQLAlchemy()
 mail = Mail()
 
 from app.routes.forgetpasswordroutes import ForgetPasswordRoutes
@@ -41,8 +39,7 @@ def create_app():
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_HTTPONLY'] = True
 
-    # 🔥 INIT DATABASE (THIS WAS MISSING)
-    db.init_app(app)
+    # 🔥 INIT MAIL
     mail.init_app(app)
 
     # Register Blueprints
