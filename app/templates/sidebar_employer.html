@@ -1,13 +1,13 @@
 <aside class="sidebar">
-  <a href="{{ url_for('employer.dashboard') }}" class="sidebar-logo sidebar-logo--employer">
-    <div class="sidebar-logo-icon">
+  <div class="employer-brand">
+    <div class="employer-brand-icon">
       <i class="fas fa-building"></i>
     </div>
-    <div class="sidebar-logo-text">
+    <div class="employer-brand-text">
       <h3>HireNest</h3>
-      <p>Employer hub</p>
+      <span>Employer hub</span>
     </div>
-  </a>
+  </div>
 
   <nav class="sidebar-nav">
     <a href="{{ url_for('employer.dashboard') }}" class="nav-item {% if request.path == url_for('employer.dashboard') %}active{% endif %}">
@@ -34,6 +34,10 @@
       <i class="fas fa-comments"></i>
       <span>Messages</span>
     </a>
+    <a href="{{ url_for('employer.reviews_page') }}" class="nav-item {% if request.path == url_for('employer.reviews_page') %}active{% endif %}">
+      <i class="fas fa-star"></i>
+      <span>Reviews</span>
+    </a>
     <a href="{{ url_for('subscriptions.plans') }}" class="nav-item {% if '/employer/subscription-plans' in request.path %}active{% endif %}">
       <i class="fas fa-credit-card"></i>
       <span>Subscription Plans</span>
@@ -42,7 +46,7 @@
       <i class="fas fa-receipt"></i>
       <span>Payment History</span>
     </a>
-    <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
+    <a href="{{ url_for('logout.process_logout') }}" class="nav-item logout-confirm-link" data-logout-url="{{ url_for('logout.process_logout') }}">
       <i class="fas fa-sign-out-alt"></i>
       <span>Logout</span>
     </a>

@@ -13,88 +13,91 @@
 
     <div class="content">
       <div class="seeker-dashboard-shell">
-        <div class="section">
-        <div class="table-container">
-          <div class="table-responsive">
-            {% if interviews %}
-            <table>
-              <thead>
-                <tr>
-                  <th>Company</th>
-                  <th>Job Position</th>
-                  <th>Date & Time</th>
-                  <th>Mode</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for interview in interviews %}
-                <tr>
-                  <td>
-                    <strong>{{ interview.Company_name }}</strong>
-                  </td>
-                  <td>{{ interview.job_title }}</td>
-                  <td>
-                    <div>
-<<<<<<< HEAD
-                      <strong>{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</strong>
-                      <div class="small-muted-text">
-                        {{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}
-=======
-                      {% if interview.date_display %}
-                        <strong>{{ interview.date_display }}</strong>
-                      {% else %}
-                        <strong>-</strong>
-                      {% endif %}
-                      <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
-                        {% if interview.time_display %}
-                          {{ interview.time_display }}
-                        {% else %}
-                          N/A
-                        {% endif %}
->>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="mode-pill">
-                      {{ interview.Mode }}
-                    </span>
-                  </td>
-                  <td>
-                    <span class="status-badge badge-{{ interview.Status|lower }}">
-                      {{ interview.Status|replace('_', ' ')|title }}
-                    </span>
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                      <a href="/seeker/interview/{{ interview.Interview_id }}" class="btn-small btn-view">
-                        <i class="fas fa-eye"></i> View
-                      </a>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-            {% else %}
-            <div class="empty-state">
-              <i class="fas fa-video empty-state-icon"></i>
-              <h3 class="empty-state-heading">No Interviews Scheduled</h3>
-              <p>When employers schedule interviews with you, they will appear here.</p>
-            </div>
-            {% endif %}
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Interview center</span>
+            <h1>Track your interview schedule</h1>
+            <p>Review meeting details, statuses, and next steps without leaving your dashboard.</p>
           </div>
-        </div>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('job_seeker.dashboard') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-home"></i>
+              <span>Dashboard</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="seeker-stat-grid" aria-label="Interview summary">
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Total interviews</p>
+              <strong>{{ interviews|length }}</strong>
+              <span>Across all applications</span>
+            </div>
+            <i class="fas fa-video"></i>
+          </div>
+          <div class="seeker-stat-tile">
+            <div>
+              <p>Scheduled</p>
+              <strong>{{ interviews|selectattr('Status', 'equalto', 'scheduled')|list|length }}</strong>
+              <span>Ready for your calendar</span>
+            </div>
+            <i class="fas fa-calendar-check"></i>
+          </div>
+        </section>
+
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading">
+            <div>
+              <span class="seeker-kicker">Interview schedule</span>
+              <h2>All interviews</h2>
+            </div>
+            <span class="seeker-chip">{{ interviews|length }} total</span>
+          </div>
+
+          {% if interviews %}
+          <div class="seeker-item-list">
+            {% for interview in interviews %}
+            <div class="seeker-application-row">
+              <div>
+                <h3>{{ interview.job_title_display }}</h3>
+                <p>{{ interview.company_display }}</p>
+              </div>
+              <div class="seeker-row-meta">
+                <span>
+                  {{ interview.date_display or 'Date TBD' }}
+                  {% if interview.time_display %}
+                    · {{ interview.time_display }}
+                  {% endif %}
+                </span>
+                <span class="seeker-chip">{{ interview.mode_display }}</span>
+                <span class="seeker-status seeker-status--{{ (interview.Status or 'scheduled')|lower }}">
+                  {{ interview.status_display }}
+                </span>
+              </div>
+              <div>
+                <a href="{{ url_for('interview.seeker_view_interview', interview_id=interview.Interview_id) }}" class="seeker-action seeker-action--secondary">
+                  <i class="fas fa-eye"></i>
+                  <span>View details</span>
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="seeker-empty-block">
+            <h3>No interviews scheduled yet</h3>
+            <p>When employers schedule interviews with you, they will appear here.</p>
+          </div>
+          {% endif %}
+        </section>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
+

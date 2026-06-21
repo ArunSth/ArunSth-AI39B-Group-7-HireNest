@@ -12,10 +12,6 @@
       <p>Track posted jobs, applications, interviews, and profile health in one place.</p>
     </div>
     <div class="seeker-quick-actions">
-      <a href="{{ url_for('job_posting.create_job') }}" class="seeker-action seeker-action--primary">
-        <i class="fas fa-plus"></i>
-        <span>Post new job</span>
-      </a>
       <a href="{{ url_for('employer.profile') }}" class="seeker-action seeker-action--secondary">
         <i class="fas fa-user-gear"></i>
         <span>Edit profile</span>
@@ -182,7 +178,12 @@
                       <td><strong>{{ job.Title }}</strong></td>
                       <td>{{ job.Location }}</td>
                       <td>{{ job_app_counts.get(job.Job_id, 0) }}</td>
-                      <td><span class="seeker-chip">{{ job.Status|default('Active')|capitalize }}</span></td>
+                      <td>
+                        {% set status_value = (job.Status or '') %}
+                        {% set status_key = status_value|lower %}
+                        {% set display_status = 'Pending Approval' if status_key == 'pending' else 'Active' if status_key == 'approved' else 'Rejected' if status_key == 'rejected' else 'Closed' if status_key == 'closed' else 'Active' %}
+                        <span class="seeker-chip">{{ display_status }}</span>
+                      </td>
                       <td>{{ job.Created_at.strftime('%d %b %Y') if job.Created_at else 'N/A' }}</td>
                       <td class="text-right">
                         <a href="/employer/jobs/{{ job.Job_id }}/edit" class="seeker-link-action">Edit</a>
@@ -241,15 +242,6 @@
               </table>
             </div>
           </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script src="{{ url_for('static', filename='js/employer_dashboard.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
-</body>
-</html>
         {% else %}
           <div class="seeker-empty-state">
             <i class="fas fa-user-clock"></i>

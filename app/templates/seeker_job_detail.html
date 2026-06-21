@@ -89,6 +89,10 @@
 
           <hr>
 
+          <button type="button" class="btn-secondary action-wide report-job-trigger" data-job-id="{{ job.Job_id }}" data-job-title="{{ job.Title }}">
+            <i class="fas fa-flag"></i> Report Job
+          </button>
+
           {% if job.Has_applied %}
           <div class="applied-note">
             <i class="fas fa-circle-check"></i>
@@ -115,6 +119,38 @@
           </form>
           {% endif %}
         </aside>
+
+        <div class="report-job-modal-overlay" id="reportJobModalOverlay" hidden>
+          <div class="report-job-modal">
+            <div class="report-job-modal__header">
+              <h3>Report Job</h3>
+              <button type="button" class="report-job-modal__close" aria-label="Close report modal" onclick="closeReportModal()">&times;</button>
+            </div>
+            <form method="POST" id="reportJobForm">
+              <input type="hidden" name="job_id" id="reportJobId">
+              <div class="form-group">
+                <label for="reportReason">Reason <span class="required">*</span></label>
+                <select name="reason" id="reportReason" required>
+                  <option value="">Select a reason</option>
+                  <option>Scam/Fraud</option>
+                  <option>Fake Company</option>
+                  <option>Misleading Information</option>
+                  <option>Spam/Duplicate</option>
+                  <option>Offensive Content</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reportDetails">Details</label>
+                <textarea id="reportDetails" name="details" rows="5" placeholder="Add any extra details"></textarea>
+              </div>
+              <div class="report-job-modal__footer">
+                <button type="button" class="btn-secondary" onclick="closeReportModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Submit Report</button>
+              </div>
+            </form>
+          </div>
+        </div>
       <div class="page-width-limit">
         <div class="table-container section-block">
           <div class="page-panel">
@@ -205,7 +241,40 @@
   .apply-card textarea { width:100%; border:1px solid var(--border-color); border-radius:8px; padding:12px; font:inherit; resize:vertical; }
   .action-wide { width:100%; justify-content:center; margin-bottom:10px; }
   .applied-note { display:flex; gap:10px; align-items:center; padding:14px; border-radius:8px; background:rgba(34,197,94,.1); color:#16a34a; margin-bottom:14px; font-weight:700; }
+  .report-job-modal-overlay { position:fixed; inset:0; background:rgba(15,23,42,0.55); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .report-job-modal { width:min(520px, 92vw); background:var(--white); border-radius:12px; box-shadow:var(--shadow-md); padding:22px; }
+  .report-job-modal__header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .report-job-modal__header h3 { margin:0; }
+  .report-job-modal__close { border:0; background:transparent; font-size:24px; cursor:pointer; color:var(--text-secondary); }
+  .report-job-modal__footer { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .required { color:#dc2626; }
   @media (max-width: 900px) { .job-detail-layout { grid-template-columns:1fr; } }
 </style>
+<script>
+  function openReportModal(jobId) {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    const jobIdInput = document.getElementById('reportJobId');
+    const form = document.getElementById('reportJobForm');
+    if (!overlay || !jobIdInput || !form) return;
+    jobIdInput.value = jobId;
+    form.action = '/seeker/jobs/' + jobId + '/report';
+    overlay.hidden = false;
+  }
+
+  function closeReportModal() {
+    const overlay = document.getElementById('reportJobModalOverlay');
+    if (overlay) overlay.hidden = true;
+  }
+
+  document.querySelectorAll('.report-job-trigger').forEach(button => {
+    button.addEventListener('click', () => {
+      openReportModal(button.dataset.jobId);
+    });
+  });
+
+  document.getElementById('reportJobModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'reportJobModalOverlay') closeReportModal();
+  });
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}

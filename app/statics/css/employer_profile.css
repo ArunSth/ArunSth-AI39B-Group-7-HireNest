@@ -4,7 +4,7 @@
 }
 
 .profile-hero {
-    background: linear-gradient(135deg, #ffffff 0%, #f7f5ff 100%);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft-alt) 100%);
     border: 1px solid var(--border-color);
     border-radius: 20px;
     box-shadow: 0 14px 30px rgba(109, 93, 252, 0.08);
@@ -28,7 +28,7 @@
 }
 
 .profile-completion-card {
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 16px 18px;
@@ -36,7 +36,7 @@
 }
 
 .profile-completion-card-accent {
-    background: linear-gradient(135deg, #ffffff 0%, #f5f2ff 100%);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft-alt) 100%);
 }
 
 .profile-completion-label {
@@ -116,7 +116,8 @@
 .profile-card {
     border: 1px solid var(--border-color);
     border-radius: 18px;
-    background: var(--white);
+    background: var(--surface);
+    color: var(--text-primary);
     box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     padding: 20px;
 }
@@ -147,6 +148,7 @@
 .profile-card .card-header h3 {
     font-size: 18px;
     margin-bottom: 4px;
+    color: var(--text-primary);
 }
 
 .profile-form {
@@ -165,7 +167,8 @@
 .profile-form .form-group select {
     border-radius: 12px;
     border: 1px solid var(--border-color);
-    background: #fff;
+    background: var(--surface);
+    color: var(--text-primary);
     padding: 12px 14px;
     box-shadow: inset 0 1px 1px rgba(15, 23, 42, 0.03);
 }
@@ -175,6 +178,20 @@
 .profile-form .form-group select:focus {
     border-color: var(--primary-purple);
     box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.12);
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.profile-form .form-group input::placeholder,
+.profile-form .form-group textarea::placeholder,
+.profile-form .form-group select option {
+    color: var(--text-secondary);
+}
+
+.profile-form .form-group input[type="file"] {
+    background: var(--surface);
+    color: var(--text-primary);
+    padding: 10px 12px;
 }
 
 .profile-form textarea {
@@ -184,12 +201,14 @@
 .profile-card-side .logo-card {
     display: grid;
     gap: 14px;
+    background: var(--surface);
+    color: var(--text-primary);
 }
 
 .profile-card-side .logo-dropzone {
     border: 1px dashed rgba(109, 93, 252, 0.35);
     border-radius: 16px;
-    background: linear-gradient(135deg, #ffffff, #f5f3ff);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft-alt) 100%);
 }
 
 .profile-card-side .logo-placeholder {

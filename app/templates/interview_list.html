@@ -149,11 +149,7 @@
 <form id="delete-interview-form" method="POST" action=""></form>
 {% endblock %}
 
-{% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
-<link rel="stylesheet" href="/static/css/employer_interviews.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="/static/js/employer_dashboard.js"></script>
+{% block extra_scripts %}
 <script>
   const deleteInterviewModal = document.getElementById('delete-interview-modal');
   const deleteInterviewForm = document.getElementById('delete-interview-form');

@@ -12,100 +12,103 @@
     </div>
 
     <div class="content">
-      <div class="page-width-limit">
-        <div class="table-container section-block">
-          <div class="page-panel">
-            <!-- Interview Info -->
-            <div class="detail-grid">
+      <div class="seeker-dashboard-shell">
+        <section class="seeker-welcome-hero">
+          <div class="seeker-welcome-copy">
+            <span class="seeker-kicker">Interview details</span>
+            <h1>{{ interview.job_title_display }}</h1>
+            <p>{{ interview.company_display }} · {{ interview.date_display or 'Date TBD' }}</p>
+          </div>
+          <div class="seeker-quick-actions">
+            <a href="{{ url_for('interview.seeker_interviews') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-arrow-left"></i>
+              <span>Back to interviews</span>
+            </a>
+            <a href="{{ url_for('job_seeker.dashboard') }}" class="seeker-action seeker-action--secondary">
+              <i class="fas fa-home"></i>
+              <span>Dashboard</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="seeker-focus-grid">
+          <div class="seeker-panel">
+            <div class="seeker-panel-heading">
               <div>
-                <p class="section-title-small">Company</p>
-                <p class="detail-heading">{{ interview.Company_name }}</p>
+                <span class="seeker-kicker">Interview overview</span>
+                <h2>Meeting details</h2>
               </div>
-              <div>
-                <p class="section-title-small">Position</p>
-                <p class="detail-heading">{{ interview.job_title }}</p>
-              </div>
+              <span class="seeker-status seeker-status--{{ (interview.Status or 'scheduled')|lower }}">
+                {{ interview.status_display }}
+              </span>
             </div>
 
-            <!-- Interview Details -->
-            <div class="detail-grid-3">
-              <div>
-<<<<<<< HEAD
-                <p class="section-title-small">Date</p>
-                <p class="detail-heading">{{ interview.Interview_date.strftime('%d %b %Y') if interview.Interview_date else 'N/A' }}</p>
+            <div class="seeker-item-list">
+              <div class="seeker-application-row">
+                <div>
+                  <h3>Company</h3>
+                  <p>{{ interview.company_display }}</p>
+                </div>
+                <div class="seeker-row-meta">
+                  <span>{{ interview.date_display or 'Date TBD' }}</span>
+                  <span>{{ interview.time_display or 'Time TBD' }}</span>
+                </div>
               </div>
-              <div>
-                <p class="section-title-small">Time</p>
-                <p class="detail-heading">{{ interview.Interview_time.strftime('%H:%M') if interview.Interview_time else 'N/A' }}</p>
-=======
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Date</p>
-                <p style="font-size: 16px; font-weight: 700;">{{ interview.date_display or 'N/A' }}</p>
+              <div class="seeker-application-row">
+                <div>
+                  <h3>Position</h3>
+                  <p>{{ interview.job_title_display }}</p>
+                </div>
+                <div class="seeker-row-meta">
+                  <span>{{ interview.mode_display }}</span>
+                  <span class="seeker-chip">{{ interview.status_display }}</span>
+                </div>
               </div>
-              <div>
-                <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600;">Time</p>
-                <p style="font-size: 16px; font-weight: 700;">{{ interview.time_display or 'N/A' }}</p>
->>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
-              </div>
-              <div>
-                <p class="section-title-small">Mode</p>
-                <span class="mode-pill">
-                  {{ interview.Mode }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Meeting Link -->
-<<<<<<< HEAD
-            <div class="section-divider">
-              <p class="section-title-small">Meeting Link</p>
-              <div class="callout-box">
-                {% if interview.Meeting_link.startswith('http') %}
-                  <a href="{{ interview.Meeting_link }}" target="_blank" class="btn-primary">
-                    <i class="fas fa-video"></i> Join Video Meeting
-                  </a>
-                {% else %}
-                  <code class="code-block">
-                    {{ interview.Meeting_link }}
-=======
-            <div style="margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--border-color);">
-              <p style="color: var(--text-secondary); font-size: 12px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Meeting Link</p>
-              <div style="background: var(--light-purple); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary-purple);">
-                {% if interview.Meeting_link and interview.Meeting_link.startswith('http') %}
-                  <a href="{{ interview.Meeting_link }}" target="_blank" class="btn-primary" style="text-decoration: none; display: inline-flex;">
-                    <i class="fas fa-video"></i> Join Video Meeting
-                  </a>
-                {% else %}
-                  <code style="color: var(--text-primary); font-family: 'Courier New', monospace;">
-                    {{ interview.Meeting_link or 'No meeting details provided.' }}
->>>>>>> 5ee903f9e169a324922090e8616aab34c2741eab
-                  </code>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Interviewer Info -->
-            <div class="section-block">
-              <p class="section-title-small">Interviewer</p>
-              <div class="info-panel">
-                <p class="detail-heading">{{ interview.employer_first_name }} {{ interview.employer_last_name }}</p>
-                <p class="small-muted-text">{{ interview.employer_email }}</p>
-              </div>
-            </div>
-
-            <!-- Actions -->
-            <div class="detail-actions">
-              <a href="/seeker/interviews" class="btn-secondary">Back to Interviews</a>
             </div>
           </div>
-        </div>
+
+          <div class="seeker-panel seeker-membership-card">
+            <div class="seeker-membership-icon">
+              <i class="fas fa-video"></i>
+            </div>
+            <div>
+              <h3>Meeting link</h3>
+              {% if interview.meeting_link_is_url %}
+                <p>Join the interview using the secure link below.</p>
+                <a href="{{ interview.meeting_link_display }}" target="_blank" rel="noopener noreferrer" class="seeker-action seeker-action--primary">
+                  <i class="fas fa-external-link-alt"></i>
+                  <span>Open meeting</span>
+                </a>
+              {% else %}
+                <p>{{ interview.meeting_link_display }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+
+        <section class="seeker-panel">
+          <div class="seeker-panel-heading seeker-panel-heading--compact">
+            <div>
+              <span class="seeker-kicker">Interviewer</span>
+              <h2>Contact details</h2>
+            </div>
+          </div>
+          <div class="seeker-item-list">
+            <div class="seeker-application-row">
+              <div>
+                <h3>{{ (interview.employer_first_name or 'Interviewer') }} {{ interview.employer_last_name or '' }}</h3>
+                <p>{{ interview.employer_email or 'No email provided' }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<link rel="stylesheet" href="/static/css/employer_dashboard.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 {% endblock %}
+
