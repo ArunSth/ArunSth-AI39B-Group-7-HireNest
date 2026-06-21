@@ -24,13 +24,16 @@ class MessageRoutes:
 
             if conversations:
                 selected_user = conversations[0]['user']
-                selected_user_status = UserModel.get_online_status(UserModel.get_by_id(selected_user['User_id']))
+                selected_user_status = UserModel.get_online_status(
+                    UserModel.get_by_id(selected_user['User_id']))
                 messages = MessageController.fetch_conversation(
                     user_id, selected_user['User_id'])
                 MessageController.mark_read(user_id, selected_user['User_id'])
 
+            template_name = 'employer_messages.html' if session.get(
+                'role') == 'employer' else 'messages.html'
             return render_template(
-                'messages.html',
+                template_name,
                 conversations=conversations,
                 selected_user=selected_user,
                 selected_user_status=selected_user_status,
@@ -56,8 +59,10 @@ class MessageRoutes:
                 user_id, conversation_id)
             MessageController.mark_read(user_id, conversation_id)
 
+            template_name = 'employer_messages.html' if session.get(
+                'role') == 'employer' else 'messages.html'
             return render_template(
-                'messages.html',
+                template_name,
                 conversations=conversations,
                 selected_user=selected_user,
                 selected_user_status=selected_user_status,
@@ -96,7 +101,8 @@ class MessageRoutes:
             if not message_id:
                 return jsonify({'status': 'error', 'message': 'Message ID required.'}), 400
 
-            updated = MessageController.mark_message_seen(message_id, receiver_id)
+            updated = MessageController.mark_message_seen(
+                message_id, receiver_id)
             return jsonify({'status': 'success' if updated else 'error', 'updated': updated})
 
         @self.blueprint.route('/messages/unread-count', methods=['GET'])

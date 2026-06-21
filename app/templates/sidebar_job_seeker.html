@@ -70,7 +70,7 @@
       <span>Messages</span>
     </a>
 
-    <a href="{{ url_for('logout.process_logout') }}" class="nav-item">
+    <a href="{{ url_for('logout.process_logout') }}" class="nav-item logout-confirm-link" data-logout-url="{{ url_for('logout.process_logout') }}">
       <i class="fas fa-sign-out-alt"></i>
       <span>Logout</span>
     </a>

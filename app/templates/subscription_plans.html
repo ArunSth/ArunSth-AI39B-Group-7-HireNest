@@ -60,9 +60,52 @@
       </article>
     {% endfor %}
   </div>
+
+  <section class="section subscription-summary-section">
+    <div class="company-card subscription-summary-card">
+      <div class="card-header">
+        <div>
+          <h3>Active Subscription</h3>
+        </div>
+      </div>
+      {% if active_subscription %}
+        {% set active_price_display =
+          'NPR 0/month' if active_subscription.Plan_name == 'Free'
+          else 'NPR 4,000/month' if active_subscription.Plan_name == 'Basic'
+          else 'NPR 8,000/month' if active_subscription.Plan_name == 'Growth'
+          else 'NPR 13,500/month'
+        %}
+        <div class="company-info subscription-summary-body">
+          <div class="subscription-summary-row">
+            <span>Plan</span>
+            <strong>{{ active_subscription.Plan_name }}</strong>
+          </div>
+          <div class="subscription-summary-row">
+            <span>Price</span>
+            <strong>{{ active_price_display }}</strong>
+          </div>
+          <div class="subscription-summary-row">
+            <span>Until</span>
+            <strong>{{ active_subscription.End_date }}</strong>
+          </div>
+          <div class="subscription-summary-row">
+            <span>Status</span>
+            <strong>{{ active_subscription.Status }}</strong>
+          </div>
+          <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}" class="action-row">
+            <button type="submit" class="btn-secondary">Cancel Subscription</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="company-info subscription-empty-state">
+          <p>You do not have an active subscription currently.</p>
+        </div>
+      {% endif %}
+    </div>
+  </section>
 </section>
 
-<div class="modal fade subscription-payment-modal" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
+<div class="modal subscription-payment-modal" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
@@ -117,6 +160,10 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+{{ super() }}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -170,51 +217,6 @@
     });
   });
 </script>
-
-<section class="section subscription-summary-section">
-  <div class="company-card subscription-summary-card">
-    <div class="card-header">
-      <div>
-        <h3>Active Subscription</h3>
-      </div>
-    </div>
-    {% if active_subscription %}
-      {% set active_price_display =
-        'NPR 0/month' if active_subscription.Plan_name == 'Free'
-        else 'NPR 4,000/month' if active_subscription.Plan_name == 'Basic'
-        else 'NPR 8,000/month' if active_subscription.Plan_name == 'Growth'
-        else 'NPR 13,500/month'
-      %}
-      <div class="company-info subscription-summary-body">
-        <div class="subscription-summary-row">
-          <span>Plan</span>
-          <strong>{{ active_subscription.Plan_name }}</strong>
-        </div>
-        <div class="subscription-summary-row">
-          <span>Price</span>
-          <strong>{{ active_price_display }}</strong>
-        </div>
-        <div class="subscription-summary-row">
-          <span>Until</span>
-          <strong>{{ active_subscription.End_date }}</strong>
-        </div>
-        <div class="subscription-summary-row">
-          <span>Status</span>
-          <strong>{{ active_subscription.Status }}</strong>
-        </div>
-        <form method="POST" action="{{ url_for('subscriptions.cancel_subscription') }}" class="action-row">
-          <button type="submit" class="btn-secondary">Cancel Subscription</button>
-        </form>
-      </div>
-    {% else %}
-      <div class="company-info subscription-empty-state">
-        <p>You do not have an active subscription currently.</p>
-      </div>
-    {% endif %}
-  </div>
-</section>
-
-<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}
 
 {% block extra_css %}

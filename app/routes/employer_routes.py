@@ -5,6 +5,7 @@ from app.modals.user import UserModel
 from app.modals.job_posting_model import JobPostingModel
 from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.interview_scheduling_model import InterviewSchedulingModel
+from app.controllers.review_controller import ReviewController
 from datetime import timedelta
 import os
 
@@ -99,6 +100,47 @@ class EmployerRoutes:
                 total_applicants=total_applicants,
                 completion_percentage=completion_percentage,
                 job_app_counts=job_app_counts
+            )
+
+        @self.blueprint.route("/employer/reviews", methods=["GET"])
+        def reviews_page():
+            if "user_id" not in session or session.get("role") != "employer":
+                flash("Please log in as an employer to view reviews.", "error")
+                return redirect(url_for("login.index"))
+
+            user_id = session["user_id"]
+            user_data = UserModel.get_by_id(user_id)
+            profile_data = EmployerProfileModel.get_profile_by_user_id(user_id)
+
+            from app.database import get_connection
+            conn = get_connection()
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        "SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s",
+                        (user_id,),
+                    )
+                    employee = cur.fetchone()
+                    if not employee:
+                        flash("Employer profile not found.", "error")
+                        return redirect(url_for("employer.profile"))
+                    employee_id = employee['Employee_id']
+            finally:
+                conn.close()
+
+            review_summary = ReviewController.get_review_summary(
+                employee_id, status='Approved'
+            )
+            reviews = ReviewController.get_reviews_by_employee(
+                employee_id, status='Approved'
+            )
+
+            return render_template(
+                "employer_reviews.html",
+                user=user_data,
+                profile=profile_data,
+                reviews=reviews,
+                review_summary=review_summary,
             )
 
         @self.blueprint.route("/employer/profile", methods=["GET", "POST"])

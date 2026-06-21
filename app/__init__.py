@@ -60,9 +60,71 @@ def create_app():
     app.register_blueprint(SubscriptionRoutes().subscription_routes())
     app.register_blueprint(SkillAssessmentRoutes().register_routes())
     app.register_blueprint(ApplicationTrackingRoutes().register_routes())
-
+    
     # Upload route
     app.register_blueprint(AdminRoutes().register_routes())
+    
+    # ── Load Admin Settings from DB into app.config ──────────
+    with app.app_context():
+        try:
+            from app.database import get_connection
+            conn = get_connection()
+            with conn.cursor() as cur:
+
+                # Auto-create table if it doesn't exist
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS `AdminSettings` (
+                        `key` VARCHAR(50) PRIMARY KEY,
+                        `value` VARCHAR(255) NOT NULL
+                    )
+                """)
+
+                # Insert defaults if table is empty
+                cur.execute("SELECT COUNT(*) as count FROM `AdminSettings`")
+                row = cur.fetchone()
+                if row['count'] == 0:
+                    cur.executemany(
+                        "INSERT INTO `AdminSettings` (`key`, `value`) VALUES (%s, %s)",
+                        [
+                            ('userRegistration',     '1'),
+                            ('employerVerification', '0'),
+                            ('autoApproveJobs',      '0'),
+                            ('jobModeration',        '1'),
+                            ('emailAlerts',          '1'),
+                            ('weeklyReports',        '0'),
+                        ]
+                    )
+
+                conn.commit()
+
+                # Now load them
+                cur.execute("SELECT `key`, `value` FROM `AdminSettings`")
+                rows = cur.fetchall()
+
+            conn.close()
+
+            saved = {row['key']: row['value'] == '1' for row in rows}
+            app.config['ADMIN_SETTINGS'] = {
+                'userRegistration':     saved.get('userRegistration',     True),
+                'employerVerification': saved.get('employerVerification', False),
+                'autoApproveJobs':      saved.get('autoApproveJobs',      False),
+                'jobModeration':        saved.get('jobModeration',        True),
+                'emailAlerts':          saved.get('emailAlerts',          True),
+                'weeklyReports':        saved.get('weeklyReports',        False),
+            }
+            print("✅ Admin settings loaded from DB")
+
+        except Exception as e:
+            app.config['ADMIN_SETTINGS'] = {
+                'userRegistration':     True,
+                'employerVerification': False,
+                'autoApproveJobs':      False,
+                'jobModeration':        True,
+                'emailAlerts':          True,
+                'weeklyReports':        False,
+            }
+            print(f"⚠️ Admin settings defaulted: {e}")
+    # ─────────────────────────────────────────────────────────
     
     from flask import send_from_directory
     import os

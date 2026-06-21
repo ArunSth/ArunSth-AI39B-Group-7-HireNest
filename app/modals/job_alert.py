@@ -117,18 +117,19 @@ class JobAlertModel:
                     JOIN `Job_Seekers` s ON a.`Seekers_id` = s.`Seekers_id`
                     JOIN `User` u ON s.`User_id` = u.`User_id`
                     WHERE a.`Is_active` = TRUE
-                      AND (a.`Location` IS NULL OR a.`Location` = '' OR %s LIKE CONCAT('%', a.`Location`, '%'))
+                      AND (a.`Location` IS NULL OR a.`Location` = '' OR %s LIKE CONCAT('%%', a.`Location`, '%%'))
                       AND (a.`Job_type` IS NULL OR a.`Job_type` = '' OR a.`Job_type` = %s)
                       AND (a.`Industry` IS NULL OR a.`Industry` = '' OR a.`Industry` = %s)
                       AND (
                           a.`Keyword` IS NULL
                           OR a.`Keyword` = ''
-                          OR LOWER(%s) LIKE CONCAT('%', LOWER(a.`Keyword`), '%')
-                          OR LOWER(%s) LIKE CONCAT('%', LOWER(a.`Keyword`), '%')
-                          OR LOWER(%s) LIKE CONCAT('%', LOWER(a.`Keyword`), '%')
+                          OR LOWER(%s) LIKE CONCAT('%%', LOWER(a.`Keyword`), '%%')
+                          OR LOWER(%s) LIKE CONCAT('%%', LOWER(a.`Keyword`), '%%')
+                          OR LOWER(%s) LIKE CONCAT('%%', LOWER(a.`Keyword`), '%%')
                       )
                 """
-                params = [location or '', job_type or '', industry or '', title or '', description or '', requirement or '']
+                params = [location or '', job_type or '', industry or '',
+                          title or '', description or '', requirement or '']
                 cur.execute(query, params)
                 return [row['User_id'] for row in cur.fetchall()]
         finally:

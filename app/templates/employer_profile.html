@@ -5,29 +5,6 @@
 
 {% block content %}
 <div class="profile-page-shell">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="section">
-        {% for category, message in messages %}
-          <div class="flash-message {{ category }}">{{ message }}</div>
-        {% endfor %}
-      </div>
-      <div class="topbar-right">
-        <i class="fa-solid fa-sun" id="theme-toggle" style="cursor:pointer;"></i>
-        <button type="button" class="notif-btn" id="notifToggle" aria-label="Notifications">
-          <i class="fa-solid fa-bell"></i>
-          <span class="notif-badge" id="notifBadge"></span>
-        </button>
-        <div class="user-profile">
-          <div class="user-avatar">{{ (user.First_name or 'U')|first }}</div>
-          <div>
-            <div class="user-name">{{ user.First_name }} {{ user.Last_name }}</div>
-            <div class="user-role">Employer</div>
-          </div>
-        </div>
-    {% endif %}
-  {% endwith %}
-
   <section class="overview-section profile-hero">
     <div class="overview-header profile-hero-header">
       <div class="profile-hero-copy">
@@ -39,7 +16,6 @@
         <span class="profile-pill"><i class="fas fa-chart-line"></i> {{ completion_percentage if completion_percentage is not none else 0 }}% complete</span>
         <a href="{{ url_for('employer.dashboard') }}" class="btn-secondary">Return to dashboard</a>
       </div>
-      {% include 'partials/notification_dropdown.html' %}
     </div>
 
     <div class="profile-completion-grid">
@@ -143,13 +119,12 @@
 </div>
 {% endblock %}
 
-
-<link rel="stylesheet" href="{{ url_for('static', filename='css/employer_dashboard.css') }}">
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/employer_profile.css') }}">
 {% endblock %}
 
 {% block extra_scripts %}
+{{ super() }}
 <script>
   document.getElementById('uploadLogoBtn')?.addEventListener('click', function () {
     const fileInput = document.getElementById('logoFile');
@@ -182,5 +157,4 @@
       });
   });
 </script>
-<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}

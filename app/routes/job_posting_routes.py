@@ -7,6 +7,7 @@ from app.modals.user import UserModel
 from app.modals.applicant_management_model import ApplicantManagementModel
 from app.modals.job_seeker_profile import JobSeekerProfileModel
 
+
 class JobPostingRoutes:
     def __init__(self):
         self.blueprint = Blueprint("job_posting", __name__)
@@ -19,18 +20,19 @@ class JobPostingRoutes:
                 return redirect(url_for("login.index"))
 
             user_id = session["user_id"]
-            
+
             # Get employer profile
             from app.database import get_connection
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
-                    cur.execute("SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
+                    cur.execute(
+                        "SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,))
                     employee = cur.fetchone()
                     if not employee:
                         flash("Employer profile not found.", "error")
                         return redirect(url_for("employer.profile"))
-                    
+
                     employee_id = employee['Employee_id']
             finally:
                 conn.close()
@@ -38,9 +40,10 @@ class JobPostingRoutes:
             jobs = JobPostingModel.get_jobs_by_employer(employee_id)
             job_app_counts = {}
             for job in jobs:
-                job_app_counts[job["Job_id"]] = JobPostingModel.get_application_count(job["Job_id"])
+                job_app_counts[job["Job_id"]] = JobPostingModel.get_application_count(
+                    job["Job_id"])
             user_data = UserModel.get_by_id(user_id)
-            
+
             return render_template("manage_jobs.html", user=user_data, jobs=jobs, job_app_counts=job_app_counts)
 
         @self.blueprint.route("/employer/jobs/create", methods=["GET", "POST"])
@@ -51,18 +54,21 @@ class JobPostingRoutes:
 
             if request.method == "POST":
                 user_id = session["user_id"]
-                
+
                 # Get employer profile
                 from app.database import get_connection
                 conn = get_connection()
                 try:
                     with conn.cursor() as cur:
-                        cur.execute("SELECT `Employee_id`, `Industry` FROM `Employee` WHERE `User_id`=%s", (user_id,))
+                        cur.execute(
+                            "SELECT `Employee_id`, `Industry` FROM `Employee` WHERE `User_id`=%s",
+                            (user_id,),
+                        )
                         employee = cur.fetchone()
                         if not employee:
                             flash("Employer profile not found.", "error")
                             return redirect(url_for("employer.profile"))
-                        
+
                         employee_id = employee['Employee_id']
                         employer_industry = employee.get('Industry')
                 finally:
@@ -74,7 +80,9 @@ class JobPostingRoutes:
                 salary = request.form.get("salary", "").strip()
                 location = request.form.get("location", "").strip()
                 job_type = request.form.get("job_type", "Full-time").strip()
-                experience_level = request.form.get("experience_level", "Entry-level").strip()
+                experience_level = request.form.get(
+                    "experience_level", "Entry-level").strip()
+                vacancies_raw = request.form.get("vacancies", "1").strip()
 
                 if not all([title, description, requirement, location]):
                     flash("All fields are required.", "error")
@@ -86,8 +94,26 @@ class JobPostingRoutes:
                     flash("Salary must be a valid number.", "error")
                     return redirect(url_for("job_posting.create_job"))
 
+        # NEW: read auto-approve from the same in-memory settings the admin routes write to
+                from flask import current_app
+                admin_settings = current_app.config.get('ADMIN_SETTINGS', {})
+                initial_status = "Approved" if admin_settings.get("autoApproveJobs") else "Pending"
+
                 job_id = JobPostingModel.create_job(
-                    employee_id, title, description, requirement, salary, location, job_type, experience_level
+                    employee_id, title, description, requirement, salary, location,
+                    job_type, experience_level, status=initial_status
+                try:
+                    vacancies = int(vacancies_raw) if vacancies_raw else 1
+                    if vacancies < 1:
+                        raise ValueError
+                except ValueError:
+                    flash(
+                        "Vacancies must be a valid whole number greater than 0.", "error")
+                    return redirect(url_for("job_posting.create_job"))
+
+                job_id = JobPostingModel.create_job(
+                    employee_id, title, description, requirement, salary, location,
+                    job_type, experience_level, vacancies
                 )
 
                 if job_id:
@@ -151,7 +177,9 @@ class JobPostingRoutes:
                 salary = request.form.get("salary", "").strip()
                 location = request.form.get("location", "").strip()
                 job_type = request.form.get("job_type", "Full-time").strip()
-                experience_level = request.form.get("experience_level", "Entry-level").strip()
+                experience_level = request.form.get(
+                    "experience_level", "Entry-level").strip()
+                vacancies_raw = request.form.get("vacancies", "1").strip()
 
                 if not all([title, description, requirement, location]):
                     flash("All fields are required.", "error")
@@ -163,7 +191,19 @@ class JobPostingRoutes:
                     flash("Salary must be a valid number.", "error")
                     return redirect(url_for("job_posting.edit_job", job_id=job_id))
 
-                if JobPostingModel.update_job(job_id, title, description, requirement, salary, location, job_type, experience_level):
+                try:
+                    vacancies = int(vacancies_raw) if vacancies_raw else 1
+                    if vacancies < 1:
+                        raise ValueError
+                except ValueError:
+                    flash(
+                        "Vacancies must be a valid whole number greater than 0.", "error")
+                    return redirect(url_for("job_posting.edit_job", job_id=job_id))
+
+                if JobPostingModel.update_job(
+                    job_id, title, description, requirement, salary, location,
+                    job_type, experience_level, vacancies
+                ):
                     flash("Job updated successfully!", "success")
                     return redirect(url_for("job_posting.view_job", job_id=job_id))
                 else:
@@ -171,7 +211,15 @@ class JobPostingRoutes:
                     return redirect(url_for("job_posting.edit_job", job_id=job_id))
 
             user_data = UserModel.get_by_id(session["user_id"])
-            return render_template("edit_job.html", user=user_data, job=job)
+            total_vacancies = int(job.get("Vacancies", 1) or 1)
+            filled_positions = int(job.get("Filled_vacancies", 0) or 0)
+            remaining_positions = max(total_vacancies - filled_positions, 0)
+            return render_template(
+                "edit_job.html",
+                user=user_data,
+                job=job,
+                remaining_positions=remaining_positions
+            )
 
         @self.blueprint.route("/employer/jobs/<int:job_id>/delete", methods=["POST"])
         def delete_job(job_id):
@@ -189,7 +237,7 @@ class JobPostingRoutes:
                 return jsonify({"status": "error", "message": "Unauthorized"}), 401
 
             status = request.json.get("status", "").strip()
-            if status not in ["active", "closed", "archived"]:
+            if status not in ["Pending", "Approved", "Rejected", "Closed"]:
                 return jsonify({"status": "error", "message": "Invalid status."}), 400
 
             if JobPostingModel.update_job_status(job_id, status):
