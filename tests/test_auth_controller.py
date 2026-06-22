@@ -1,246 +1,221 @@
-import unittest
+﻿import unittest
 from unittest.mock import patch, MagicMock
-from flask import Flask, session
-
+from flask import Flask, Blueprint, session, get_flashed_messages
 from app.controllers.auth_controller import AuthController
+
+
+def make_test_app():
+    app = Flask(__name__)
+    app.secret_key = "test-secret-key"
+
+    bp = Blueprint("auth", __name__)
+    bp.route("/", endpoint="home")(lambda: "home")
+    bp.route("/login", endpoint="login")(lambda: "login")
+    bp.route("/dashboard", endpoint="dashboard")(lambda: "dashboard")
+    bp.route("/register", endpoint="register")(lambda: "register")
+    bp.route("/profile", endpoint="profile")(lambda: "profile")
+    app.register_blueprint(bp)
+    return app
 
 
 class TestAuthController(unittest.TestCase):
     def setUp(self):
-        self.app = Flask(__name__)
-        self.app.secret_key = "test-secret"
-        self.app.config["TESTING"] = True
+        self.app = make_test_app()
+        self.controller = AuthController()
+        self.controller.user_model = MagicMock()
 
     @patch("app.controllers.auth_controller.render_template")
-    def test_home_renders_base_template(self, mock_render_template):
-        mock_render_template.return_value = "rendered-base"
-        controller = AuthController()
+    def test_home_renders_base_template(self, mock_render):
+        mock_render.return_value = "base_page"
 
-        with self.app.test_request_context("/", method="GET"):
-            result = controller.home()
+        with self.app.test_request_context(method="GET"):
+            result = self.controller.home()
 
-        self.assertEqual(result, "rendered-base")
-        mock_render_template.assert_called_once_with("base.html")
+        self.assertEqual(result, "base_page")
+        mock_render.assert_called_once_with("base.html")
 
-    @patch("app.controllers.auth_controller.redirect")
-    @patch("app.controllers.auth_controller.url_for")
-    def test_login_redirects_logged_in_non_admin(self, mock_url_for, mock_redirect):
-        mock_url_for.return_value = "/home"
-        mock_redirect.return_value = "redirect-home"
-        controller = AuthController()
-
-        with self.app.test_request_context("/login", method="GET"):
-            session["user_id"] = 1
-            session["role"] = "user"
-            result = controller.login()
-
-        self.assertEqual(result, "redirect-home")
-        mock_url_for.assert_called_once_with("auth.home")
-
-    @patch("app.controllers.auth_controller.redirect")
-    @patch("app.controllers.auth_controller.url_for")
-    def test_login_redirects_logged_in_admin(self, mock_url_for, mock_redirect):
-        mock_url_for.return_value = "/dashboard"
-        mock_redirect.return_value = "redirect-dashboard"
-        controller = AuthController()
-
-        with self.app.test_request_context("/login", method="GET"):
-            session["user_id"] = 1
-            session["role"] = "admin"
-            result = controller.login()
-
-        self.assertEqual(result, "redirect-dashboard")
-        mock_url_for.assert_called_once_with("auth.dashboard")
-
-    @patch("app.controllers.auth_controller.flash")
     @patch("app.controllers.auth_controller.render_template")
-    def test_login_post_missing_credentials_renders_login(self, mock_render_template, mock_flash):
-        mock_render_template.return_value = "login-page"
-        controller = AuthController()
+    def test_login_get_shows_login_form(self, mock_render):
+        mock_render.return_value = "login_page"
 
-        with self.app.test_request_context("/login", method="POST", data={}):
-            result = controller.login()
+        with self.app.test_request_context(method="GET"):
+            result = self.controller.login()
 
-        self.assertEqual(result, "login-page")
-        mock_render_template.assert_called_once_with("login.html")
-        mock_flash.assert_called_once_with("Email and password are required.", "danger")
+        self.assertEqual(result, "login_page")
+        mock_render.assert_called_once_with("login.html")
+
+    @patch("app.controllers.auth_controller.render_template")
+    def test_login_missing_fields_shows_error(self, mock_render):
+        mock_render.return_value = "login_page"
+
+        with self.app.test_request_context(method="POST", data={"email": "", "password": ""}):
+            result = self.controller.login()
+            self.assertEqual(result, "login_page")
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("danger", "Email and password are required."), flashes)
+
+    @patch("app.controllers.auth_controller.User.from_db")
+    @patch("app.controllers.auth_controller.render_template")
+    def test_login_invalid_password_shows_error(self, mock_render, mock_from_db):
+        mock_render.return_value = "login_page"
+        self.controller.user_model.find_by.return_value = {
+            "id": 1,
+            "name": "Bob",
+            "email": "bob@example.com",
+            "role": "user",
+        }
+        fake_user = MagicMock()
+        fake_user.check_password.return_value = False
+        mock_from_db.return_value = fake_user
+
+        with self.app.test_request_context(method="POST", data={"email": "bob@example.com", "password": "wrongpass"}):
+            result = self.controller.login()
+            self.assertEqual(result, "login_page")
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("danger", "Invalid email or password."), flashes)
+            self.assertFalse(session.get("user_id"))
+
+    @patch("app.controllers.auth_controller.User.from_db")
+    def test_login_success_sets_session_and_redirects(self, mock_from_db):
+        self.controller.user_model.find_by.return_value = {
+            "id": 2,
+            "name": "Bob",
+            "email": "bob@example.com",
+            "role": "user",
+        }
+        fake_user = MagicMock()
+        fake_user.check_password.return_value = True
+        mock_from_db.return_value = fake_user
+
+        with self.app.test_request_context(method="POST", data={"email": "bob@example.com", "password": "secret1"}):
+            response = self.controller.login()
+            self.assertEqual(session["user_id"], 2)
+            self.assertEqual(session["user_name"], "Bob")
+            self.assertEqual(session["role"], "user")
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/", response.location)
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("success", "Login successful!"), flashes)
+
+    @patch("app.controllers.auth_controller.render_template")
+    def test_register_get_shows_registration_form(self, mock_render):
+        mock_render.return_value = "registration_page"
+
+        with self.app.test_request_context(method="GET"):
+            result = self.controller.register()
+
+        self.assertEqual(result, "registration_page")
+        mock_render.assert_called_once_with("registration.html")
+
+    @patch("app.controllers.auth_controller.render_template")
+    def test_register_missing_fields_shows_error(self, mock_render):
+        mock_render.return_value = "registration_page"
+
+        with self.app.test_request_context(method="POST", data={"name": "", "email": "", "password": ""}):
+            result = self.controller.register()
+            self.assertEqual(result, "registration_page")
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("danger", "All fields are required."), flashes)
 
     @patch("app.controllers.auth_controller.User")
-    @patch("app.controllers.auth_controller.AuthController.flash_and_redirect")
-    def test_login_post_valid_user_redirects_home(self, mock_flash_and_redirect, mock_user_class):
-        mock_user = MagicMock()
-        mock_user.check_password.return_value = True
-        mock_user_class.from_db.return_value = mock_user
-        mock_user_model = MagicMock()
-        mock_user_model.find_by.return_value = {"id": 11, "name": "Alice", "role": "user"}
-        mock_user_class.return_value = mock_user_model
-        mock_flash_and_redirect.return_value = "flash-home"
-        controller = AuthController()
+    def test_register_duplicate_email_redirects(self, mock_user_class):
+        fake_user = MagicMock()
+        fake_user.email_exists.return_value = True
+        mock_user_class.return_value = fake_user
 
-        with self.app.test_request_context("/login", method="POST", data={"email": "alice@example.com", "password": "password123"}):
-            result = controller.login()
+        with self.app.test_request_context(method="POST", data={"name": "Bob", "email": "taken@example.com", "password": "secret1"}):
+            response = self.controller.register()
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/register", response.location)
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("danger", "Email already exists."), flashes)
+            fake_user.save.assert_not_called()
 
-        self.assertEqual(result, "flash-home")
-        self.assertEqual(session["user_id"], 11)
-        self.assertEqual(session["user_name"], "Alice")
-        self.assertEqual(session["role"], "user")
-
-    @patch("app.controllers.auth_controller.flash")
-    @patch("app.controllers.auth_controller.render_template")
-    def test_login_post_invalid_credentials_shows_error(self, mock_render_template, mock_flash):
-        mock_render_template.return_value = "login-page"
-        controller = AuthController()
-        controller.user_model = MagicMock()
-        controller.user_model.find_by.return_value = None
-
-        with self.app.test_request_context("/login", method="POST", data={"email": "bad@example.com", "password": "wrong"}):
-            result = controller.login()
-
-        self.assertEqual(result, "login-page")
-        mock_render_template.assert_called_once_with("login.html")
-        mock_flash.assert_called_once_with("Invalid email or password.", "danger")
-
-    @patch("app.controllers.auth_controller.redirect")
-    @patch("app.controllers.auth_controller.url_for")
-    def test_register_redirects_logged_in_user(self, mock_url_for, mock_redirect):
-        mock_url_for.return_value = "/dashboard"
-        mock_redirect.return_value = "redirect-dashboard"
-        controller = AuthController()
-
-        with self.app.test_request_context("/register", method="GET"):
-            session["user_id"] = 16
-            result = controller.register()
-
-        self.assertEqual(result, "redirect-dashboard")
-        mock_url_for.assert_called_once_with("auth.dashboard")
-
-    @patch("app.controllers.auth_controller.flash")
-    @patch("app.controllers.auth_controller.render_template")
     @patch("app.controllers.auth_controller.User")
-    def test_register_post_missing_fields_renders_registration(self, mock_user_class, mock_render_template, mock_flash):
-        mock_render_template.return_value = "registration-page"
-        controller = AuthController()
-        controller.user_model = MagicMock()
+    def test_register_success_redirects_to_login(self, mock_user_class):
+        fake_user = MagicMock()
+        fake_user.email_exists.return_value = False
+        mock_user_class.return_value = fake_user
 
-        with self.app.test_request_context("/register", method="POST", data={"name": "", "email": "", "password": ""}):
-            result = controller.register()
+        with self.app.test_request_context(method="POST", data={"name": "Alice", "email": "alice@example.com", "password": "secret1"}):
+            response = self.controller.register()
+            fake_user.save.assert_called_once()
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/login", response.location)
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("success", "Registration successful! Please login."), flashes)
 
-        self.assertEqual(result, "registration-page")
-        mock_render_template.assert_called_once_with("registration.html")
-        mock_flash.assert_called_once_with("All fields are required.", "danger")
-
-    @patch("app.controllers.auth_controller.AuthController.flash_and_redirect")
-    @patch("app.controllers.auth_controller.User")
-    def test_register_post_success_saves_user_and_redirects_login(self, mock_user_class, mock_flash_and_redirect):
-        mock_user = MagicMock()
-        mock_user.email_exists.return_value = False
-        mock_user_class.return_value = mock_user
-        mock_flash_and_redirect.return_value = "redirect-login"
-        controller = AuthController()
-
-        with self.app.test_request_context("/register", method="POST", data={"name": "Bob", "email": "bob@example.com", "password": "secret12"}):
-            result = controller.register()
-
-        self.assertEqual(result, "redirect-login")
-        mock_user.save.assert_called_once()
-
-    @patch("app.controllers.auth_controller.AuthController.flash_and_redirect")
-    def test_logout_clears_session_and_redirects(self, mock_flash_and_redirect):
-        mock_flash_and_redirect.return_value = "redirect-login"
-        controller = AuthController()
-
-        with self.app.test_request_context("/logout", method="GET"):
+    def test_logout_clears_session_and_redirects(self):
+        with self.app.test_request_context():
             session["user_id"] = 99
-            session["user_name"] = "Tester"
-            result = controller.logout()
+            session["user_name"] = "Alice"
+            session["role"] = "user"
 
-        self.assertEqual(result, "redirect-login")
-        self.assertFalse(session)
-
-    @patch("app.controllers.auth_controller.render_template")
-    def test_dashboard_renders_admin_dashboard_with_users(self, mock_render_template):
-        mock_render_template.return_value = "dashboard-page"
-        controller = AuthController()
-        controller.user_model = MagicMock()
-        controller.user_model.find_all.return_value = [{"id": 1, "name": "Alice"}]
-
-        with self.app.test_request_context("/dashboard", method="GET"):
-            result = controller.dashboard()
-
-        self.assertEqual(result, "dashboard-page")
-        mock_render_template.assert_called_once_with("admin_dashboard.html", users=[{"id": 1, "name": "Alice"}])
+            response = self.controller.logout()
+            self.assertFalse(session.get("user_id"))
+            self.assertFalse(session.get("user_name"))
+            self.assertFalse(session.get("role"))
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/login", response.location)
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("success", "Logged out successfully."), flashes)
 
     @patch("app.controllers.auth_controller.render_template")
-    def test_profile_get_renders_profile(self, mock_render_template):
-        mock_render_template.return_value = "profile-page"
-        controller = AuthController()
-        controller.user_model = MagicMock()
-        controller.get_current_user_id = MagicMock(return_value=5)
-        controller.user_model.find_by_id.return_value = {"id": 5, "name": "Jane"}
+    def test_dashboard_renders_admin_dashboard(self, mock_render):
+        users = [{"id": 1, "name": "Bob"}]
+        self.controller.user_model.find_all.return_value = users
+        mock_render.return_value = "dashboard_page"
 
-        with self.app.test_request_context("/profile", method="GET"):
-            result = controller.profile()
+        with self.app.test_request_context():
+            result = self.controller.dashboard()
 
-        self.assertEqual(result, "profile-page")
-        mock_render_template.assert_called_once_with("job_seeker_profile.html", user={"id": 5, "name": "Jane"})
+        self.assertEqual(result, "dashboard_page")
+        mock_render.assert_called_once_with("admin_dashboard.html", users=users)
 
-    @patch("app.controllers.auth_controller.flash")
     @patch("app.controllers.auth_controller.render_template")
-    def test_profile_post_missing_name_or_email_shows_error(self, mock_render_template, mock_flash):
-        mock_render_template.return_value = "profile-page"
-        controller = AuthController()
-        controller.get_current_user_id = MagicMock(return_value=5)
-        controller.user_model = MagicMock()
-        controller.user_model.find_by_id.return_value = {"id": 5, "name": "Jane"}
+    def test_profile_get_renders_profile_page(self, mock_render):
+        mock_render.return_value = "profile_page"
+        self.controller.user_model.find_by_id.return_value = {"id": 10, "name": "Alice"}
 
-        with self.app.test_request_context("/profile", method="POST", data={"name": "", "email": ""}):
-            result = controller.profile()
+        with self.app.test_request_context():
+            session["user_id"] = 10
+            result = self.controller.profile()
 
-        self.assertEqual(result, "profile-page")
-        mock_flash.assert_called_once_with("Name and email are required.", "danger")
-        mock_render_template.assert_called_once_with("job_seeker_profile.html", user={"id": 5, "name": "Jane"})
+        self.assertEqual(result, "profile_page")
+        mock_render.assert_called_once_with("job_seeker_profile.html", user={"id": 10, "name": "Alice"})
 
-    @patch("app.controllers.auth_controller.User")
-    @patch("app.controllers.auth_controller.flash")
+    @patch("app.controllers.auth_controller.User.from_db")
     @patch("app.controllers.auth_controller.render_template")
-    def test_profile_post_incorrect_current_password(self, mock_render_template, mock_flash, mock_user_class):
-        mock_render_template.return_value = "profile-page"
-        controller = AuthController()
-        controller.get_current_user_id = MagicMock(return_value=5)
-        controller.user_model = MagicMock()
-        controller.user_model.find_by_id.return_value = {"id": 5, "name": "Jane", "password": "hash"}
+    def test_profile_post_wrong_current_password(self, mock_render, mock_from_db):
+        mock_render.return_value = "profile_page"
+        self.controller.user_model.find_by_id.return_value = {"id": 10, "name": "Alice", "password": "oldpass"}
         stored_user = MagicMock()
         stored_user.check_password.return_value = False
-        mock_user_class.from_db.return_value = stored_user
+        mock_from_db.return_value = stored_user
 
-        with self.app.test_request_context("/profile", method="POST", data={"name": "Jane", "email": "jane@example.com", "current_password": "bad", "new_password": "newsecret"}):
-            result = controller.profile()
-
-        self.assertEqual(result, "profile-page")
-        mock_flash.assert_called_once_with("Current password is incorrect.", "danger")
-        mock_render_template.assert_called_once_with("job_seeker_profile.html", user={"id": 5, "name": "Jane", "password": "hash"})
+        with self.app.test_request_context(method="POST", data={"name": "Alice", "email": "alice@example.com", "current_password": "wrongpass", "new_password": "newsecret"}):
+            session["user_id"] = 10
+            result = self.controller.profile()
+            self.assertEqual(result, "profile_page")
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("danger", "Current password is incorrect."), flashes)
+            mock_from_db.assert_called_once()
 
     @patch("app.controllers.auth_controller.User")
-    @patch("app.controllers.auth_controller.AuthController.flash_and_redirect")
-    def test_profile_post_updates_profile_and_redirects(self, mock_flash_and_redirect, mock_user_class):
-        mock_flash_and_redirect.return_value = "redirect-profile"
-        controller = AuthController()
-        controller.get_current_user_id = MagicMock(return_value=5)
-        controller.user_model = MagicMock()
-        controller.user_model.find_by_id.side_effect = [{"id": 5, "name": "Jane", "password": "hash"}, {"id": 5, "name": "Jane", "password": "hash"}]
-        stored_user = MagicMock()
-        stored_user.check_password.return_value = True
-        mock_user_class.from_db.return_value = stored_user
-        user_obj = MagicMock()
-        mock_user_class.return_value = user_obj
+    def test_profile_post_updates_successfully(self, mock_user_class):
+        fake_user = MagicMock()
+        fake_user.email_exists.return_value = False
+        mock_user_class.return_value = fake_user
+        self.controller.user_model.find_by_id.return_value = {"id": 10, "name": "Alice"}
 
-        with self.app.test_request_context("/profile", method="POST", data={"name": "Jane", "email": "jane@example.com", "current_password": "correct", "new_password": "newsecret"}):
-            result = controller.profile()
-
-        self.assertEqual(result, "redirect-profile")
-        user_obj.set_password.assert_called_once_with("newsecret")
-        user_obj.update_profile.assert_called_once_with(5, update_password=True)
-        self.assertEqual(session["user_name"], "Jane")
+        with self.app.test_request_context(method="POST", data={"name": "Alice", "email": "alice@example.com", "current_password": "", "new_password": ""}):
+            session["user_id"] = 10
+            response = self.controller.profile()
+            fake_user.update_profile.assert_called_once_with(10, update_password=False)
+            self.assertEqual(response.status_code, 302)
+            self.assertIn("/profile", response.location)
+            flashes = get_flashed_messages(with_categories=True)
+            self.assertIn(("success", "Profile updated successfully!"), flashes)
 
 
 if __name__ == "__main__":

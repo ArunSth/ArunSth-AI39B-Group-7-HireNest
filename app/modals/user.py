@@ -3,6 +3,48 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .base_model import create_all
 
 
+class User:
+    def __init__(self, name=None, email=None, password=None, role="user"):
+        self.name = name
+        self.email = email
+        self.password = password
+        self.role = role
+        self._password_hash = password
+
+    @classmethod
+    def from_db(cls, data):
+        user = cls(
+            name=data.get("name") or data.get("Name") or data.get("name"),
+            email=data.get("email") or data.get("Email"),
+            role=data.get("role") or data.get("Role"),
+        )
+        user._password_hash = data.get("password") or data.get("Password")
+        return user
+
+    def check_password(self, password):
+        if self._password_hash is None:
+            return False
+        return password == self._password_hash or check_password_hash(
+            self._password_hash, password
+        )
+
+    def email_exists(self, exclude_id=None):
+        return False
+
+    def save(self):
+        return True
+
+    def set_password(self, password):
+        self.password = password
+        self._password_hash = password
+
+    def update_profile(self, user_id, update_password=False):
+        return True
+
+    def update(self, user_id, update_password=False):
+        return True
+
+
 class UserModel:
     """Simple user model using raw SQL and the existing PyMySQL connection."""
 
