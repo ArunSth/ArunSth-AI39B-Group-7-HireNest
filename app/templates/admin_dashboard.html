@@ -210,13 +210,9 @@
                                             onclick="viewUserFromServer('{{ u.User_id }}', '{{ u.First_name }} {{ u.Last_name }}', '{{ u.Email }}', '{{ u.Role }}')">
                                             <i class="fa-solid fa-eye"></i> View
                                         </button>
-                                        <button class="action-btn secondary sm"
-                                            onclick="reportUserJob('{{ u.User_id }}', '{{ u.First_name }}')">
-                                            <i class="fa-solid fa-flag"></i> Report
-                                        </button>
                                         <button class="action-btn danger sm"
-                                            onclick="deleteUserFromServer('{{ u.User_id }}', '{{ u.First_name }} {{ u.Last_name }}')">
-                                            <i class="fa-solid fa-trash"></i>
+                                            onclick="deleteUserFromServer('{{ u.User_id }}', '{{ (u.First_name or '') ~ ' ' ~ (u.Last_name or '')|replace("'", "\\'") }}')">
+                                            <i class="fa-solid fa-trash"></i> Delete
                                         </button>
                                     </div>
                                 </td>

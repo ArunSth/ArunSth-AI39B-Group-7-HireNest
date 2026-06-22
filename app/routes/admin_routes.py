@@ -82,15 +82,60 @@ class AdminRoutes:
             if 'user_id' not in session or session.get('role') != 'admin':
                 return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
 
+            print(f"Delete user route hit: user_id={user_id}")
             from app.database import get_connection
             conn = get_connection()
             try:
                 with conn.cursor() as cur:
+                    # Delete direct user-related records first
+                    cur.execute("DELETE FROM `User_Sessions` WHERE `User_id`=%s", (user_id,))
+                    cur.execute("DELETE FROM `Email_Verification_Tokens` WHERE `User_id`=%s", (user_id,))
+                    cur.execute("DELETE FROM `User_Settings` WHERE `User_id`=%s", (user_id,))
+                    cur.execute("DELETE FROM `Admin_Audit_Log` WHERE `Admin_user_id`=%s", (user_id,))
+                    cur.execute("DELETE FROM `Notification` WHERE `User_id`=%s", (user_id,))
+                    cur.execute("DELETE FROM `Messages` WHERE `Sender_id`=%s OR `Receiver_id`=%s", (user_id, user_id))
                     cur.execute(
-                        "DELETE FROM `User` WHERE `User_id`=%s", (user_id,))
+                        "DELETE FROM `Job_Reports` WHERE `Reporter_user_id`=%s OR `Resolved_by_user_id`=%s", (user_id, user_id)
+                    )
+
+                    # Delete job seeker dependent records
+                    cur.execute(
+                        "SELECT `Seekers_id` FROM `Job_Seekers` WHERE `User_id`=%s", (user_id,)
+                    )
+                    seekers = cur.fetchall() or []
+                    for seeker in seekers:
+                        seekers_id = seeker['Seekers_id']
+                        cur.execute("DELETE FROM `Interview` WHERE `Application_id` IN (SELECT `Application_id` FROM `Applications` WHERE `Seekers_id`=%s)", (seekers_id,))
+                        cur.execute("DELETE FROM `Applications` WHERE `Seekers_id`=%s", (seekers_id,))
+                        cur.execute("DELETE FROM `Company_Review` WHERE `Seekers_id`=%s", (seekers_id,))
+                        cur.execute("DELETE FROM `Saved_Jobs` WHERE `Seekers_id`=%s", (seekers_id,))
+                        cur.execute("DELETE FROM `Job_Alerts` WHERE `Seekers_id`=%s", (seekers_id,))
+                        cur.execute("DELETE FROM `Seeker_Assessment_Attempts` WHERE `Seekers_id`=%s", (seekers_id,))
+                    cur.execute("DELETE FROM `Job_Seekers` WHERE `User_id`=%s", (user_id,))
+
+                    # Delete employer dependent records
+                    cur.execute(
+                        "SELECT `Employee_id` FROM `Employee` WHERE `User_id`=%s", (user_id,)
+                    )
+                    employees = cur.fetchall() or []
+                    for employee in employees:
+                        employee_id = employee['Employee_id']
+                        cur.execute("DELETE FROM `Job_Reports` WHERE `Job_id` IN (SELECT `Job_id` FROM `Jobs` WHERE `Employee_id`=%s)", (employee_id,))
+                        cur.execute("DELETE FROM `Payment_History` WHERE `Employee_id`=%s", (employee_id,))
+                        cur.execute("DELETE FROM `Employer_Subscriptions` WHERE `Employee_id`=%s", (employee_id,))
+                        cur.execute("DELETE FROM `Jobs` WHERE `Employee_id`=%s", (employee_id,))
+                    cur.execute("DELETE FROM `Employee` WHERE `User_id`=%s", (user_id,))
+
+                    # Delete admin profile if present
+                    cur.execute("DELETE FROM `Admin_Profiles` WHERE `User_id`=%s", (user_id,))
+
+                    # Finally delete the user record
+                    cur.execute("DELETE FROM `User` WHERE `User_id`=%s", (user_id,))
                 conn.commit()
+                print(f"User deleted from DB: user_id={user_id}")
                 return jsonify({'status': 'success'})
             except Exception as e:
+                print(f"Delete user error: {e}")
                 return jsonify({'status': 'error', 'message': str(e)}), 500
             finally:
                 conn.close()

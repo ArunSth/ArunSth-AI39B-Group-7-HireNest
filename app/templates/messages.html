@@ -249,46 +249,48 @@
     }
   </style>
   <script>
-    const chatBody = document.getElementById('chat-body');
-    const form = document.getElementById('message-form');
+    window.addEventListener('DOMContentLoaded', function () {
+      const chatBody = document.getElementById('chat-body');
+      const form = document.getElementById('message-form');
+      const searchInput = document.getElementById('conversation-search');
 
-    function scrollToBottom() {
-      if (chatBody) {
-        chatBody.scrollTop = chatBody.scrollHeight;
-      }
-    }
-
-    window.addEventListener('load', scrollToBottom);
-
-    if (form) {
-      form.addEventListener('submit', async function (event) {
-        event.preventDefault();
-        const formData = new FormData(form);
-        const response = await fetch('{{ url_for("messages.send_message") }}', {
-          method: 'POST',
-          body: formData,
-          headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        const data = await response.json();
-        if (data.status === 'success') {
-          window.location.reload();
-        } else {
-          alert(data.message || 'Unable to send message.');
+      function scrollToBottom() {
+        if (chatBody) {
+          chatBody.scrollTop = chatBody.scrollHeight;
         }
-      });
-    }
+      }
 
-    const searchInput = document.getElementById('conversation-search');
-    if (searchInput) {
-      searchInput.addEventListener('input', function () {
-        const filter = this.value.toLowerCase();
-        const items = document.querySelectorAll('#conversation-list .conversation-link');
-        items.forEach(item => {
-          const text = item.textContent.toLowerCase();
-          item.style.display = text.includes(filter) ? '' : 'none';
+      window.addEventListener('load', scrollToBottom);
+
+      if (form) {
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const response = await fetch('{{ url_for("messages.send_message") }}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+          const data = await response.json();
+          if (data.status === 'success') {
+            window.location.reload();
+          } else {
+            alert(data.message || 'Unable to send message.');
+          }
         });
-      });
-    }
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          const filter = this.value.toLowerCase();
+          const items = document.querySelectorAll('#conversation-list .conversation-link');
+          items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(filter) ? '' : 'none';
+          });
+        });
+      }
+    });
   </script>
 {% endblock %}
 

@@ -398,9 +398,6 @@ function viewUserFromServer(id, name, email, role) {
     </div>`;
   document.getElementById('viewJobFooter').innerHTML = `
     <button class="action-btn ghost" onclick="closeModal('viewJobModal')">Close</button>
-    <button class="action-btn secondary" onclick="closeModal('viewJobModal');reportUserJob(${id},'${name.trim()}')">
-      <i class="fa-solid fa-flag"></i> Report
-    </button>
     <button class="action-btn danger" onclick="closeModal('viewJobModal');deleteUserFromServer(${id},'${name.trim()}')">
       <i class="fa-solid fa-trash"></i> Delete
     </button>`;
@@ -408,6 +405,7 @@ function viewUserFromServer(id, name, email, role) {
 }
 
 function deleteUserFromServer(id, name) {
+  console.log('Admin delete user clicked', { id, name });
   showConfirm(
     'Delete User',
     `Permanently delete "${name || 'this user'}"? This cannot be undone.`,
