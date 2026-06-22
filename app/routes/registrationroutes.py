@@ -11,6 +11,18 @@ class RegistrationRoutes:
         @self.blueprint.route('/register', methods=['GET', 'POST'])
         def register():
             if request.method == 'POST':
+
+                from flask import current_app
+                settings = current_app.config.get('ADMIN_SETTINGS', {})
+
+                if not settings.get('userRegistration', True):
+                    msg = 'New user registration is currently disabled. Please try again later.'
+                    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+                    if is_ajax:
+                        return jsonify({'status': 'error', 'message': msg}), 403
+                    flash(msg, 'error')
+                    return render_template('registration.html')
+        
                 # Support both modal field names (user-name) and standalone page names (name)
                 name = (request.form.get('name') or request.form.get('user-name') or '').strip()
                 phone = (request.form.get('phone') or request.form.get('user-phone') or '').strip()

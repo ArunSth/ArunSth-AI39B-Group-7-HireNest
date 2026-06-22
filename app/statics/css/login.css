@@ -237,7 +237,14 @@ body {
   margin-left: 16px;
 }
 
-.nav-icons i:hover {
+#theme-toggle {
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-links);
+  transition: color 0.2s ease;
+}
+
+#theme-toggle:hover {
   color: #6d5dfc;
 }
 

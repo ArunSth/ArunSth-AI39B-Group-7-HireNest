@@ -53,13 +53,19 @@ function logActivity(action, target, status) {
 
   const auditBody = document.getElementById('audit-body');
   if (auditBody && activityLog.length > 0) {
+    const statusText = {
+      success: 'Completed',
+      warning: 'Pending',
+      danger: 'Removed',
+      info: 'Updated',
+      muted: 'Dismissed'
+    };
     const jsRows = activityLog.slice(0, 5).map(a => `
       <tr>
         <td>${a.action}</td>
         <td style="color:var(--muted)">${a.target}</td>
         <td style="color:var(--muted)">${a.date}</td>
-        <td><span class="status-pill ${a.status}">${{ success: 'Completed', warning: 'Pending', danger: 'Removed', info: 'Updated', muted: 'Dismissed' }[a.status] || a.status
-      }</span></td>
+        <td><span class="status-pill ${a.status}">${statusText[a.status] || a.status}</span></td>
       </tr>`).join('');
     auditBody.innerHTML = jsRows + auditBody.innerHTML;
   }
@@ -126,7 +132,7 @@ function clearActionHistory() {
     }
   );
 }
-
+ 
 // ─────────────────────────────────────────────
 // LOGOUT CONFIRMATION
 // ─────────────────────────────────────────────
@@ -173,6 +179,17 @@ document.querySelectorAll('.nav-link[data-tab]').forEach(link => {
     if (tab === 'analytics') updateAnalytics();
     if (tab === 'company-jobs') renderCompanyJobs();
   });
+});
+
+function activateAdminTab(tabName) {
+  if (!tabName) return;
+  const tabLink = document.querySelector(`.nav-link[data-tab="${tabName}"]`);
+  if (tabLink) tabLink.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const activeTab = document.body?.dataset.activeTab || 'overview';
+  activateAdminTab(activeTab);
 });
 
 // ─────────────────────────────────────────────
@@ -363,119 +380,6 @@ function updateAnalytics() {
     }
   }
 }
-
-// ════════════════════════════════════════════
-// ADMIN NOTIFICATION DROPDOWN
-// ════════════════════════════════════════════
-const adminNotifs = JSON.parse(localStorage.getItem('hn_admin_notifs') || '[]');
-let notifFilter = 'all';
-
-function pushAdminNotif(action, target, status) {
-  const typeMap = {
-    success: 'job',
-    danger: 'report',
-    warning: 'job',
-    info: 'announcement',
-    muted: 'system',
-  };
-  let type = typeMap[status] || 'system';
-  if (action.toLowerCase().includes('report')) type = 'report';
-  adminNotifs.unshift({
-    id: Date.now(),
-    type: type,
-    title: action,
-    msg: target,
-    time: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
-    unread: true,
-  });
-  if (adminNotifs.length > 50) adminNotifs.pop();
-  localStorage.setItem('hn_admin_notifs', JSON.stringify(adminNotifs));
-  renderAdminNotifs();
-}
-
-const _origLogActivity = logActivity;
-logActivity = function (action, target, status) {
-  _origLogActivity(action, target, status);
-  pushAdminNotif(action, target, status);
-};
-
-function getFilteredNotifs() {
-  if (notifFilter === 'unread') return adminNotifs.filter(n => n.unread);
-  if (notifFilter === 'announcement') return adminNotifs.filter(n => n.type === 'announcement');
-  if (notifFilter === 'report') return adminNotifs.filter(n => n.type === 'report');
-  return adminNotifs;
-}
-
-function renderAdminNotifs() {
-  const body = document.getElementById('notifListBody');
-  const badge = document.getElementById('notifBadge');
-  const label = document.getElementById('notifUnreadLabel');
-  if (!body) return;
-
-  const unread = adminNotifs.filter(n => n.unread).length;
-  if (badge) {
-    badge.textContent = unread > 99 ? '99+' : unread;
-    badge.style.display = unread === 0 ? 'none' : 'flex';
-  }
-  if (label) label.textContent = unread > 0 ? `(${unread} unread)` : '';
-
-  const data = getFilteredNotifs();
-  if (data.length === 0) {
-    body.innerHTML = `<div class="notif-empty">
-      <i class="fa-solid fa-bell-slash"></i>
-      <p>No notifications</p>
-    </div>`;
-    return;
-  }
-
-  const iconMap = { announcement: 'fa-bullhorn', user: 'fa-user-plus', report: 'fa-flag', job: 'fa-briefcase', system: 'fa-heart-pulse' };
-  const classMap = { announcement: 'announce', user: 'user', report: 'report', job: 'job', system: 'system' };
-
-  body.innerHTML = data.map(n => `
-    <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="markAdminNotifRead(${n.id})">
-      <div class="notif-icon ${classMap[n.type] || 'system'}">
-        <i class="fa-solid ${iconMap[n.type] || 'fa-bell'}"></i>
-      </div>
-      <div class="notif-body">
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-msg">${n.msg}</div>
-        <div class="notif-time">${n.time}</div>
-      </div>
-      ${n.unread ? '<span class="notif-dot"></span>' : ''}
-    </div>`).join('');
-}
-
-function markAdminNotifRead(id) {
-  const n = adminNotifs.find(x => x.id === id);
-  if (n) n.unread = false;
-  renderAdminNotifs();
-}
-
-function markAllAdminNotifs() {
-  adminNotifs.forEach(n => n.unread = false);
-  renderAdminNotifs();
-}
-
-function setNotifFilter(f, btn) {
-  notifFilter = f;
-  document.querySelectorAll('.nftab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  renderAdminNotifs();
-}
-
-function toggleNotifDropdown() {
-  const dd = document.getElementById('notifDropdown');
-  if (dd) dd.classList.toggle('open');
-}
-
-function closeNotifDropdown() {
-  document.getElementById('notifDropdown')?.classList.remove('open');
-}
-
-document.addEventListener('click', e => {
-  const wrap = document.getElementById('notifWrap');
-  if (wrap && !wrap.contains(e.target)) closeNotifDropdown();
-});
 
 // ════════════════════════════════════════════
 // USER MANAGEMENT
@@ -721,6 +625,10 @@ function renderModeration(data) {
     const statusPill = j.status === 'Approved'
       ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
 
+    const safeId = jsStringArg(j.id);
+    const safeTitle = jsStringArg(j.title);
+    const safeCompany = jsStringArg(j.company);
+
     return `
     <tr id="job-row-${j.id}">
       <td><strong>${j.title}</strong></td>
@@ -732,14 +640,14 @@ function renderModeration(data) {
       </td>
       <td>
         <div class="td-actions">
-          <button class="action-btn ghost sm" onclick="viewModerationJob('${j.id}')">
+          <button class="action-btn ghost sm" onclick="viewModerationJob('${safeId}')">
             <i class="fa-solid fa-eye"></i> View
           </button>
           ${isPending ? `
-            <button class="action-btn green sm" onclick="approveJob('${j.id}','${j.title}')">
+            <button class="action-btn green sm" onclick="approveJob('${safeId}','${safeTitle}')">
               <i class="fa-solid fa-check"></i> Approve
             </button>
-            <button class="action-btn danger sm" onclick="rejectJob('${j.id}','${j.title}')">
+            <button class="action-btn danger sm" onclick="rejectJob('${safeId}','${safeTitle}')">
               <i class="fa-solid fa-xmark"></i> Reject
             </button>` : `
             <button class="action-btn ghost sm" style="opacity:0.4;cursor:default" disabled>
@@ -748,11 +656,11 @@ function renderModeration(data) {
         : '<i class="fa-solid fa-circle-xmark"></i> Rejected'}
             </button>`}
           <button class="action-btn secondary sm"
-            onclick="reportModerationJob('${j.id}','${j.title}','${j.company}')">
+            onclick="reportModerationJob('${safeId}','${safeTitle}','${safeCompany}')">
             <i class="fa-solid fa-flag"></i>
           </button>
           <button class="action-btn danger sm"
-            onclick="deleteModerationJob('${j.id}','${j.title}')">
+            onclick="deleteModerationJob('${safeId}','${safeTitle}')">
             <i class="fa-solid fa-trash"></i>
           </button>
         </div>
@@ -773,13 +681,25 @@ function filterModeration() {
   renderModeration(data);
 }
 
+function jsStringArg(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\"/g, '\\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
 // ── APPROVE — calls the backend, then updates the local JOBS array ──
 function approveJob(id, title) {
+  console.log('approveJob called:', id, title);
   showConfirm('Approve Job', `Approve "${title}"? It will go live and be visible to job seekers.`, 'Approve', 'green', () => {
-    const j = JOBS.find(j => j.id === id);
+    const j = JOBS.find(j => String(j.id) === String(id));
+    console.log('approveJob found job:', j);
     if (!j) return;
 
     if (j.fromDB) {
+      console.log('approveJob backend request for job dbId=', j.dbId);
       // Persist to database
       fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' })
         .then(r => r.json())
@@ -796,7 +716,10 @@ function approveJob(id, title) {
             showToast(data.message || 'Approval failed', 'danger');
           }
         })
-        .catch(() => showToast('Network error — approval failed', 'danger'));
+        .catch(err => {
+          console.error('approveJob fetch error:', err);
+          showToast('Network error — approval failed', 'danger');
+        });
     } else {
       // JS-only job (not in DB)
       j.status = 'Approved';
@@ -812,11 +735,14 @@ function approveJob(id, title) {
 
 // ── REJECT — calls the backend, then updates the local JOBS array ──
 function rejectJob(id, title) {
+  console.log('rejectJob called:', id, title);
   showConfirm('Reject Job', `Reject "${title}"? Employers will be notified it was not approved.`, 'Reject', 'danger', () => {
-    const j = JOBS.find(j => j.id === id);
+    const j = JOBS.find(j => String(j.id) === String(id));
+    console.log('rejectJob found job:', j);
     if (!j) return;
 
     if (j.fromDB) {
+      console.log('rejectJob backend request for job dbId=', j.dbId);
       // Persist to database
       fetch(`/admin/moderation/jobs/${j.dbId}/reject`, { method: 'POST' })
         .then(r => r.json())
@@ -833,7 +759,10 @@ function rejectJob(id, title) {
             showToast(data.message || 'Rejection failed', 'danger');
           }
         })
-        .catch(() => showToast('Network error — rejection failed', 'danger'));
+        .catch(err => {
+          console.error('rejectJob fetch error:', err);
+          showToast('Network error — rejection failed', 'danger');
+        });
     } else {
       j.status = 'Rejected';
       persistState();
@@ -847,7 +776,7 @@ function rejectJob(id, title) {
 }
 
 function viewModerationJob(id) {
-  const j = JOBS.find(j => j.id === id);
+  const j = JOBS.find(j => String(j.id) === String(id));
   if (!j) return;
   const statusPill = j.status === 'Approved' ? 'success' : j.status === 'Rejected' ? 'danger' : 'warning';
   document.getElementById('viewJobTitle').textContent = j.title;
@@ -903,11 +832,11 @@ function deleteModerationJob(id, title) {
     `Permanently delete "${title}"? This cannot be undone.`,
     'Delete', 'danger',
     () => {
-      const j = JOBS.find(j => j.id === id);
+      const j = JOBS.find(j => String(j.id) === String(id));
       if (!j) return;
 
       const doDelete = () => {
-        JOBS = JOBS.filter(j => j.id !== id);
+        JOBS = JOBS.filter(j => String(j.id) !== String(id));
         persistState();
         filterModeration();
         updateStats();
@@ -958,8 +887,13 @@ document.getElementById('addJobForm')?.addEventListener('submit', e => {
   filterModeration();
   updateStats();
   renderCompanyJobs();
-  logActivity('Job Submitted', `${title} at ${company}`, 'warning');
-  showToast(`"${title}" submitted for review`, 'info');
+  if (autoApprove) {
+    logActivity('Job Auto-Approved', `${title} at ${company}`, 'success');
+    showToast(`"${title}" added and auto-approved — live now`, 'success');
+  } else {
+    logActivity('Job Submitted', `${title} at ${company}`, 'warning');
+    showToast(`"${title}" submitted for review`, 'info');
+  }
 });
 
 // ════════════════════════════════════════════
@@ -1001,6 +935,261 @@ function renderReports(data) {
 }
 
 // ════════════════════════════════════════════
+// SETTINGS — fully wired to your HTML toggles
+// ════════════════════════════════════════════
+const SETTINGS_KEY = 'hn_admin_settings';
+ 
+const defaultSettings = {
+  userRegistration:     true,
+  employerVerification: false,
+  autoApproveJobs:      false,
+  jobModeration:        true,
+  weeklyReports:        false,
+};
+ 
+function getSettingsCheckboxes() {
+  // Matches your exact HTML order:
+  // [0] User Registration
+  // [1] Employer Verification
+  // [2] Auto-approve Jobs
+  // [3] Job Moderation
+  // [4] Weekly Reports
+  return document.querySelectorAll('#tab-settings .toggle input[type="checkbox"]');
+}
+ 
+function loadSettings() {
+  return Object.assign({}, defaultSettings,
+    JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'));
+}
+
+const THEME_STORAGE_KEY = 'hn_admin_theme';
+function getSavedTheme() {
+  return localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+}
+
+function updateThemeToggleButton(theme) {
+  const button = document.getElementById('darkModeToggle');
+  if (!button) return;
+  button.innerHTML = theme === 'dark'
+    ? '<i class="fa-solid fa-sun"></i>'
+    : '<i class="fa-solid fa-moon"></i>';
+  button.title = theme === 'dark'
+    ? 'Switch to light mode'
+    : 'Switch to dark mode';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  updateThemeToggleButton(theme);
+}
+
+function toggleTheme() {
+  const nextTheme = getSavedTheme() === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+  applyTheme(nextTheme);
+}
+
+function initThemeToggle() {
+  const savedTheme = getSavedTheme();
+  applyTheme(savedTheme);
+  const button = document.getElementById('darkModeToggle');
+  if (button) {
+    button.addEventListener('click', toggleTheme);
+  }
+}
+ 
+function syncToggleUI(settings) {
+  const cbs = getSettingsCheckboxes();
+  const keys = ['userRegistration','employerVerification','autoApproveJobs','jobModeration','weeklyReports'];
+  keys.forEach((key, i) => { if (cbs[i]) cbs[i].checked = !!settings[key]; });
+}
+ 
+function applySettings(settings) {
+ 
+  // ── 1. USER REGISTRATION ──
+  // Shows a banner at the top of settings when registration is off
+  let banner = document.getElementById('hn-reg-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'hn-reg-banner';
+    banner.style.cssText = `
+      display:none; background:rgba(239,68,68,0.08);
+      border:1px solid rgba(239,68,68,0.3);
+      border-radius:10px; padding:12px 16px; margin-bottom:16px;
+      font-size:13px; color:#EF4444; font-weight:600;
+    `;
+    banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> User registration is currently <strong>DISABLED</strong>. New sign-ups are blocked.';
+    const pageHead = document.querySelector('#tab-settings .page-head');
+    if (pageHead) pageHead.after(banner);
+  }
+  banner.style.display = settings.userRegistration ? 'none' : 'block';
+ 
+  // ── 2. EMPLOYER VERIFICATION ──
+  // Stores flag — your Flask /jobs/post route reads this to block unverified employers
+  // Frontend: show a notice in the Job Moderation tab header
+  let verBanner = document.getElementById('hn-ver-banner');
+  if (!verBanner) {
+    verBanner = document.createElement('div');
+    verBanner.id = 'hn-ver-banner';
+    verBanner.style.cssText = `
+      display:none; background:rgba(108,92,231,0.08);
+      border:1px solid rgba(108,92,231,0.3);
+      border-radius:10px; padding:10px 14px; margin-bottom:14px;
+      font-size:13px; color:#6C5CE7; font-weight:600;
+    `;
+    verBanner.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Employer verification is <strong>ON</strong> — only verified employers can post jobs.';
+    const modHead = document.querySelector('#tab-job-moderation .page-head');
+    if (modHead) modHead.after(verBanner);
+  }
+  verBanner.style.display = settings.employerVerification ? 'block' : 'none';
+ 
+  // ── 3. AUTO-APPROVE JOBS ──
+  // Immediately approves all currently pending jobs
+  if (settings.autoApproveJobs) {
+    let autoApproved = 0;
+    JOBS.forEach(j => {
+      if (j.status === 'Pending') {
+        j.status = 'Approved';
+        autoApproved++;
+        if (j.fromDB) {
+          fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' }).catch(() => {});
+        }
+      }
+    });
+    if (autoApproved > 0) {
+      persistState();
+      filterModeration();
+      updateStats();
+      renderCompanyJobs();
+      showToast(`Auto-approved ${autoApproved} pending job(s)`, 'success');
+    }
+  }
+ 
+  // ── 4. JOB MODERATION ──
+  // Dims the moderation nav link when disabled
+  const modNavLink = document.querySelector('[data-tab="job-moderation"]');
+  if (modNavLink) {
+    if (settings.jobModeration) {
+      modNavLink.style.opacity = '';
+      modNavLink.style.pointerEvents = '';
+      modNavLink.title = '';
+    } else {
+      modNavLink.style.opacity = '0.4';
+      modNavLink.style.pointerEvents = 'none';
+      modNavLink.title = 'Job Moderation is disabled in Settings';
+    }
+  }
+ 
+  // ── 5. WEEKLY REPORTS ──
+  // Shown as a status line under the Settings save button
+  let weeklyNote = document.getElementById('hn-weekly-note');
+  if (!weeklyNote) {
+    weeklyNote = document.createElement('p');
+    weeklyNote.id = 'hn-weekly-note';
+    weeklyNote.style.cssText = 'font-size:12px; margin-top:10px; color:var(--muted);';
+    const saveBtn = document.querySelector('#tab-settings .action-btn.purple');
+    if (saveBtn) saveBtn.after(weeklyNote);
+  }
+  weeklyNote.textContent = settings.weeklyReports
+    ? '✅ Weekly platform summary reports are scheduled.'
+    : '⏸ Weekly reports are off. Enable to receive Sunday summaries.';
+}
+ 
+function saveSettings() {
+  const cbs = getSettingsCheckboxes();
+  const previousSettings = loadSettings();
+ 
+  const settings = {
+    userRegistration:     cbs[0]?.checked ?? true,
+    employerVerification: cbs[1]?.checked ?? false,
+    autoApproveJobs:      cbs[2]?.checked ?? false,
+    jobModeration:        cbs[3]?.checked ?? true,
+    weeklyReports:        cbs[4]?.checked ?? false,
+  };
+ 
+  if (settings.autoApproveJobs && settings.jobModeration) {
+    showToast('Conflict: Auto-approve disables Job Moderation.', 'warning');
+    settings.jobModeration = false;
+    if (cbs[3]) cbs[3].checked = false;
+  }
+ 
+  if (settings.userRegistration === false) {
+    settings.userRegistration = false;
+  }
+ 
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+ 
+  fetch('/admin/settings/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.status !== 'success') {
+        showToast('Failed to save settings.', 'danger');
+      }
+    })
+    .catch(() => {
+      showToast('Settings save failed; offline mode active.', 'warning');
+    });
+ 
+  applySettings(settings);
+  logActivity('Settings Updated', buildSettingsSummary(settings), 'info');
+  showToast('Settings saved!', 'success');
+}
+ 
+function buildSettingsSummary(s) {
+  const labels = {
+    userRegistration:     'Registration',
+    employerVerification: 'Employer Verify',
+    autoApproveJobs:      'Auto-approve',
+    jobModeration:        'Moderation',
+    weeklyReports:        'Weekly Reports',
+  };
+  return Object.entries(labels)
+    .map(([k, label]) => `${label}: ${s[k] ? 'ON' : 'OFF'}`)
+    .join(' | ');
+}
+ 
+// ── Settings load + live row highlight on toggle change ──
+document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
+ 
+  fetch('/admin/settings/load')
+    .then(r => r.json())
+    .then(data => {
+      if (data.status === 'success') {
+        const settings = data.settings;
+        // Save to localStorage too
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        syncToggleUI(settings);
+        applySettings(settings);
+      }
+    })
+    .catch(() => {
+      // Fallback to localStorage if fetch fails
+      const saved = loadSettings();
+      syncToggleUI(saved);
+      applySettings(saved);
+    });
+ 
+  // Highlight row on toggle change (before saving)
+  getSettingsCheckboxes().forEach(cb => {
+    cb.addEventListener('change', () => {
+      const row = cb.closest('.setting-row');
+      if (!row) return;
+      row.style.transition = 'background 0.4s';
+      row.style.background = cb.checked
+        ? 'rgba(22,163,74,0.07)'
+        : 'rgba(239,68,68,0.07)';
+      setTimeout(() => { row.style.background = ''; }, 900);
+    });
+  });
+});
+ 
+ 
+// ════════════════════════════════════════════
 // COMPANY JOBS TAB
 // ════════════════════════════════════════════
 function companyKey(job) {
@@ -1030,7 +1219,7 @@ function renderCompanyJobs() {
   JOBS.forEach(j => {
     const key = companyKey(j);
     if (!groups[key]) {
-      groups[key] = { company: j.company, email: j.email || j.companyEmail || '—', jobs: [] };
+      groups[key] = { company: j.company, email: j.email || j.companyEmail || '—', logo: j.logo || '', jobs: [] };
     }
     groups[key].jobs.push(j);
   });
@@ -1058,11 +1247,12 @@ function renderCompanyJobs() {
     const pending = c.jobs.filter(j => j.status === 'Pending').length;
     const approved = c.jobs.filter(j => j.status === 'Approved').length;
     const rejected = c.jobs.filter(j => j.status === 'Rejected').length;
-    const total = c.jobs.length;
-    const cKey = companyKey(c.jobs[0]);
-    const initial = (c.company || '?').trim()[0] || '?';
-    const site = companyWebsite(c.jobs[0]);
-
+    const total    = c.jobs.length;
+    const cKey     = companyKey(c.jobs[0]);
+    const initial  = (c.company || '?').trim()[0] || '?';
+    const site     = companyWebsite(c.jobs[0]);
+    const logoUrl  = c.logo ? `/uploads/logos/${c.logo}` : '';
+ 
     return `
       <div class="company-job-card">
         <div class="cjc-head">
@@ -1070,7 +1260,9 @@ function renderCompanyJobs() {
           <span class="cjc-count-badge">${total} job${total === 1 ? '' : 's'}</span>
         </div>
         <div class="cjc-identity">
-          <div class="cjc-avatar">${initial}</div>
+          ${logoUrl
+            ? `<img class="cjc-avatar cjc-avatar-img" src="${logoUrl}" alt="${c.company} logo" onerror="this.outerHTML='<div class=&quot;cjc-avatar&quot;>${initial}</div>'">`
+            : `<div class="cjc-avatar">${initial}</div>`}
           <div class="cjc-identity-text">
             <div class="cjc-company" title="${c.company}">${c.company}</div>
             ${site
@@ -1442,60 +1634,6 @@ function updatePlatformHealth() {
   }
 }
 
-// ════════════════════════════════════════════
-// NOTIFICATION BELL SHAKE
-// ════════════════════════════════════════════
-function shakeBell() {
-  const btn = document.getElementById('notifBtn');
-  if (!btn) return;
-  btn.classList.remove('bell-shake');
-  void btn.offsetWidth;
-  btn.classList.add('bell-shake');
-  setTimeout(() => btn.classList.remove('bell-shake'), 500);
-}
-
-const _origPushAdminNotif = pushAdminNotif;
-pushAdminNotif = function (action, target, status) {
-  _origPushAdminNotif(action, target, status);
-  shakeBell();
-  const badge = document.getElementById('notifBadge');
-  if (badge && badge.textContent !== '0') {
-    badge.style.display = 'flex';
-    document.getElementById('notifBtn')?.classList.add('has-unread');
-  }
-};
-
-const _origRenderAdminNotifs = renderAdminNotifs;
-renderAdminNotifs = function () {
-  _origRenderAdminNotifs();
-  const unread = adminNotifs.filter(n => n.unread).length;
-  const badge = document.getElementById('notifBadge');
-  const btn = document.getElementById('notifBtn');
-  if (badge) {
-    badge.style.display = unread > 0 ? 'flex' : 'none';
-    badge.textContent = unread > 99 ? '99+' : unread;
-  }
-  if (btn) btn.classList.toggle('has-unread', unread > 0);
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderAdminNotifs();
-});
-
-function saveSettings() {
-  showToast('Settings saved successfully!', 'success');
-}
-
-document.getElementById("darkModeToggle")?.addEventListener("change", function () {
-  if (this.checked) {
-    document.body.style.background = "#1e1e2f";
-    document.body.style.color = "#f5f5f5";
-  } else {
-    document.body.style.background = "#f5f7fa";
-    document.body.style.color = "#333";
-  }
-});
-
 // ─────────────────────────────────────────────
 // GLOBAL SEARCH
 // ─────────────────────────────────────────────
@@ -1534,7 +1672,7 @@ function loadModerationJobsFromDB() {
 
       dbJobs.forEach(dbJob => {
         JOBS.push({
-          id: 'db-' + dbJob.id,
+          id: String(dbJob.id),
           dbId: dbJob.id,
           title: dbJob.title,
           company: dbJob.company,
@@ -1544,10 +1682,11 @@ function loadModerationJobsFromDB() {
           status: dbJob.status,   // 'Pending' | 'Approved' | 'Rejected'
           submitted: dbJob.submitted,
           description: dbJob.description || '',
-          salary: dbJob.salary || '',
-          website: dbJob.website || dbJob.companyWebsite || '',
-          email: dbJob.email || dbJob.companyEmail || '',
-          fromDB: true,
+          salary:      dbJob.salary || '',
+          website:     dbJob.website || dbJob.companyWebsite || '',
+          email:       dbJob.email  || dbJob.companyEmail   || '',
+          logo:        dbJob.logo || '',
+          fromDB:      true,
         });
       });
 
@@ -1558,6 +1697,27 @@ function loadModerationJobsFromDB() {
       setEl('stat-active-jobs', totalActive);
 
       updateStats();
+ 
+      // ── If Auto-approve Jobs is ON, sweep up any freshly-submitted
+      //    employer jobs that are still sitting at "Pending" in the DB ──
+      if (loadSettings().autoApproveJobs) {
+        const stillPending = JOBS.filter(j => j.fromDB && j.status === 'Pending');
+        stillPending.forEach(j => {
+          fetch(`/admin/moderation/jobs/${j.dbId}/approve`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+              if (data.status === 'success') {
+                j.status = 'Approved';
+                persistState();
+                filterModeration();
+                updateStats();
+                renderCompanyJobs();
+                logActivity('Job Auto-Approved', j.title, 'success');
+              }
+            })
+            .catch(() => {});
+        });
+      }
     })
     .catch(err => console.error('Could not load jobs for moderation:', err));
 }
@@ -1581,3 +1741,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadModerationJobsFromDB, 30000);
   setInterval(loadReportsFromDB, 30000);
 });
+
+

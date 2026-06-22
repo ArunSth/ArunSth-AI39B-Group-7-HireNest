@@ -94,6 +94,20 @@ class JobPostingRoutes:
                     flash("Salary must be a valid number.", "error")
                     return redirect(url_for("job_posting.create_job"))
 
+                from flask import current_app
+                admin_settings = current_app.config.get('ADMIN_SETTINGS', {})
+                initial_status = "Approved" if admin_settings.get('autoApproveJobs') else "Pending"
+                if not admin_settings.get('jobModeration', True):
+                    initial_status = "Approved"
+
+                if admin_settings.get('employerVerification'):
+                    if not employee.get('Company_name') or not employee.get('Industry') or not employee.get('Description') or not employee.get('Website'):
+                        flash(
+                            "Employer verification is required before posting jobs. Please complete your profile.",
+                            "error"
+                        )
+                        return redirect(url_for("employer.profile"))
+
                 try:
                     vacancies = int(vacancies_raw) if vacancies_raw else 1
                     if vacancies < 1:
@@ -105,7 +119,7 @@ class JobPostingRoutes:
 
                 job_id = JobPostingModel.create_job(
                     employee_id, title, description, requirement, salary, location,
-                    job_type, experience_level, vacancies
+                    job_type, experience_level, vacancies, status=initial_status
                 )
 
                 if job_id:

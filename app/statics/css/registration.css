@@ -77,6 +77,13 @@ body {
   color: var(--text-links);
 }
 
+.nav-icons i,
+.nav-icons button,
+.nav-icons a {
+  display: inline-flex;
+  align-items: center;
+}
+
 .nav-icons i {
   cursor: pointer;
 }
@@ -89,7 +96,18 @@ body {
 .auth-buttons {
   display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 16px;
+}
+
+#theme-toggle {
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-links);
+  transition: color 0.2s ease;
+}
+
+#theme-toggle:hover {
+  color: #6d5dfc;
 }
 
 .login-btn {
